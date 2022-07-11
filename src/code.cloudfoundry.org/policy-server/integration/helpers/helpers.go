@@ -219,6 +219,7 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		UAAURL:            "http://" + UAAHost,
 		UAAPort:           UAAPort,
 		CCURL:             mockCCServerURL,
+		CCInternalURL:     mockCCServerURL,
 		CCCA:              "/some/ca/cert",
 		LogPrefix:         "testprefix",
 		MetronAddress:     metronAddress,

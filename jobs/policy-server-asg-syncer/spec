@@ -6,6 +6,9 @@ templates:
   database_ca.crt.erb: config/certs/database_ca.crt
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   cc_ca.crt.erb: config/certs/cc_ca.crt
+  cc_internal_ca.crt.erb: config/certs/cc_internal_ca.crt
+  cc_internal_client.crt.erb: config/certs/cc_internal_client.crt
+  cc_internal_client.key.erb: config/certs/cc_internal_client.key
   locket_ca.crt.erb: config/certs/locket_ca.crt
   locket.crt.erb: config/certs/locket.crt
   locket.key.erb: config/certs/locket.key
@@ -22,6 +25,8 @@ consumes:
 - name: cloud_controller_https_endpoint
   type: cloud_controller_https_endpoint
   optional: true
+- name: cloud_controller_mtls_endpoint
+  type: cloud_controller_mtls_endpoint
 
 properties:
   disable:
@@ -53,6 +58,12 @@ properties:
       The value supplied to this property must match the value supplied to the Cloud Controller
       property `cc.external_port`.
     example: 9022
+
+  cc_internal.client_cert:
+    description: "Client certificate for cloud controller"
+
+  cc_internal.client_key:
+    description: "Client private key for cloud controller"
 
   database.connect_timeout_seconds:
     description: "Connection timeout between the policy server and its database."

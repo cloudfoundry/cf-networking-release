@@ -12,6 +12,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
@@ -95,8 +96,13 @@ func main() {
 	}
 
 	var tlsConfig *tls.Config
+	var mutualTlsConfig *tls.Config
 	if conf.SkipSSLValidation {
 		tlsConfig = &tls.Config{
+			InsecureSkipVerify: conf.SkipSSLValidation,
+		}
+
+		mutualTlsConfig = &tls.Config{
 			InsecureSkipVerify: conf.SkipSSLValidation,
 		}
 	} else {
@@ -104,11 +110,22 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s.%s error creating tls config: %s", logPrefix, jobPrefix, err) // not tested
 		}
+
+		mutualTlsConfig, err = mutualtls.NewClientTLSConfig(conf.CCInternalClientCert, conf.CCInternalClientKey, conf.CCInternalCA)
+		if err != nil {
+			log.Fatalf("%s.%s error creating mutual tls config: %s", logPrefix, jobPrefix, err) // not tested
+		}
 	}
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,
+		},
+	}
+
+	httpInternalClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: mutualTlsConfig,
 		},
 	}
 
@@ -121,8 +138,9 @@ func main() {
 	}
 
 	ccClient := &cc_client.Client{
-		JSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
-		Logger:     logger,
+		ExternalJSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
+		InternalJSONClient: json_client.New(logger.Session("cc-internal-json-client"), httpInternalClient, conf.CCInternalURL),
+		Logger:             logger,
 	}
 
 	asgSyncer := asg_syncer.NewASGSyncer(logger, wrappedSecurityGroupsStore, uaaClient, ccClient, time.Duration(conf.ASGSyncInterval)*time.Second, metricsSender, time.Second*time.Duration(conf.RetryDeadline))

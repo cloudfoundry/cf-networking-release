@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"code.cloudfoundry.org/policy-server/cc_client"
 	. "github.com/onsi/gomega"
@@ -13,9 +14,10 @@ import (
 type ConfigurableMockCCServer struct {
 	server *httptest.Server
 
-	apps           map[string]struct{}
-	spaces         map[string]struct{}
-	securityGroups map[string]cc_client.SecurityGroupResource
+	apps            map[string]struct{}
+	spaces          map[string]struct{}
+	securityGroups  map[string]cc_client.SecurityGroupResource
+	asgLatestUpdate time.Time
 }
 
 type resource struct {
@@ -55,6 +57,7 @@ func (c *ConfigurableMockCCServer) AddSpace(guid string) {
 
 func (c *ConfigurableMockCCServer) AddSecurityGroup(securityGroup cc_client.SecurityGroupResource) {
 	c.securityGroups[securityGroup.GUID] = securityGroup
+	c.asgLatestUpdate = time.Now()
 }
 
 func (c *ConfigurableMockCCServer) DeleteApp(guid string) {
@@ -67,6 +70,7 @@ func (c *ConfigurableMockCCServer) DeleteSpace(guid string) {
 
 func (c *ConfigurableMockCCServer) DeleteSecurityGroup(guid string) {
 	delete(c.securityGroups, guid)
+	c.asgLatestUpdate = time.Now()
 }
 
 func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -93,8 +97,17 @@ func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if r.URL.Path == "/internal/v4/asg_latest_update" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(buildCCASGLatestUpdateResponse(c.asgLatestUpdate)))
+	}
+
 	w.WriteHeader(http.StatusTeapot)
 	return
+}
+
+func buildCCASGLatestUpdateResponse(timestamp time.Time) string {
+	return fmt.Sprintf("{\"last_update\": \"%s\"}", timestamp.Format(time.RFC3339))
 }
 
 func buildCCGuidsResponse(guids map[string]struct{}) string {

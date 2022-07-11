@@ -3,6 +3,7 @@ package fakes
 
 import (
 	"sync"
+	"time"
 
 	"code.cloudfoundry.org/policy-server/cc_client"
 )
@@ -61,6 +62,19 @@ type CCClient struct {
 	}
 	getSecurityGroupsReturnsOnCall map[int]struct {
 		result1 []cc_client.SecurityGroupResource
+		result2 error
+	}
+	GetSecurityGroupsLastUpdateStub        func(string) (time.Time, error)
+	getSecurityGroupsLastUpdateMutex       sync.RWMutex
+	getSecurityGroupsLastUpdateArgsForCall []struct {
+		arg1 string
+	}
+	getSecurityGroupsLastUpdateReturns struct {
+		result1 time.Time
+		result2 error
+	}
+	getSecurityGroupsLastUpdateReturnsOnCall map[int]struct {
+		result1 time.Time
 		result2 error
 	}
 	GetSpaceStub        func(string, string) (*cc_client.SpaceResponse, error)
@@ -398,6 +412,70 @@ func (fake *CCClient) GetSecurityGroupsReturnsOnCall(i int, result1 []cc_client.
 	}{result1, result2}
 }
 
+func (fake *CCClient) GetSecurityGroupsLastUpdate(arg1 string) (time.Time, error) {
+	fake.getSecurityGroupsLastUpdateMutex.Lock()
+	ret, specificReturn := fake.getSecurityGroupsLastUpdateReturnsOnCall[len(fake.getSecurityGroupsLastUpdateArgsForCall)]
+	fake.getSecurityGroupsLastUpdateArgsForCall = append(fake.getSecurityGroupsLastUpdateArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	stub := fake.GetSecurityGroupsLastUpdateStub
+	fakeReturns := fake.getSecurityGroupsLastUpdateReturns
+	fake.recordInvocation("GetSecurityGroupsLastUpdate", []interface{}{arg1})
+	fake.getSecurityGroupsLastUpdateMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *CCClient) GetSecurityGroupsLastUpdateCallCount() int {
+	fake.getSecurityGroupsLastUpdateMutex.RLock()
+	defer fake.getSecurityGroupsLastUpdateMutex.RUnlock()
+	return len(fake.getSecurityGroupsLastUpdateArgsForCall)
+}
+
+func (fake *CCClient) GetSecurityGroupsLastUpdateCalls(stub func(string) (time.Time, error)) {
+	fake.getSecurityGroupsLastUpdateMutex.Lock()
+	defer fake.getSecurityGroupsLastUpdateMutex.Unlock()
+	fake.GetSecurityGroupsLastUpdateStub = stub
+}
+
+func (fake *CCClient) GetSecurityGroupsLastUpdateArgsForCall(i int) string {
+	fake.getSecurityGroupsLastUpdateMutex.RLock()
+	defer fake.getSecurityGroupsLastUpdateMutex.RUnlock()
+	argsForCall := fake.getSecurityGroupsLastUpdateArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *CCClient) GetSecurityGroupsLastUpdateReturns(result1 time.Time, result2 error) {
+	fake.getSecurityGroupsLastUpdateMutex.Lock()
+	defer fake.getSecurityGroupsLastUpdateMutex.Unlock()
+	fake.GetSecurityGroupsLastUpdateStub = nil
+	fake.getSecurityGroupsLastUpdateReturns = struct {
+		result1 time.Time
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CCClient) GetSecurityGroupsLastUpdateReturnsOnCall(i int, result1 time.Time, result2 error) {
+	fake.getSecurityGroupsLastUpdateMutex.Lock()
+	defer fake.getSecurityGroupsLastUpdateMutex.Unlock()
+	fake.GetSecurityGroupsLastUpdateStub = nil
+	if fake.getSecurityGroupsLastUpdateReturnsOnCall == nil {
+		fake.getSecurityGroupsLastUpdateReturnsOnCall = make(map[int]struct {
+			result1 time.Time
+			result2 error
+		})
+	}
+	fake.getSecurityGroupsLastUpdateReturnsOnCall[i] = struct {
+		result1 time.Time
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *CCClient) GetSpace(arg1 string, arg2 string) (*cc_client.SpaceResponse, error) {
 	fake.getSpaceMutex.Lock()
 	ret, specificReturn := fake.getSpaceReturnsOnCall[len(fake.getSpaceArgsForCall)]
@@ -675,6 +753,8 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getLiveSpaceGUIDsMutex.RUnlock()
 	fake.getSecurityGroupsMutex.RLock()
 	defer fake.getSecurityGroupsMutex.RUnlock()
+	fake.getSecurityGroupsLastUpdateMutex.RLock()
+	defer fake.getSecurityGroupsLastUpdateMutex.RUnlock()
 	fake.getSpaceMutex.RLock()
 	defer fake.getSpaceMutex.RUnlock()
 	fake.getSpaceGUIDsMutex.RLock()
