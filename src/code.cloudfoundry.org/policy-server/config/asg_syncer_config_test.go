@@ -34,17 +34,21 @@ var _ = Describe("ASGSyncerConfig", func() {
 					"timeout":       5,
 					"database_name": "network_policy",
 				},
-				"uaa_client":          "some-uaa-client",
-				"uaa_client_secret":   "some-uaa-client-secret",
-				"uaa_ca":              "some/ca/cert/uaa.ca",
-				"uaa_url":             "uaa.service.cf.internal",
-				"uaa_port":            8443,
-				"cc_url":              "cc.service.cf.internal",
-				"cc_ca_cert":          "some/ca/cert/cc.ca",
-				"log_prefix":          "cfnetworking",
-				"log_level":           "debug",
-				"metron_address":      "127.0.0.1:3457",
-				"skip_ssl_validation": true,
+				"uaa_client":              "some-uaa-client",
+				"uaa_client_secret":       "some-uaa-client-secret",
+				"uaa_ca":                  "some/ca/cert/uaa.ca",
+				"uaa_url":                 "uaa.service.cf.internal",
+				"uaa_port":                8443,
+				"cc_url":                  "cc.service.cf.internal:9024",
+				"cc_internal_url":         "cc.service.cf.internal:9023",
+				"cc_ca_cert":              "some/ca/cert/cc.ca",
+				"cc_internal_ca_cert":     "cert/cc_internal_ca.crt",
+				"cc_internal_client_cert": "cert/cc_internal_client.crt",
+				"cc_internal_client_key":  "cert/cc_internal_client.key",
+				"log_prefix":              "cfnetworking",
+				"log_level":               "debug",
+				"metron_address":          "127.0.0.1:3457",
+				"skip_ssl_validation":     true,
 				"locket": map[string]interface{}{
 					"locket_address":          "http://6.5.4.3",
 					"locket_ca_cert_file":     "some/ca/cert/locket.ca",
@@ -76,8 +80,12 @@ var _ = Describe("ASGSyncerConfig", func() {
 				Expect(c.UAACA).To(Equal("some/ca/cert/uaa.ca"))
 				Expect(c.UAAURL).To(Equal("uaa.service.cf.internal"))
 				Expect(c.UAAPort).To(Equal(8443))
-				Expect(c.CCURL).To(Equal("cc.service.cf.internal"))
+				Expect(c.CCURL).To(Equal("cc.service.cf.internal:9024"))
+				Expect(c.CCInternalURL).To(Equal("cc.service.cf.internal:9023"))
 				Expect(c.CCCA).To(Equal("some/ca/cert/cc.ca"))
+				Expect(c.CCInternalCA).To(Equal("cert/cc_internal_ca.crt"))
+				Expect(c.CCInternalClientCert).To(Equal("cert/cc_internal_client.crt"))
+				Expect(c.CCInternalClientKey).To(Equal("cert/cc_internal_client.key"))
 				Expect(c.LogPrefix).To(Equal("cfnetworking"))
 				Expect(c.LogLevel).To(Equal("debug"))
 				Expect(c.MetronAddress).To(Equal("127.0.0.1:3457"))
@@ -129,6 +137,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 			Entry("missing uaa url", "uaa_url", "UAAURL: zero value"),
 			Entry("missing uaa port", "uaa_port", "UAAPort: zero value"),
 			Entry("missing cc url", "cc_url", "CCURL: zero value"),
+			Entry("missing cc internal url", "cc_internal_url", "CCInternalURL: zero value"),
 		)
 
 		Describe("asg sync interval", func() {

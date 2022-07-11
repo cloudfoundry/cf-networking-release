@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager"
@@ -25,11 +26,13 @@ type CCClient interface {
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
 	GetSecurityGroups(token string) ([]SecurityGroupResource, error)
+	GetSecurityGroupsLastUpdate(token string) (time.Time, error)
 }
 
 type Client struct {
-	Logger     lager.Logger
-	JSONClient json_client.JsonClient
+	Logger             lager.Logger
+	ExternalJSONClient json_client.JsonClient
+	InternalJSONClient json_client.JsonClient
 }
 
 type GetSecurityGroupsResponse struct {
@@ -74,6 +77,10 @@ type SecurityGroupResource struct {
 	GloballyEnabled SecurityGroupGloballyEnabled `json:"globally_enabled"`
 	Rules           []SecurityGroupRule          `json:"rules"`
 	Relationships   SecurityGroupRelationships   `json:"relationships"`
+}
+
+type SecurityGroupLatestUpdateResponse struct {
+	LastUpdate string `json:"last_update"`
 }
 
 type AppsV3Response struct {
@@ -167,7 +174,7 @@ func (c *Client) makeAppsV3Request(queryParams, token string) (AppsV3Response, e
 		route = fmt.Sprintf("%s?%s", route, queryParams)
 	}
 	var response AppsV3Response
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return AppsV3Response{}, fmt.Errorf("json client do: %s", err)
 	}
@@ -184,7 +191,7 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
 
 	var response AppsV3Response
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
@@ -214,7 +221,7 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 
 	route := fmt.Sprintf("/v3/spaces?%s", values.Encode())
 	var response SpacesV3Response
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
@@ -263,7 +270,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
 
 	var response AppsV3Response
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
@@ -289,7 +296,7 @@ func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
 	route := fmt.Sprintf("/v2/spaces/%s", spaceGUID)
 
 	var response SpaceResponse
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		typedErr, ok := err.(*json_client.HttpResponseCodeError)
 		if !ok {
@@ -315,7 +322,7 @@ func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (
 	route := fmt.Sprintf("/v2/spaces?%s", values.Encode())
 
 	var response SpacesResponse
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
@@ -343,7 +350,7 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	var resources []SpaceResource
 	for route != "" {
 		var response SpacesResponse
-		err := c.JSONClient.Do("GET", route, nil, &response, token)
+		err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 		if err != nil {
 			return nil, fmt.Errorf("json client do: %s", err)
 		}
@@ -358,6 +365,30 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	}
 
 	return subjectSpaces, nil
+}
+
+func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
+	token = fmt.Sprintf("bearer %s", token)
+
+	var response SecurityGroupLatestUpdateResponse
+	err := c.InternalJSONClient.Do("GET", "/internal/v4/asg_latest_update", nil, &response, token)
+	if err != nil {
+		typedErr, ok := err.(*json_client.HttpResponseCodeError)
+		if !ok {
+			return time.Time{}, fmt.Errorf("json client do: %s", err)
+		}
+		if typedErr.StatusCode == http.StatusNotFound {
+			return time.Time{}, nil
+		}
+		return time.Time{}, fmt.Errorf("json client do: %s", err)
+	}
+
+	lastUpdateTimestamp, err := time.Parse(time.RFC3339, response.LastUpdate)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed parsing last_update from cloud controller: '%s'", response.LastUpdate)
+	}
+
+	return lastUpdateTimestamp, nil
 }
 
 func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error) {
@@ -424,7 +455,7 @@ func (c *Client) makeGetSecurityGroupsRequest(queryParams, token string) (*GetSe
 	}
 
 	var response GetSecurityGroupsResponse
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}

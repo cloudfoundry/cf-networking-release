@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/store"
@@ -23,14 +24,16 @@ type metricsSender interface {
 }
 
 type ASGSyncer struct {
-	Logger        lager.Logger
-	Store         store.SecurityGroupsStore
-	UAAClient     uaa_client.UAAClient
-	CCClient      cc_client.CCClient
-	PollInterval  time.Duration
-	MetricsSender metricsSender
-	RetryDeadline time.Duration
-	lastSync      time.Time
+	Logger           lager.Logger
+	Store            store.SecurityGroupsStore
+	UAAClient        uaa_client.UAAClient
+	CCClient         cc_client.CCClient
+	PollInterval     time.Duration
+	MetricsSender    metricsSender
+	RetryDeadline    time.Duration
+	latestUpdateTime time.Time
+	lastSyncTime     time.Time
+	Clock            clock.Clock
 }
 
 func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, pollInterval time.Duration, metricsSender metricsSender, retryDeadline time.Duration) *ASGSyncer {
@@ -42,6 +45,7 @@ func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClien
 		PollInterval:  pollInterval,
 		MetricsSender: metricsSender,
 		RetryDeadline: retryDeadline,
+		Clock:         clock.NewClock(),
 	}
 }
 
@@ -60,13 +64,18 @@ func (a *ASGSyncer) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 }
 
+func valueHasNotBeenUpdated(ccTimetamp, localTimestamp time.Time) bool {
+	return !ccTimetamp.IsZero() && !ccTimetamp.After(localTimestamp)
+}
+
 func (a *ASGSyncer) Poll() error {
-	syncStartTime := time.Now()
+	syncStartTime := a.Clock.Now()
 	a.Logger.Debug("asg-sync-started")
 	defer a.Logger.Debug("asg-sync-complete")
 
-	if a.lastSync.IsZero() {
-		a.lastSync = time.Now()
+	if a.lastSyncTime.IsZero() {
+		a.Logger.Debug("initializing-lastSyncTime")
+		a.lastSyncTime = a.Clock.Now()
 	}
 
 	token, err := a.UAAClient.GetToken()
@@ -74,21 +83,40 @@ func (a *ASGSyncer) Poll() error {
 		return err
 	}
 
-	retrieveStartTime := time.Now()
+	ccLatestUpdateTime, err := a.CCClient.GetSecurityGroupsLastUpdate(token)
+	if err != nil {
+		return err
+	}
+
+	if valueHasNotBeenUpdated(ccLatestUpdateTime, a.latestUpdateTime) {
+		a.Logger.Debug("skipping-update", lager.Data{"cc-latest-update-time": ccLatestUpdateTime, "local-latest-update-time": a.latestUpdateTime})
+		return nil
+	}
+
+	a.Logger.Debug("performing-update", lager.Data{"cc-latest-update-time": ccLatestUpdateTime, "local-latest-update-time": a.latestUpdateTime})
+
+	retrieveStartTime := a.Clock.Now()
 	ccSGs, err := a.CCClient.GetSecurityGroups(token)
 	if err != nil {
 		if _, ok := err.(cc_client.UnstableSecurityGroupListError); ok {
-			fmt.Printf("deadline: %s, lastSync: %s\n", time.Now(), a.lastSync.Add(a.RetryDeadline))
-			if time.Now().After(a.lastSync.Add(a.RetryDeadline)) {
+			if a.Clock.Now().After(a.lastSyncTime.Add(a.RetryDeadline)) {
 				return fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '%s': %s", a.RetryDeadline, err)
 			}
 			return nil
 		}
 		return err
 	}
-	retrieveEndTime := time.Now()
+	a.Logger.Debug("successfully-fetched-security-groups")
+
+	retrieveEndTime := a.Clock.Now()
 	a.MetricsSender.SendDuration(metricSecurityGroupsRetrievalFromCCDuration, retrieveEndTime.Sub(retrieveStartTime))
-	a.lastSync = time.Now()
+	a.Logger.Debug("successfully-sent-performance-metrics")
+
+	a.Logger.Debug("updating-local-latest-update-time", lager.Data{"old-local-latest-update-time": a.latestUpdateTime, "new-local-latest-update-time": ccLatestUpdateTime})
+	a.latestUpdateTime = ccLatestUpdateTime
+
+	a.lastSyncTime = a.Clock.Now()
+	a.Logger.Debug("updating-last-sync-time", lager.Data{"new-last-sync-time": a.lastSyncTime})
 
 	sgs := []store.SecurityGroup{}
 	for _, ccSG := range ccSGs {
@@ -125,7 +153,7 @@ func (a *ASGSyncer) Poll() error {
 
 	err = a.Store.Replace(sgs)
 
-	syncEndTime := time.Now()
+	syncEndTime := a.Clock.Now()
 	a.MetricsSender.SendDuration(metricSecurityGroupsTotalSyncDuration, syncEndTime.Sub(syncStartTime))
 
 	return err

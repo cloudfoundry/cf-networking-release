@@ -147,8 +147,8 @@ func main() {
 	}
 
 	ccClient := &cc_client.Client{
-		JSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
-		Logger:     logger,
+		ExternalJSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
+		Logger:             logger,
 	}
 
 	policyGuard := handlers.NewPolicyGuard(uaaClient, ccClient)

@@ -23,6 +23,10 @@
 
       raise '`cc_hostname` and `cc_port` properties were not supplied as manifest properties, nor were found in `cloud_controller_https_endpoint` link'
     end
+    
+    def get_cc_internal_url
+     return "https://#{link('cloud_controller_mtls_endpoint').p('cc.internal_service_hostname')}:#{link('cloud_controller_mtls_endpoint').p('cc.tls_port')}"
+    end
 
     def asg_poll_interval_seconds
       interval = p('asg_poll_interval_seconds')
@@ -75,6 +79,10 @@
       'uaa_ca' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/uaa_ca.crt',
       'cc_url' => get_cc_url,
       'cc_ca_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_ca.crt',
+      'cc_internal_url' => get_cc_internal_url,
+      'cc_internal_ca_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_internal_ca.crt',
+      'cc_internal_client_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_internal_client.crt',
+      'cc_internal_client_key' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_internal_client.key',
       'log_prefix' => 'cfnetworking',
       'log_level' => p('log_level'),
       "metron_address" => "127.0.0.1:#{p("metron_port")}",

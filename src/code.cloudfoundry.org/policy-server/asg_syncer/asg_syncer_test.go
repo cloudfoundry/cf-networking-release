@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/policy-server/asg_syncer"
 	"code.cloudfoundry.org/policy-server/asg_syncer/fakes"
@@ -20,6 +21,7 @@ import (
 
 var _ = Describe("ASGSyncer", func() {
 	var (
+		asgSyncer         *asg_syncer.ASGSyncer
 		fakeUAAClient     *uaafakes.UAAClient
 		fakeCCClient      *ccfakes.CCClient
 		logger            *lagertest.TestLogger
@@ -27,6 +29,7 @@ var _ = Describe("ASGSyncer", func() {
 		pollInterval      time.Duration
 		fakeMetricsSender *fakes.MetricsSender
 	)
+
 	BeforeEach(func() {
 		fakeStore = &dbfakes.SecurityGroupsStore{}
 		fakeUAAClient = &uaafakes.UAAClient{}
@@ -34,7 +37,55 @@ var _ = Describe("ASGSyncer", func() {
 		logger = lagertest.NewTestLogger("test")
 		pollInterval = time.Millisecond
 		fakeMetricsSender = &fakes.MetricsSender{}
+
+		asgSyncer = asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Second)
+		fakeUAAClient.GetTokenReturns("fake-token", nil)
+		fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{{
+			GUID:            "first-guid",
+			Name:            "asg-1",
+			GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{Running: true, Staging: true},
+			Rules: []cc_client.SecurityGroupRule{{
+				Protocol:    "ICMP",
+				Destination: "10.10.10.10/32",
+				Code:        4,
+				Type:        1,
+				Description: "fake icmp rule",
+				Log:         false,
+			}, {
+				Protocol:    "TCP",
+				Destination: "20.20.20.20/32",
+				Ports:       "80-1024",
+				Description: "fake tcp rule",
+				Log:         true,
+			}},
+			Relationships: cc_client.SecurityGroupRelationships{},
+		}, {
+			GUID: "second-guid",
+			Name: "asg-2",
+			Rules: []cc_client.SecurityGroupRule{{
+				Protocol:    "UDP",
+				Destination: "0.0.0/0",
+				Ports:       "53",
+				Description: "fake dns rule",
+				Log:         true,
+			}},
+			Relationships: cc_client.SecurityGroupRelationships{
+				RunningSpaces: cc_client.SecurityGroupSpaceRelationship{
+					Data: []map[string]string{{
+						"guid": "space-1-guid",
+					}, {
+						"guid": "space-2-guid",
+					}},
+				},
+				StagingSpaces: cc_client.SecurityGroupSpaceRelationship{
+					Data: []map[string]string{{
+						"guid": "space-3-guid",
+					}},
+				},
+			},
+		}}, nil)
 	})
+
 	Describe("NewASGSyncer()", func() {
 		It("works", func() {
 			asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Millisecond)
@@ -46,99 +97,51 @@ var _ = Describe("ASGSyncer", func() {
 			Expect(asgSyncer.RetryDeadline).To(Equal(time.Millisecond))
 		})
 	})
-	Describe("asgSyncer.Poll()", func() {
-		var asgSyncer *asg_syncer.ASGSyncer
+
+	Describe("asgSyncer.Run()", func() {
+		var (
+			signals chan os.Signal
+			ready   chan struct{}
+
+			retChan chan error
+		)
+
 		BeforeEach(func() {
-			asgSyncer = asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Millisecond)
-			fakeUAAClient.GetTokenReturns("fake-token", nil)
-			fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{{
-				GUID:            "first-guid",
-				Name:            "asg-1",
-				GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{Running: true, Staging: true},
-				Rules: []cc_client.SecurityGroupRule{{
-					Protocol:    "ICMP",
-					Destination: "10.10.10.10/32",
-					Code:        4,
-					Type:        1,
-					Description: "fake icmp rule",
-					Log:         false,
-				}, {
-					Protocol:    "TCP",
-					Destination: "20.20.20.20/32",
-					Ports:       "80-1024",
-					Description: "fake tcp rule",
-					Log:         true,
-				}},
-				Relationships: cc_client.SecurityGroupRelationships{},
-			}, {
-				GUID: "second-guid",
-				Name: "asg-2",
-				Rules: []cc_client.SecurityGroupRule{{
-					Protocol:    "UDP",
-					Destination: "0.0.0/0",
-					Ports:       "53",
-					Description: "fake dns rule",
-					Log:         true,
-				}},
-				Relationships: cc_client.SecurityGroupRelationships{
-					RunningSpaces: cc_client.SecurityGroupSpaceRelationship{
-						Data: []map[string]string{{
-							"guid": "space-1-guid",
-						}, {
-							"guid": "space-2-guid",
-						}},
-					},
-					StagingSpaces: cc_client.SecurityGroupSpaceRelationship{
-						Data: []map[string]string{{
-							"guid": "space-3-guid",
-						}},
-					},
-				},
-			}}, nil)
+			signals = make(chan os.Signal)
+			ready = make(chan struct{})
+
+			retChan = make(chan error)
 		})
-		Describe("asgSyncer.Run()", func() {
-			var (
-				signals chan os.Signal
-				ready   chan struct{}
 
-				retChan chan error
-			)
+		It("polls at poll interval", func() {
+			go func() {
+				retChan <- asgSyncer.Run(signals, ready)
+			}()
 
+			Eventually(ready).Should(BeClosed())
+			Eventually(fakeUAAClient.GetTokenCallCount).Should(BeNumerically(">", 1))
+
+			Consistently(retChan).ShouldNot(Receive())
+
+			signals <- os.Interrupt
+			Eventually(retChan).Should(Receive(nil))
+		})
+
+		Context("when the poller func errors", func() {
 			BeforeEach(func() {
-				signals = make(chan os.Signal)
-				ready = make(chan struct{})
-
-				retChan = make(chan error)
+				fakeUAAClient.GetTokenReturns("", fmt.Errorf("banana"))
 			})
 
-			It("polls at poll interval", func() {
-				go func() {
-					retChan <- asgSyncer.Run(signals, ready)
-				}()
-
-				Eventually(ready).Should(BeClosed())
-				Eventually(fakeUAAClient.GetTokenCallCount).Should(BeNumerically(">", 1))
-
-				Consistently(retChan).ShouldNot(Receive())
-
-				signals <- os.Interrupt
-				Eventually(retChan).Should(Receive(nil))
-			})
-
-			Context("when the poller func errors", func() {
-				BeforeEach(func() {
-					fakeUAAClient.GetTokenReturns("", fmt.Errorf("banana"))
-				})
-
-				It("logs the error and returns", func() {
-					err := asgSyncer.Run(signals, ready)
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(fmt.Errorf("banana")))
-					Expect(logger).To(gbytes.Say("asg-sync-cycle.*banana"))
-				})
+			It("logs the error and returns", func() {
+				err := asgSyncer.Run(signals, ready)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(fmt.Errorf("banana")))
+				Expect(logger).To(gbytes.Say("asg-sync-cycle.*banana"))
 			})
 		})
+	})
 
+	Describe("asgSyncer.Poll()", func() {
 		It("polls properly", func() {
 			err := asgSyncer.Poll()
 			Expect(err).To(BeNil())
@@ -146,13 +149,16 @@ var _ = Describe("ASGSyncer", func() {
 			By("Getting a UAA token", func() {
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
 			})
+
 			By("Requesting data from CAPI", func() {
 				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
 				Expect(fakeCCClient.GetSecurityGroupsArgsForCall(0)).To(Equal("fake-token"))
 			})
+
 			By("calling Replace() on the store", func() {
 				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
 			})
+
 			By("Translating cc_client security group resources into store security groups", func() {
 				Expect(fakeStore.ReplaceArgsForCall(0)).To(Equal([]store.SecurityGroup{{
 					Guid:              "first-guid",
@@ -171,6 +177,122 @@ var _ = Describe("ASGSyncer", func() {
 				}}))
 			})
 		})
+
+		Context("when the latest update time in CAPI is before the saved latest update time", func() {
+			BeforeEach(func() {
+				fakeCCClient.GetSecurityGroupsLastUpdateReturns(time.Now().Add(-1*time.Hour), nil)
+			})
+
+			It("does not request data from CAPI and does not update the store on a second poll", func() {
+				err := asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
+
+				err = asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
+			})
+		})
+
+		Context("when a user updates asgs at the same time that the syncer poll is occurring", func() {
+			var (
+				fakeClock *fakeclock.FakeClock
+			)
+
+			BeforeEach(func() {
+				fakeClock = fakeclock.NewFakeClock(time.Now())
+				asgSyncer = &asg_syncer.ASGSyncer{
+					Logger:        logger,
+					Store:         fakeStore,
+					UAAClient:     fakeUAAClient,
+					CCClient:      fakeCCClient,
+					PollInterval:  pollInterval,
+					MetricsSender: fakeMetricsSender,
+					RetryDeadline: time.Second,
+					Clock:         fakeClock,
+				}
+
+				fakeCCClient.GetSecurityGroupsLastUpdateReturnsOnCall(0, fakeClock.Now().Add(-1*time.Hour), nil)
+				fakeCCClient.GetSecurityGroupsLastUpdateReturnsOnCall(1, fakeClock.Now().Add(-1*time.Second), nil)
+			})
+
+			It("requests data from CAPI and does update the store on a second poll", func() {
+				err := asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
+
+				err = asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(2))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(2))
+			})
+		})
+
+		Context("when the latest update time in CAPI is equal to the saved latest update time", func() {
+			var (
+				fakeClock *fakeclock.FakeClock
+			)
+
+			BeforeEach(func() {
+				fakeClock = fakeclock.NewFakeClock(time.Now())
+				asgSyncer = &asg_syncer.ASGSyncer{
+					Logger:        logger,
+					Store:         fakeStore,
+					UAAClient:     fakeUAAClient,
+					CCClient:      fakeCCClient,
+					PollInterval:  pollInterval,
+					MetricsSender: fakeMetricsSender,
+					RetryDeadline: time.Second,
+					Clock:         fakeClock,
+				}
+
+				fakeCCClient.GetSecurityGroupsLastUpdateReturnsOnCall(0, fakeClock.Now().Add(-1*time.Hour), nil)
+				fakeCCClient.GetSecurityGroupsLastUpdateReturnsOnCall(1, fakeClock.Now().Add(-1*time.Hour), nil)
+			})
+
+			It("does not request data from CAPI and does not update the store on a second poll", func() {
+				err := asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
+
+				err = asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
+			})
+		})
+
+		Context("when the latest update time in CAPI is not set", func() {
+			BeforeEach(func() {
+				fakeCCClient.GetSecurityGroupsLastUpdateReturns(time.Time{}, nil)
+			})
+
+			It("requests data from CAPI and updates the store on a second poll", func() {
+				err := asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
+
+				err = asgSyncer.Poll()
+				Expect(err).To(BeNil())
+
+				Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(2))
+				Expect(fakeStore.ReplaceCallCount()).To(Equal(2))
+			})
+
+		})
+
 		Context("metrics", func() {
 			It("emits ASG metrics", func() {
 				err := asgSyncer.Poll()
@@ -185,11 +307,11 @@ var _ = Describe("ASGSyncer", func() {
 		})
 
 		Context("when errors occur", func() {
-
 			Context("getting a UAA token", func() {
 				BeforeEach(func() {
 					fakeUAAClient.GetTokenReturns("", fmt.Errorf("uaa error"))
 				})
+
 				It("returns a relevant error", func() {
 					err := asgSyncer.Poll()
 					Expect(err).To(HaveOccurred())
@@ -232,8 +354,8 @@ var _ = Describe("ASGSyncer", func() {
 						It("throws an error", func() {
 							Eventually(func(g Gomega) {
 								err := asgSyncer.Poll()
-								g.Expect(err).To(MatchError(fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '1ms': unstable list")))
-							}).Should(Succeed())
+								g.Expect(err).To(MatchError(fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '1s': unstable list")))
+							}).WithTimeout(2 * time.Second).Should(Succeed())
 							Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(BeNumerically(">", 1))
 						})
 					})

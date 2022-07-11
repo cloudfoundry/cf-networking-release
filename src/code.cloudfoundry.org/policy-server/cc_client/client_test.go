@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
@@ -23,24 +24,27 @@ import (
 
 var _ = Describe("Client", func() {
 	var (
-		client         *Client
-		fakeJSONClient *fakes.JSONClient
-		logger         *lagertest.TestLogger
+		client                 *Client
+		fakeExternalJSONClient *fakes.JSONClient
+		fakeInternalJSONClient *fakes.JSONClient
+		logger                 *lagertest.TestLogger
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		fakeJSONClient = &fakes.JSONClient{}
+		fakeExternalJSONClient = &fakes.JSONClient{}
+		fakeInternalJSONClient = &fakes.JSONClient{}
 		client = &Client{
-			JSONClient: fakeJSONClient,
-			Logger:     logger,
+			ExternalJSONClient: fakeExternalJSONClient,
+			InternalJSONClient: fakeInternalJSONClient,
+			Logger:             logger,
 		}
 	})
 
 	Describe("GetAllAppGUIDs", func() {
 		Context("when there is a single page of app guids", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
 					return nil
 				}
@@ -50,9 +54,9 @@ var _ = Describe("Client", func() {
 				apps, err := client.GetAllAppGUIDs("some-token")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+				method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
 				Expect(route).To(Equal("/v3/apps"))
@@ -71,7 +75,7 @@ var _ = Describe("Client", func() {
 
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					if route == "/v3/apps?page=2&per_page=1" {
 						json.Unmarshal([]byte(fixtures.AppsV3MultiplePagesPg2), respData)
 					} else if route == "/v3/apps?page=3&per_page=1" {
@@ -87,23 +91,23 @@ var _ = Describe("Client", func() {
 				apps, err := client.GetAllAppGUIDs("some-token")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(3))
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(3))
 
-				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+				method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
 				Expect(route).To(Equal("/v3/apps"))
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
-				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
+				method, route, reqData, _, token = fakeExternalJSONClient.DoArgsForCall(1)
 
 				Expect(method).To(Equal("GET"))
 				Expect(route).To(Equal("/v3/apps?page=2&per_page=1"))
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
-				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
+				method, route, reqData, _, token = fakeExternalJSONClient.DoArgsForCall(2)
 
 				Expect(method).To(Equal("GET"))
 				Expect(route).To(Equal("/v3/apps?page=3&per_page=1"))
@@ -120,7 +124,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns the error", func() {
@@ -132,7 +136,7 @@ var _ = Describe("Client", func() {
 
 	Describe("GetLiveAppGUIDs", func() {
 		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.AppsV3LiveAppGUIDs), respData)
 				return nil
 			}
@@ -142,9 +146,9 @@ var _ = Describe("Client", func() {
 			appGUIDs, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid&per_page=2"))
@@ -159,7 +163,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns the error", func() {
@@ -170,7 +174,7 @@ var _ = Describe("Client", func() {
 
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
 					return nil
 				}
@@ -190,7 +194,7 @@ var _ = Describe("Client", func() {
 		)
 
 		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				passedToken = token
 				passedRoute = route
 				_ = json.Unmarshal([]byte(fixtures.SpaceV3LiveSpaces), respData)
@@ -212,7 +216,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns the error", func() {
@@ -223,7 +227,7 @@ var _ = Describe("Client", func() {
 
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.SpaceV3MultiplePages), respData)
 					return nil
 				}
@@ -238,7 +242,7 @@ var _ = Describe("Client", func() {
 
 	Describe("GetSpaceGUIDs", func() {
 		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
 				return nil
 			}
@@ -248,9 +252,9 @@ var _ = Describe("Client", func() {
 			spaceGUIDs, err := client.GetSpaceGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid&per_page=2"))
@@ -278,7 +282,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
@@ -290,7 +294,7 @@ var _ = Describe("Client", func() {
 
 	Describe("GetSpace", func() {
 		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.Space), respData)
 				return nil
 			}
@@ -307,9 +311,9 @@ var _ = Describe("Client", func() {
 			matchingSpace, err := client.GetSpace("some-token", "some-space-guid")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v2/spaces/some-space-guid"))
@@ -321,7 +325,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
@@ -332,7 +336,7 @@ var _ = Describe("Client", func() {
 
 		Context("if the response status code is a 404", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(&json_client.HttpResponseCodeError{
+				fakeExternalJSONClient.DoReturns(&json_client.HttpResponseCodeError{
 					StatusCode: 404,
 					Message:    "not found",
 				})
@@ -347,7 +351,7 @@ var _ = Describe("Client", func() {
 
 		Context("if the response status code is not 200 or 404", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(&json_client.HttpResponseCodeError{
+				fakeExternalJSONClient.DoReturns(&json_client.HttpResponseCodeError{
 					StatusCode: http.StatusTeapot,
 					Message:    "i am a teapot",
 				})
@@ -380,7 +384,7 @@ var _ = Describe("Client", func() {
 				"live-app-4-guid": "space-2-guid",
 				"live-app-5-guid": "space-3-guid",
 			}
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
 				return nil
 			}
@@ -390,9 +394,9 @@ var _ = Describe("Client", func() {
 			appSpaceMap, err := client.GetAppSpaces("some-token", appGUIDs)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(ContainSubstring("/v3/apps?guids="))
@@ -416,7 +420,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
@@ -427,7 +431,7 @@ var _ = Describe("Client", func() {
 
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
 					return nil
 				}
@@ -447,7 +451,7 @@ var _ = Describe("Client", func() {
 				fixtures.SubjectSpacesPage2,
 				fixtures.SubjectSpacesPage3,
 			}
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				parsedRoute, err := url.Parse(route)
 				Expect(err).NotTo(HaveOccurred())
 				pageParameter := parsedRoute.Query().Get("page")
@@ -467,23 +471,23 @@ var _ = Describe("Client", func() {
 			subjectSpaces, err := client.GetSubjectSpaces("some-token", "some-subject-id")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(3))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(3))
 
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?results-per-page=100"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
-			method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
+			method, route, reqData, _, token = fakeExternalJSONClient.DoArgsForCall(1)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?order-direction=asc&page=2&results-per-page=1"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
-			method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
+			method, route, reqData, _, token = fakeExternalJSONClient.DoArgsForCall(2)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?order-direction=asc&page=3&results-per-page=1"))
@@ -499,7 +503,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
@@ -517,7 +521,7 @@ var _ = Describe("Client", func() {
 			},
 		}
 		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.SubjectSpace), respData)
 				return nil
 			}
@@ -527,9 +531,9 @@ var _ = Describe("Client", func() {
 			matchingSpace, err := client.GetSubjectSpace("some-token", "some-subject-id", space)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v2/spaces?q=developer_guid%3Asome-subject-id&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
@@ -541,7 +545,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the subject has no spaces", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.SubjectSpaceEmpty), respData)
 					return nil
 				}
@@ -556,7 +560,7 @@ var _ = Describe("Client", func() {
 
 		Context("when more than one space is returned", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.Spaces), respData)
 					return nil
 				}
@@ -570,7 +574,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("banana"))
+				fakeExternalJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
@@ -580,9 +584,63 @@ var _ = Describe("Client", func() {
 		})
 	})
 
+	Describe("GetSecurityGroupsLastUpdate", func() {
+		BeforeEach(func() {
+			fakeInternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(`{"last_update":"1971-01-01T00:00:00Z"}`), respData)
+				return nil
+			}
+		})
+
+		It("gets latest update time", func() {
+			latestUpdateTimeResponse, err := client.GetSecurityGroupsLastUpdate("some-token")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeInternalJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, _ := fakeInternalJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/internal/v4/asg_latest_update"))
+			Expect(reqData).To(BeNil())
+			timestamp, err := time.Parse(time.RFC3339, "1971-01-01T00:00:00Z")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(latestUpdateTimeResponse).To(Equal(timestamp))
+		})
+
+		Context("when the endpoint does not exist", func() {
+			BeforeEach(func() {
+				fakeInternalJSONClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: 404,
+					Message:    "not found",
+				})
+			})
+
+			It("returns zero time", func() {
+				latestUpdateTimeResponse, err := client.GetSecurityGroupsLastUpdate("some-token")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(latestUpdateTimeResponse.IsZero()).To(BeTrue())
+			})
+		})
+
+		Context("when the timestamp can't be parsed", func() {
+			BeforeEach(func() {
+				fakeInternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(`{"last_update":"meow-meow"}`), respData)
+					return nil
+				}
+			})
+
+			It("returns zero time and an error", func() {
+				latestUpdateTimeResponse, err := client.GetSecurityGroupsLastUpdate("some-token")
+				Expect(latestUpdateTimeResponse.IsZero()).To(BeTrue())
+				Expect(err).To(MatchError(ContainSubstring("failed parsing last_update from cloud controller: 'meow-meow'")))
+			})
+		})
+	})
+
 	Describe("GetSecurityGroups", func() {
 		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				err := json.Unmarshal([]byte(fixtures.OneSecurityGroup), respData)
 				Expect(err).ToNot(HaveOccurred())
 				return nil
@@ -592,9 +650,9 @@ var _ = Describe("Client", func() {
 		It("polls the Cloud Controller successfully", func() {
 			sgs, err := client.GetSecurityGroups("some-token")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+			method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
@@ -619,7 +677,7 @@ var _ = Describe("Client", func() {
 
 		Context("when there are no security groups", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					err := json.Unmarshal([]byte(fixtures.NoSecurityGroups), respData)
 					Expect(err).ToNot(HaveOccurred())
 					return nil
@@ -629,9 +687,9 @@ var _ = Describe("Client", func() {
 			It("Returns an empty set", func() {
 				sgs, err := client.GetSecurityGroups("some-token")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+				method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
 				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
@@ -643,7 +701,7 @@ var _ = Describe("Client", func() {
 
 		Context("when multiple security groups are returned", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					err := json.Unmarshal([]byte(fixtures.TwoSecurityGroups), respData)
 					Expect(err).ToNot(HaveOccurred())
 					return nil
@@ -653,9 +711,9 @@ var _ = Describe("Client", func() {
 			It("Returns them all", func() {
 				sgs, err := client.GetSecurityGroups("some-token")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
 
-				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+				method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
 				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
@@ -690,7 +748,7 @@ var _ = Describe("Client", func() {
 			JustBeforeEach(func() {
 				// set up a fake client that will return the list of SGs in a paginated fashion
 				// using consistent ordering, and adapting to changes in the per_page number + page request
-				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					url, err := url.Parse(route)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -743,9 +801,9 @@ var _ = Describe("Client", func() {
 			It("queries with decreasing page sizes and increasing offsets to detect changes", func() {
 				_, err := client.GetSecurityGroups("some-token")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(totalPagesForSet(cc_client.SecurityGroupsPerPage-pages+1, len(sgs))))
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(totalPagesForSet(cc_client.SecurityGroupsPerPage-pages+1, len(sgs))))
 				for i := 1; i <= pages; i++ {
-					method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(i - 1)
+					method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(i - 1)
 					Expect(method).To(Equal("GET"))
 					Expect(route).To(Equal(fmt.Sprintf("/v3/security_groups?per_page=%d&order_by=created_at&page=%d", cc_client.SecurityGroupsPerPage-i+1, i)))
 					Expect(reqData).To(BeNil())
@@ -755,7 +813,7 @@ var _ = Describe("Client", func() {
 			It("returns all the security groups", func() {
 				returnedSGs, err := client.GetSecurityGroups("some-token")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(11))
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(11))
 
 				Expect(returnedSGs).To(Equal(sgs))
 			})
@@ -768,7 +826,7 @@ var _ = Describe("Client", func() {
 						_, err := client.GetSecurityGroups("some-token")
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(MatchError(cc_client.NewUnstableSecurityGroupListError(fmt.Errorf("unexpected SG changes during pagination"))))
-						_, route, _, _, _ := fakeJSONClient.DoArgsForCall(fakeJSONClient.DoCallCount() - 1)
+						_, route, _, _, _ := fakeExternalJSONClient.DoArgsForCall(fakeExternalJSONClient.DoCallCount() - 1)
 						Expect(strings.Split(route, "?")[1]).To(Equal(fmt.Sprintf("per_page=%d&order_by=created_at&page=%d", cc_client.SecurityGroupsPerPage-page+1, page)))
 					}
 				})
@@ -777,7 +835,7 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("kissa ja undulaatti"))
+				fakeExternalJSONClient.DoReturns(errors.New("kissa ja undulaatti"))
 			})
 
 			It("returns a helpful error", func() {
