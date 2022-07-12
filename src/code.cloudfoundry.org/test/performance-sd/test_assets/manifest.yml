@@ -34,6 +34,16 @@ instance_groups:
         trace: true
         user: nats
         hostname: ((nats_ip))
+        migrate_server:
+          tls:
+            ca: "((nats_server_cert.ca))"
+            private_key: "((nats_server_cert.private_key))"
+            certificate: "((nats_server_cert.certificate))"
+        migrate_client:
+          tls:
+            ca: "((nats_client_cert.ca))"
+            private_key: "((nats_client_cert.private_key))"
+            certificate: "((nats_client_cert.certificate))"
     provides:
       nats:
         as: nats
@@ -115,6 +125,35 @@ variables:
   options:
     is_ca: true
     common_name: service-discovery-controller.service.cf.internal
+- name: nats_ca
+  type: certificate
+  options:
+    common_name: nats
+    is_ca: true
+
+- name: nats_client_cert
+  type: certificate
+  update_mode: converge
+  options:
+    ca: nats_ca
+    common_name: nats_client
+    alternative_names:
+    - nats_client
+    extended_key_usage:
+    - client_auth
+
+- name: nats_server_cert
+  type: certificate
+  update_mode: converge
+  options:
+    ca: nats_ca
+    common_name: nats.service.cf.internal
+    alternative_names:
+    - "*.nats.service.cf.internal"
+    - nats.service.cf.internal
+    extended_key_usage:
+    - server_auth
+
 - name: service_discovery_server_tls
   type: certificate
   options:
