@@ -151,7 +151,7 @@ func main() {
 		{Name: "asg-syncer", Runner: asgSyncer},
 	}
 
-	logger.Info("starting asg syncer", lager.Data{"interval": conf.ASGSyncInterval})
+	logger.Info("starting-asg-syncer", lager.Data{"interval": conf.ASGSyncInterval})
 
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
