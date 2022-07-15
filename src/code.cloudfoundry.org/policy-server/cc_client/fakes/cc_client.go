@@ -77,6 +77,20 @@ type CCClient struct {
 		result1 time.Time
 		result2 error
 	}
+	GetSecurityGroupsWithPageStub        func(string, int) (cc_client.GetSecurityGroupsResponse, error)
+	getSecurityGroupsWithPageMutex       sync.RWMutex
+	getSecurityGroupsWithPageArgsForCall []struct {
+		arg1 string
+		arg2 int
+	}
+	getSecurityGroupsWithPageReturns struct {
+		result1 cc_client.GetSecurityGroupsResponse
+		result2 error
+	}
+	getSecurityGroupsWithPageReturnsOnCall map[int]struct {
+		result1 cc_client.GetSecurityGroupsResponse
+		result2 error
+	}
 	GetSpaceStub        func(string, string) (*cc_client.SpaceResponse, error)
 	getSpaceMutex       sync.RWMutex
 	getSpaceArgsForCall []struct {
@@ -476,6 +490,71 @@ func (fake *CCClient) GetSecurityGroupsLastUpdateReturnsOnCall(i int, result1 ti
 	}{result1, result2}
 }
 
+func (fake *CCClient) GetSecurityGroupsWithPage(arg1 string, arg2 int) (cc_client.GetSecurityGroupsResponse, error) {
+	fake.getSecurityGroupsWithPageMutex.Lock()
+	ret, specificReturn := fake.getSecurityGroupsWithPageReturnsOnCall[len(fake.getSecurityGroupsWithPageArgsForCall)]
+	fake.getSecurityGroupsWithPageArgsForCall = append(fake.getSecurityGroupsWithPageArgsForCall, struct {
+		arg1 string
+		arg2 int
+	}{arg1, arg2})
+	stub := fake.GetSecurityGroupsWithPageStub
+	fakeReturns := fake.getSecurityGroupsWithPageReturns
+	fake.recordInvocation("GetSecurityGroupsWithPage", []interface{}{arg1, arg2})
+	fake.getSecurityGroupsWithPageMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *CCClient) GetSecurityGroupsWithPageCallCount() int {
+	fake.getSecurityGroupsWithPageMutex.RLock()
+	defer fake.getSecurityGroupsWithPageMutex.RUnlock()
+	return len(fake.getSecurityGroupsWithPageArgsForCall)
+}
+
+func (fake *CCClient) GetSecurityGroupsWithPageCalls(stub func(string, int) (cc_client.GetSecurityGroupsResponse, error)) {
+	fake.getSecurityGroupsWithPageMutex.Lock()
+	defer fake.getSecurityGroupsWithPageMutex.Unlock()
+	fake.GetSecurityGroupsWithPageStub = stub
+}
+
+func (fake *CCClient) GetSecurityGroupsWithPageArgsForCall(i int) (string, int) {
+	fake.getSecurityGroupsWithPageMutex.RLock()
+	defer fake.getSecurityGroupsWithPageMutex.RUnlock()
+	argsForCall := fake.getSecurityGroupsWithPageArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *CCClient) GetSecurityGroupsWithPageReturns(result1 cc_client.GetSecurityGroupsResponse, result2 error) {
+	fake.getSecurityGroupsWithPageMutex.Lock()
+	defer fake.getSecurityGroupsWithPageMutex.Unlock()
+	fake.GetSecurityGroupsWithPageStub = nil
+	fake.getSecurityGroupsWithPageReturns = struct {
+		result1 cc_client.GetSecurityGroupsResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CCClient) GetSecurityGroupsWithPageReturnsOnCall(i int, result1 cc_client.GetSecurityGroupsResponse, result2 error) {
+	fake.getSecurityGroupsWithPageMutex.Lock()
+	defer fake.getSecurityGroupsWithPageMutex.Unlock()
+	fake.GetSecurityGroupsWithPageStub = nil
+	if fake.getSecurityGroupsWithPageReturnsOnCall == nil {
+		fake.getSecurityGroupsWithPageReturnsOnCall = make(map[int]struct {
+			result1 cc_client.GetSecurityGroupsResponse
+			result2 error
+		})
+	}
+	fake.getSecurityGroupsWithPageReturnsOnCall[i] = struct {
+		result1 cc_client.GetSecurityGroupsResponse
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *CCClient) GetSpace(arg1 string, arg2 string) (*cc_client.SpaceResponse, error) {
 	fake.getSpaceMutex.Lock()
 	ret, specificReturn := fake.getSpaceReturnsOnCall[len(fake.getSpaceArgsForCall)]
@@ -755,6 +834,8 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getSecurityGroupsMutex.RUnlock()
 	fake.getSecurityGroupsLastUpdateMutex.RLock()
 	defer fake.getSecurityGroupsLastUpdateMutex.RUnlock()
+	fake.getSecurityGroupsWithPageMutex.RLock()
+	defer fake.getSecurityGroupsWithPageMutex.RUnlock()
 	fake.getSpaceMutex.RLock()
 	defer fake.getSpaceMutex.RUnlock()
 	fake.getSpaceGUIDsMutex.RLock()
