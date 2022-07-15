@@ -3,13 +3,10 @@ package cc_client_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -584,6 +581,44 @@ var _ = Describe("Client", func() {
 		})
 	})
 
+	Describe("GetSecurityGroupsWithPage", func() {
+		BeforeEach(func() {
+			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(`{"resources":[{"guid": "meow"}]}`), respData)
+				return nil
+			}
+		})
+
+		It("returns the response from the JSON Client", func() {
+			response, err := client.GetSecurityGroupsWithPage("token", 1)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response).NotTo(BeNil())
+			Expect(response.Resources).NotTo(BeEmpty())
+			Expect(response.Resources[0].GUID).To(Equal("meow"))
+		})
+
+		It("makes a JSONClient call with the provided page number", func() {
+			_, err := client.GetSecurityGroupsWithPage("token", 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, route, _, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
+			Expect(route).To(Equal("/v3/security_groups?per_page=5000&page=1"))
+
+			_, err = client.GetSecurityGroupsWithPage("token", 2)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, route, _, _, _ = fakeExternalJSONClient.DoArgsForCall(1)
+			Expect(route).To(Equal("/v3/security_groups?per_page=5000&page=2"))
+		})
+
+		It("makes a JSONClient call with the provided page number", func() {
+			_, err := client.GetSecurityGroupsWithPage("token", 1)
+			Expect(err).NotTo(HaveOccurred())
+			_, _, _, _, token := fakeExternalJSONClient.DoArgsForCall(0)
+			Expect(token).To(Equal("bearer token"))
+		})
+	})
+
 	Describe("GetSecurityGroupsLastUpdate", func() {
 		BeforeEach(func() {
 			fakeInternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -639,208 +674,398 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetSecurityGroups", func() {
+		var (
+			token string
+		)
+
 		BeforeEach(func() {
-			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				err := json.Unmarshal([]byte(fixtures.OneSecurityGroup), respData)
-				Expect(err).ToNot(HaveOccurred())
-				return nil
-			}
-		})
-
-		It("polls the Cloud Controller successfully", func() {
-			sgs, err := client.GetSecurityGroups("some-token")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
-
-			method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
-
-			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
-			Expect(reqData).To(BeNil())
-
-			Expect(len(sgs)).To(Equal(1))
-			Expect(sgs[0].Name).To(Equal("my-group0"))
-			Expect(sgs[0].GUID).To(Equal("b85a788e-671f-4549-814d-e34cdb2f539a"))
-			Expect(sgs[0].GloballyEnabled.Running).To(BeTrue())
-			Expect(sgs[0].GloballyEnabled.Staging).To(BeFalse())
-			Expect(sgs[0].Rules[0].Protocol).To(Equal("tcp"))
-			Expect(sgs[0].Rules[1].Protocol).To(Equal("icmp"))
-			Expect(sgs[0].Relationships.StagingSpaces.Data).To(Equal([]map[string]string{
-				{"guid": "space-guid-1"},
-				{"guid": "space-guid-2"},
-			}))
-			Expect(sgs[0].Relationships.RunningSpaces.Data).To(Equal([]map[string]string{
-				{"guid": "space-guid-3"},
-				{"guid": "space-guid-4"},
-			}))
+			token = "some-uaa-token"
+			stubDefaultLastUpdateRequest(fakeInternalJSONClient)
 		})
 
 		Context("when there are no security groups", func() {
+			It("returns an empty set of security groups", func() {
+				Expect(client.GetSecurityGroups(token)).To(Equal([]cc_client.SecurityGroupResource{}))
+			})
+		})
+
+		Context("when there is an error fetching a page of security groups", func() {
 			BeforeEach(func() {
-				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					err := json.Unmarshal([]byte(fixtures.NoSecurityGroups), respData)
-					Expect(err).ToNot(HaveOccurred())
+				fakeExternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+					switch fakeExternalJSONClient.DoCallCount() {
+					case 1:
+						return errors.New("security-groups-error")
+					case 2:
+						loadSecurityGroupsResponseIntoObject([]cc_client.SecurityGroupResource{}, resp)
+						return nil
+					default:
+						panic("Too many calls to fetch security groups")
+					}
+				}
+			})
+
+			It("bails on that pagination attempt and retries", func() {
+				securityGroups, err := client.GetSecurityGroups(token)
+				Expect(securityGroups).To(BeEmpty())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(2))
+
+				method, route, req, _, token := fakeExternalJSONClient.DoArgsForCall(0)
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(ContainSubstring("security_groups"))
+				Expect(route).To(ContainSubstring("page=1"))
+				Expect(req).To(BeNil())
+				Expect(token).To(Equal("bearer some-uaa-token"))
+
+				method, route, req, _, token = fakeExternalJSONClient.DoArgsForCall(1)
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(ContainSubstring("security_groups"))
+				Expect(route).To(ContainSubstring("page=1"))
+				Expect(req).To(BeNil())
+				Expect(token).To(Equal("bearer some-uaa-token"))
+			})
+		})
+
+		Context("when there is an error fetching the initial last_update time", func() {
+			BeforeEach(func() {
+				timestamp := time.Now()
+				fakeInternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+					switch fakeInternalJSONClient.DoCallCount() {
+					case 1:
+						return errors.New("last-update-error")
+					default:
+						loadLastUpdateResponseIntoObject(timestamp, resp)
+						return nil
+					}
+				}
+			})
+
+			It("bails on that pagination attempt and retries", func() {
+				securityGroups, err := client.GetSecurityGroups(token)
+				Expect(securityGroups).To(BeEmpty())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeInternalJSONClient.DoCallCount()).To(Equal(3))
+				//TODO: Make stronger assertion on parameters passed to Do method
+			})
+		})
+
+		Context("when the CC API returns a single page of security groups", func() {
+			BeforeEach(func() {
+				securityGroups := []cc_client.SecurityGroupResource{
+					cc_client.SecurityGroupResource{GUID: "1"},
+					cc_client.SecurityGroupResource{GUID: "2"},
+					cc_client.SecurityGroupResource{GUID: "3"},
+				}
+
+				stubSecurityGroupRequestWith(fakeExternalJSONClient, securityGroups, nil)
+			})
+
+			It("returns the security groups as a list of security group resources", func() {
+				Expect(client.GetSecurityGroups(token)).To(Equal([]cc_client.SecurityGroupResource{
+					cc_client.SecurityGroupResource{GUID: "1"},
+					cc_client.SecurityGroupResource{GUID: "2"},
+					cc_client.SecurityGroupResource{GUID: "3"},
+				}))
+			})
+		})
+
+		Context("when the CC API returns paginated results", func() {
+			var (
+				response0, response1, response2 cc_client.GetSecurityGroupsResponse
+				stubResponses                   []cc_client.GetSecurityGroupsResponse
+			)
+
+			BeforeEach(func() {
+				response0 = cc_client.GetSecurityGroupsResponse{
+					Pagination: cc_client.Pagination{
+						TotalPages: 3,
+						Next:       cc_client.Href{Href: "url-for-page-1"},
+					},
+					Resources: []cc_client.SecurityGroupResource{
+						cc_client.SecurityGroupResource{GUID: "1"},
+						cc_client.SecurityGroupResource{GUID: "2"},
+						cc_client.SecurityGroupResource{GUID: "3"},
+					},
+				}
+
+				response1 = cc_client.GetSecurityGroupsResponse{
+					Pagination: cc_client.Pagination{
+						TotalPages: 3,
+						Next:       cc_client.Href{Href: "url-for-page-2"},
+						Previous:   cc_client.Href{Href: "url-for-page-1"},
+					},
+					Resources: []cc_client.SecurityGroupResource{
+						cc_client.SecurityGroupResource{GUID: "4"},
+						cc_client.SecurityGroupResource{GUID: "5"},
+						cc_client.SecurityGroupResource{GUID: "6"},
+					},
+				}
+
+				response2 = cc_client.GetSecurityGroupsResponse{
+					Pagination: cc_client.Pagination{
+						TotalPages: 3,
+						Previous:   cc_client.Href{Href: "url-for-page-1"},
+					},
+					Resources: []cc_client.SecurityGroupResource{
+						cc_client.SecurityGroupResource{GUID: "7"},
+						cc_client.SecurityGroupResource{GUID: "8"},
+						cc_client.SecurityGroupResource{GUID: "9"},
+					},
+				}
+
+				stubResponses = []cc_client.GetSecurityGroupsResponse{response0, response1, response2}
+				fakeExternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+					jsonBytes, err := json.Marshal(stubResponses[fakeExternalJSONClient.DoCallCount()-1])
+					Expect(err).NotTo(HaveOccurred())
+
+					err = json.Unmarshal(jsonBytes, resp)
+					Expect(err).NotTo(HaveOccurred())
 					return nil
 				}
 			})
 
-			It("Returns an empty set", func() {
-				sgs, err := client.GetSecurityGroups("some-token")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
+			Context("and the CC last_update time does not change between fetching pages", func() {
+				BeforeEach(func() {
+					stubDefaultLastUpdateRequest(fakeInternalJSONClient)
+				})
 
-				method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
+				It("requests the next page of results", func() {
+					Expect(client.GetSecurityGroups(token)).To(Equal([]cc_client.SecurityGroupResource{
+						cc_client.SecurityGroupResource{GUID: "1"},
+						cc_client.SecurityGroupResource{GUID: "2"},
+						cc_client.SecurityGroupResource{GUID: "3"},
+						cc_client.SecurityGroupResource{GUID: "4"},
+						cc_client.SecurityGroupResource{GUID: "5"},
+						cc_client.SecurityGroupResource{GUID: "6"},
+						cc_client.SecurityGroupResource{GUID: "7"},
+						cc_client.SecurityGroupResource{GUID: "8"},
+						cc_client.SecurityGroupResource{GUID: "9"},
+					}))
 
-				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
-				Expect(reqData).To(BeNil())
+					Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(3))
 
-				Expect(len(sgs)).To(Equal(0))
-			})
-		})
+					_, route, _, _, token := fakeExternalJSONClient.DoArgsForCall(0)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=1"))
 
-		Context("when multiple security groups are returned", func() {
-			BeforeEach(func() {
-				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					err := json.Unmarshal([]byte(fixtures.TwoSecurityGroups), respData)
-					Expect(err).ToNot(HaveOccurred())
-					return nil
-				}
-			})
+					_, route, _, _, token = fakeExternalJSONClient.DoArgsForCall(1)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=2"))
 
-			It("Returns them all", func() {
-				sgs, err := client.GetSecurityGroups("some-token")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
+					_, route, _, _, token = fakeExternalJSONClient.DoArgsForCall(2)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=3"))
 
-				method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
+					Expect(fakeInternalJSONClient.DoCallCount()).To(Equal(4))
+				})
 
-				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
-				Expect(reqData).To(BeNil())
-
-				Expect(len(sgs)).To(Equal(2))
-				Expect(sgs[1].Name).To(Equal("my-group2"))
-				Expect(sgs[1].GUID).To(Equal("second-guid"))
-				Expect(sgs[1].GloballyEnabled.Running).To(BeFalse())
-				Expect(sgs[1].GloballyEnabled.Staging).To(BeTrue())
-				Expect(sgs[1].Rules[0].Protocol).To(Equal("tcp"))
-				Expect(sgs[1].Rules[0].Ports).To(Equal("53"))
-			})
-		})
-
-		Context("when there are multiple pages", func() {
-			var sgs []cc_client.SecurityGroupResource
-			var pages int
-			var deleteBeforePage int
-
-			BeforeEach(func() {
-				pages = 10
-				deleteBeforePage = 0
-				sgs = []cc_client.SecurityGroupResource{}
-				// build a list of SGs that we can paginate over
-				for i := 0; i < pages*cc_client.SecurityGroupsPerPage; i++ {
-					sgs = append(sgs, cc_client.SecurityGroupResource{
-						GUID: fmt.Sprintf("guid-%d", i),
+				Context("when calls to CC continually fail", func() {
+					BeforeEach(func() {
+						// First try fails
+						fakeInternalJSONClient.DoReturnsOnCall(0, errors.New("meow"))
+						// Second try fails
+						fakeInternalJSONClient.DoReturnsOnCall(1, errors.New("meow"))
+						// Third try fails
+						fakeInternalJSONClient.DoReturnsOnCall(2, errors.New("meow"))
 					})
-				}
-			})
-			JustBeforeEach(func() {
-				// set up a fake client that will return the list of SGs in a paginated fashion
-				// using consistent ordering, and adapting to changes in the per_page number + page request
-				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					url, err := url.Parse(route)
-					Expect(err).ToNot(HaveOccurred())
 
-					//grab per_page + page query params, or set sensible defaults
-					perPageStr := url.Query().Get("per_page")
-					if perPageStr == "" {
-						perPageStr = "50"
-					}
-					pageStr := url.Query().Get("page")
-					if pageStr == "" {
-						pageStr = "1"
-					}
-					perPage, err := strconv.Atoi(perPageStr)
-					Expect(err).ToNot(HaveOccurred())
-					page, err := strconv.Atoi(pageStr)
-					Expect(err).ToNot(HaveOccurred())
-					next := page + 1
-
-					// delete a number of indexes from our dataset, simulating deletions between
-					// pagination requests. any number of deletions should trigger an error, so
-					// delete the same number of indexes as our page is at
-					if deleteBeforePage == page {
-						sgs = sgs[page:]
-					}
-
-					resp := cc_client.GetSecurityGroupsResponse{}
-					resp.Pagination.TotalPages = totalPagesForSet(perPage, len(sgs))
-					//only set the next href if there's another page
-					if next <= resp.Pagination.TotalPages {
-						resp.Pagination.Next.Href = fmt.Sprintf("/v3/security_groups?per_page=%d&order_by=created_at&page=%d", perPage, next)
-					}
-
-					// figure out which results we should return
-					first := (page - 1) * perPage
-					last := first + perPage
-
-					// avoid index errors on the last page of sg results
-					if last > len(sgs) {
-						last = len(sgs)
-					}
-					resp.Resources = sgs[first:last]
-
-					// update the inbound respData with our new response
-					v := reflect.ValueOf(respData)
-					v.Elem().Set(reflect.ValueOf(resp))
-
-					return nil
-				}
-			})
-			It("queries with decreasing page sizes and increasing offsets to detect changes", func() {
-				_, err := client.GetSecurityGroups("some-token")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(totalPagesForSet(cc_client.SecurityGroupsPerPage-pages+1, len(sgs))))
-				for i := 1; i <= pages; i++ {
-					method, route, reqData, _, _ := fakeExternalJSONClient.DoArgsForCall(i - 1)
-					Expect(method).To(Equal("GET"))
-					Expect(route).To(Equal(fmt.Sprintf("/v3/security_groups?per_page=%d&order_by=created_at&page=%d", cc_client.SecurityGroupsPerPage-i+1, i)))
-					Expect(reqData).To(BeNil())
-				}
-			})
-
-			It("returns all the security groups", func() {
-				returnedSGs, err := client.GetSecurityGroups("some-token")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(11))
-
-				Expect(returnedSGs).To(Equal(sgs))
-			})
-
-			Context("when entries are removed from previous pages", func() {
-				// skip page 1 since it would never trigger an error
-				It("detects a changes and invalidates the by throwing an error", func() {
-					for page := 2; page <= pages; page++ {
-						deleteBeforePage = page
-						_, err := client.GetSecurityGroups("some-token")
+					It("returns an error", func() {
+						securityGroups, err := client.GetSecurityGroups(token)
+						Expect(securityGroups).To(BeEmpty())
 						Expect(err).To(HaveOccurred())
-						Expect(err).To(MatchError(cc_client.NewUnstableSecurityGroupListError(fmt.Errorf("unexpected SG changes during pagination"))))
-						_, route, _, _, _ := fakeExternalJSONClient.DoArgsForCall(fakeExternalJSONClient.DoCallCount() - 1)
-						Expect(strings.Split(route, "?")[1]).To(Equal(fmt.Sprintf("per_page=%d&order_by=created_at&page=%d", cc_client.SecurityGroupsPerPage-page+1, page)))
+						Expect(err.Error()).To(ContainSubstring("Ran out of retry attempts"))
+						Expect(err.Error()).To(ContainSubstring("meow"))
+					})
+				})
+
+				Context("when there is an error fetching the last_update time", func() {
+					BeforeEach(func() {
+						timestamp := time.Now()
+						failedCallIndex := 2 // Zero-indexed
+
+						fakeInternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+							switch fakeInternalJSONClient.DoCallCount() - 1 { // DoCallCount it 1-indexed
+							case failedCallIndex:
+								// First try fails on fetching the timestamp for the last page
+								return errors.New("last-update-error")
+							default:
+								loadLastUpdateResponseIntoObject(timestamp, resp)
+								return nil
+							}
+						}
+
+						fakeExternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+							responseNumber := fakeExternalJSONClient.DoCallCount() - 1 //DoCallCount is 1-indexed
+							if responseNumber >= failedCallIndex {
+								responseNumber = responseNumber - failedCallIndex
+							}
+
+							jsonBytes, err := json.Marshal(stubResponses[responseNumber])
+							Expect(err).NotTo(HaveOccurred())
+
+							err = json.Unmarshal(jsonBytes, resp)
+							Expect(err).NotTo(HaveOccurred())
+							return nil
+						}
+					})
+
+					It("bails on that pagination attempt and retries", func() {
+						securityGroups, err := client.GetSecurityGroups(token)
+						Expect(securityGroups).To(Equal([]cc_client.SecurityGroupResource{
+							cc_client.SecurityGroupResource{GUID: "1"},
+							cc_client.SecurityGroupResource{GUID: "2"},
+							cc_client.SecurityGroupResource{GUID: "3"},
+							cc_client.SecurityGroupResource{GUID: "4"},
+							cc_client.SecurityGroupResource{GUID: "5"},
+							cc_client.SecurityGroupResource{GUID: "6"},
+							cc_client.SecurityGroupResource{GUID: "7"},
+							cc_client.SecurityGroupResource{GUID: "8"},
+							cc_client.SecurityGroupResource{GUID: "9"},
+						}))
+						Expect(err).NotTo(HaveOccurred())
+						Expect(fakeInternalJSONClient.DoCallCount()).To(Equal(7))
+					})
+				})
+
+			})
+
+			Context("and the CC last_update time changes between fetching pages", func() {
+				BeforeEach(func() {
+					timestamp1 := time.Now()
+					timestamp2 := timestamp1.Add(1 * time.Minute)
+
+					timestampChangedIndex := 2 //Zero-indexed
+
+					// First try "fails" because the timestamp has been updated
+					// Second try "succeeds" because the new timestamp persists through pagination
+					fakeInternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+						Expect(fakeInternalJSONClient.DoCallCount()).To(BeNumerically("<=", 7))
+						switch callCount := fakeInternalJSONClient.DoCallCount() - 1; { //DoCallCount is 1-indexed
+						case callCount < timestampChangedIndex:
+							loadLastUpdateResponseIntoObject(timestamp1, resp)
+							return nil
+						case callCount >= timestampChangedIndex:
+							loadLastUpdateResponseIntoObject(timestamp2, resp)
+							return nil
+						default:
+							panic("impossible state")
+						}
+					}
+
+					fakeExternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+						responseNumber := fakeExternalJSONClient.DoCallCount() - 1 //DoCallCount is 1-indexed
+						if responseNumber >= timestampChangedIndex {
+							responseNumber = responseNumber - timestampChangedIndex
+						}
+
+						jsonBytes, err := json.Marshal(stubResponses[responseNumber])
+						Expect(err).NotTo(HaveOccurred())
+
+						err = json.Unmarshal(jsonBytes, resp)
+						Expect(err).NotTo(HaveOccurred())
+						return nil
 					}
 				})
-			})
-		})
 
-		Context("when the json client returns an error", func() {
-			BeforeEach(func() {
-				fakeExternalJSONClient.DoReturns(errors.New("kissa ja undulaatti"))
+				It("retries by starting from the beginning", func() {
+					Expect(client.GetSecurityGroups(token)).To(Equal([]cc_client.SecurityGroupResource{
+						cc_client.SecurityGroupResource{GUID: "1"},
+						cc_client.SecurityGroupResource{GUID: "2"},
+						cc_client.SecurityGroupResource{GUID: "3"},
+						cc_client.SecurityGroupResource{GUID: "4"},
+						cc_client.SecurityGroupResource{GUID: "5"},
+						cc_client.SecurityGroupResource{GUID: "6"},
+						cc_client.SecurityGroupResource{GUID: "7"},
+						cc_client.SecurityGroupResource{GUID: "8"},
+						cc_client.SecurityGroupResource{GUID: "9"},
+					}))
+
+					Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(5))
+
+					_, route, _, _, token := fakeExternalJSONClient.DoArgsForCall(0)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=1"))
+
+					_, route, _, _, token = fakeExternalJSONClient.DoArgsForCall(1)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=2"))
+
+					_, route, _, _, token = fakeExternalJSONClient.DoArgsForCall(2)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=1"))
+
+					_, route, _, _, token = fakeExternalJSONClient.DoArgsForCall(3)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=2"))
+
+					_, route, _, _, token = fakeExternalJSONClient.DoArgsForCall(4)
+					Expect(token).To(Equal("bearer some-uaa-token"))
+					Expect(route).To(ContainSubstring("page=3"))
+
+					Expect(fakeInternalJSONClient.DoCallCount()).To(Equal(7))
+				})
 			})
 
-			It("returns a helpful error", func() {
-				_, err := client.GetSubjectSpaces("some-token", "some-subject-id")
-				Expect(err).To(MatchError(ContainSubstring("json client do: kissa ja undulaatti")))
+			Context("and the CC last_update time changes between fetching pages more times than the retry limit", func() {
+				BeforeEach(func() {
+					timestamp1 := time.Now()
+					timestamp2 := timestamp1.Add(1 * time.Minute)
+					timestamp3 := timestamp1.Add(2 * time.Minute)
+					timestamp4 := timestamp1.Add(3 * time.Minute)
+
+					timestampChangedIndex1 := 2
+					timestampChangedIndex2 := 5
+					timestampChangedIndex3 := 8
+
+					fakeInternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+						switch callCount := fakeInternalJSONClient.DoCallCount() - 1; { //DoCallCount is 1-indexed
+						case callCount < timestampChangedIndex1:
+							loadLastUpdateResponseIntoObject(timestamp1, resp)
+							return nil
+						case callCount <= timestampChangedIndex2:
+							loadLastUpdateResponseIntoObject(timestamp2, resp)
+							return nil
+						case callCount <= timestampChangedIndex3:
+							loadLastUpdateResponseIntoObject(timestamp3, resp)
+							return nil
+						default:
+							loadLastUpdateResponseIntoObject(timestamp4, resp)
+							return nil
+						}
+					}
+
+					fakeExternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+						var response cc_client.GetSecurityGroupsResponse
+						switch responseNumber := fakeExternalJSONClient.DoCallCount() - 1; { //DoCallCount is 1-indexed
+						case responseNumber < timestampChangedIndex1:
+							response = stubResponses[responseNumber]
+						case responseNumber < timestampChangedIndex2:
+							responseNumber = responseNumber - timestampChangedIndex1
+							response = stubResponses[responseNumber]
+						case responseNumber < timestampChangedIndex3:
+							responseNumber = responseNumber - timestampChangedIndex2
+							response = stubResponses[responseNumber]
+						default:
+							responseNumber = responseNumber - timestampChangedIndex3
+							response = stubResponses[responseNumber]
+						}
+
+						jsonBytes, err := json.Marshal(response)
+						Expect(err).NotTo(HaveOccurred())
+
+						err = json.Unmarshal(jsonBytes, resp)
+						Expect(err).NotTo(HaveOccurred())
+						return nil
+					}
+				})
+
+				It("return an error", func() {
+					securityGroups, err := client.GetSecurityGroups(token)
+					Expect(securityGroups).To(BeEmpty())
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("Ran out of retry attempts"))
+					Expect(err.Error()).To(ContainSubstring("last_update time has changed"))
+				})
 			})
 		})
 	})
@@ -848,4 +1073,50 @@ var _ = Describe("Client", func() {
 
 func totalPagesForSet(perPage, setLength int) int {
 	return int(math.Ceil(float64(setLength) / float64(perPage)))
+}
+
+func stubDefaultLastUpdateRequest(fakeInternalJSONClient *fakes.JSONClient) {
+	stubLastUpdateRequestWith(fakeInternalJSONClient, time.Now(), nil)
+}
+
+func stubLastUpdateRequestWith(fakeInternalJSONClient *fakes.JSONClient, timestamp time.Time, err error) {
+	fakeInternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+		loadLastUpdateResponseIntoObject(timestamp, resp)
+		return err
+	}
+}
+
+func stubSecurityGroupRequestWith(fakeExternalJSONClient *fakes.JSONClient, securityGroups []cc_client.SecurityGroupResource, err error) {
+	fakeExternalJSONClient.DoStub = func(method, route string, req, resp interface{}, token string) error {
+		loadSecurityGroupsResponseIntoObject(securityGroups, resp)
+		return err
+	}
+}
+
+func loadLastUpdateResponseIntoObject(timestamp time.Time, response interface{}) {
+	lastUpdateResponse := SecurityGroupLatestUpdateResponse{
+		LastUpdate: timestamp.Format(time.RFC3339),
+	}
+
+	jsonBytes, err := json.Marshal(lastUpdateResponse)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = json.Unmarshal(jsonBytes, response)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func loadSecurityGroupsResponseIntoObject(securityGroups []cc_client.SecurityGroupResource, response interface{}) {
+	securityGroupsResponse := cc_client.GetSecurityGroupsResponse{
+		Pagination: cc_client.Pagination{
+			TotalPages: 1,
+			Next:       cc_client.Href{Href: ""},
+		},
+		Resources: securityGroups,
+	}
+
+	jsonBytes, err := json.Marshal(securityGroupsResponse)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = json.Unmarshal(jsonBytes, response)
+	Expect(err).NotTo(HaveOccurred())
 }

@@ -3,6 +3,7 @@ package cc_client
 //go:generate counterfeiter -generate
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,7 +15,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-const SecurityGroupsPerPage = 5000
+const SECURITY_GROUPS_PER_PAGE = 5000
 
 //counterfeiter:generate -o fakes/cc_client.go --fake-name CCClient . CCClient
 type CCClient interface {
@@ -25,8 +26,9 @@ type CCClient interface {
 	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
-	GetSecurityGroups(token string) ([]SecurityGroupResource, error)
 	GetSecurityGroupsLastUpdate(token string) (time.Time, error)
+	GetSecurityGroupsWithPage(token string, page int) (GetSecurityGroupsResponse, error)
+	GetSecurityGroups(token string) ([]SecurityGroupResource, error)
 }
 
 type Client struct {
@@ -35,20 +37,21 @@ type Client struct {
 	InternalJSONClient json_client.JsonClient
 }
 
+type Href struct {
+	Href string `json:"href"`
+}
+
+type Pagination struct {
+	TotalPages int  `json:"total_pages"`
+	First      Href `json:"first"`
+	Last       Href `json:"last"`
+	Next       Href `json:"next"`
+	Previous   Href `json:"previous"`
+}
+
 type GetSecurityGroupsResponse struct {
-	Pagination struct {
-		TotalPages int `json:"total_pages"`
-		First      struct {
-			Href string `json:"href"`
-		} `json:"first"`
-		Last struct {
-			Href string `json:"href"`
-		} `json:"last"`
-		Next struct {
-			Href string `json:"href"`
-		} `json:"next"`
-	} `json:"pagination"`
-	Resources []SecurityGroupResource `json:"resources"`
+	Pagination Pagination              `json:"pagination"`
+	Resources  []SecurityGroupResource `json:"resources"`
 }
 
 type SecurityGroupGloballyEnabled struct {
@@ -367,6 +370,85 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	return subjectSpaces, nil
 }
 
+func (c *Client) GetSecurityGroupsWithPage(token string, page int) (GetSecurityGroupsResponse, error) {
+	token = fmt.Sprintf("bearer %s", token)
+	route := "/v3/security_groups"
+	queryParams := generatePageQueryParams(page)
+
+	route = fmt.Sprintf("%s?%s", route, queryParams)
+
+	var response GetSecurityGroupsResponse
+	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
+	if err != nil {
+		return GetSecurityGroupsResponse{}, fmt.Errorf("json client do: %s", err)
+	}
+
+	return response, nil
+}
+
+func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error) {
+	var err error
+	var securityGroups []SecurityGroupResource
+
+	for retry := 0; retry < 3; retry++ {
+		securityGroups, err = c.attemptPagination(token)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return []SecurityGroupResource{}, fmt.Errorf("Ran out of retry attempts. Last error was: %s\n", err.Error())
+	}
+
+	return securityGroups, nil
+}
+
+func (c *Client) attemptPagination(token string) ([]SecurityGroupResource, error) {
+	securityGroups := []SecurityGroupResource{}
+
+	originalUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
+	if err != nil {
+		return securityGroups, err
+	}
+
+	page := 1
+
+	for {
+		// Get page
+		securityGroupResponse, err := c.GetSecurityGroupsWithPage(token, page)
+		if err != nil {
+			return []SecurityGroupResource{}, err
+		}
+
+		newUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
+		if err != nil {
+			return []SecurityGroupResource{}, err
+		}
+
+		// Check to see if there are zero ASGs
+		if securityGroupResponse.Resources == nil {
+			return securityGroups, nil
+		}
+
+		// Check to make sure ASGs haven't been updated
+		if newUpdatedAt.Equal(originalUpdatedAt) {
+			securityGroups = append(securityGroups, securityGroupResponse.Resources...)
+		} else {
+			return []SecurityGroupResource{}, NewUnstableSecurityGroupListError(errors.New("last_update time has changed"))
+		}
+
+		// Check if this is the last page
+		if securityGroupResponse.Pagination.Next.Href == "" {
+			break
+		}
+
+		page++
+	}
+
+	return securityGroups, nil
+}
+
 func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
@@ -391,78 +473,6 @@ func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
 	return lastUpdateTimestamp, nil
 }
 
-func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error) {
-	token = fmt.Sprintf("bearer %s", token)
-
-	securityGroups := []SecurityGroupResource{}
-
-	var firstNewIndex, page, asgsPerPage int
-
-	lastSeenGuid := ""
-	// page indexing is 1 based, start with SecurityGroupsPerPage
-	for page, asgsPerPage = 1, SecurityGroupsPerPage; asgsPerPage > 0; page++ {
-		// response.Resources indexing is 0 based. represents the index of the first item that we would not have already seen
-		// since we decrement our per-page with each query, we will see more and more duplicate SGs, and need to keep track of
-		// where the first new result is (and by extension, the last already-seen result).
-		// e.g. on the first query, per_page=5000&page=1 -> we see indices 0 through 4999
-		//      on the second query, per_page=4999&page=2 -> we see indices 4999 through 9998
-		//      page will be 2, firstNewIndex will be 1, and the index of what we think the lastSeenSG would be 0
-		firstNewIndex = page - 1
-		targetLastSeen := firstNewIndex - 1
-		asgsPerPage = SecurityGroupsPerPage - firstNewIndex
-		nextPage := genNextPageQueryParams(asgsPerPage, page)
-
-		response, err := c.makeGetSecurityGroupsRequest(nextPage, token)
-		if err != nil {
-			return nil, err
-		}
-
-		// ensure we have new SGs in the response before we try to do any validation
-		if len(response.Resources) > 0 {
-			if firstNewIndex >= len(response.Resources) {
-				// realistically, this won't be hit until 2500 pages + ~6million ASGs, but it prevents a panic
-				err := fmt.Errorf("further querying will result in no new sources being returned")
-				c.Logger.Error("sg-validation-exhausted", err, lager.Data{"pageNumber": page, "initialPerPage": SecurityGroupsPerPage, "currentPerPage": SecurityGroupsPerPage - firstNewIndex})
-				return nil, err
-			}
-			// skip the validation if we haven't seen any guids yet
-			if lastSeenGuid != "" {
-				// validate previous guid against the guid before our firstNewIndex
-				targetGuid := response.Resources[targetLastSeen].GUID
-				if targetGuid != lastSeenGuid {
-					c.Logger.Info("unexpected-changes-to-sg-list-during-pagination", lager.Data{"detectedGuid": targetGuid, "expectedGuid": lastSeenGuid})
-					return nil, NewUnstableSecurityGroupListError(fmt.Errorf("unexpected SG changes during pagination"))
-				}
-			}
-			lastSeenGuid = response.Resources[len(response.Resources)-1].GUID
-			securityGroups = append(securityGroups, response.Resources[firstNewIndex:]...)
-		}
-
-		// stop looping if we have no more pages left
-		if response.Pagination.Next.Href == "" {
-			break
-		}
-	}
-
-	return securityGroups, nil
-}
-
-func (c *Client) makeGetSecurityGroupsRequest(queryParams, token string) (*GetSecurityGroupsResponse, error) {
-	route := "/v3/security_groups"
-
-	if queryParams != "" {
-		route = fmt.Sprintf("%s?%s", route, queryParams)
-	}
-
-	var response GetSecurityGroupsResponse
-	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
-	if err != nil {
-		return nil, fmt.Errorf("json client do: %s", err)
-	}
-
-	return &response, nil
-}
-
-func genNextPageQueryParams(perPage, page int) string {
-	return fmt.Sprintf("per_page=%s&order_by=created_at&page=%s", url.QueryEscape(fmt.Sprintf("%d", perPage)), url.QueryEscape(fmt.Sprintf("%d", page)))
+func generatePageQueryParams(page int) string {
+	return fmt.Sprintf("per_page=%s&page=%s", url.QueryEscape(fmt.Sprintf("%d", SECURITY_GROUPS_PER_PAGE)), url.QueryEscape(fmt.Sprintf("%d", page)))
 }
