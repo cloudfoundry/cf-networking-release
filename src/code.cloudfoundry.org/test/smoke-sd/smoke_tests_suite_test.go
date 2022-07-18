@@ -64,7 +64,7 @@ var _ = BeforeSuite(func() {
 	appsDir = os.Getenv("APPS_DIR")
 	Expect(appsDir).NotTo(BeEmpty())
 
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
 })
 
 func Auth(username, password string) {
