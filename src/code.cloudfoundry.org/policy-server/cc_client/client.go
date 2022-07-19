@@ -152,20 +152,24 @@ type SpacesResponse struct {
 }
 
 func (c *Client) GetAllAppGUIDs(token string) (map[string]struct{}, error) {
+	c.Logger.Info("get-all-app-guids")
 	token = fmt.Sprintf("bearer %s", token)
 
 	set := make(map[string]struct{})
 	nextPage := "?"
 	for nextPage != "" {
 		queryParams := strings.Split(nextPage, "?")[1]
+		c.Logger.Debug("make-apps-v3-request", lager.Data{"queryParams": queryParams})
 		response, err := c.makeAppsV3Request(queryParams, token)
 		if err != nil {
 			return nil, err
 		}
 		for _, resource := range response.Resources {
+			c.Logger.Debug("save-app-guid", lager.Data{"app-guid": resource.GUID})
 			set[resource.GUID] = struct{}{}
 		}
 		nextPage = response.Pagination.Next.Href
+		c.Logger.Debug("next-app-guid-page", lager.Data{"nextPage": nextPage})
 	}
 
 	return set, nil
@@ -185,6 +189,7 @@ func (c *Client) makeAppsV3Request(queryParams, token string) (AppsV3Response, e
 }
 
 func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error) {
+	c.Logger.Info("get-live-app-guids", lager.Data{"candidate-app-guids": appGUIDs})
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
@@ -192,6 +197,7 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 	values.Add("per_page", strconv.Itoa(len(appGUIDs)))
 
 	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
+	c.Logger.Debug("live-app-guid-request", lager.Data{"route": route})
 
 	var response AppsV3Response
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
@@ -204,6 +210,8 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
 
+	c.Logger.Debug("live-app-guid-response", lager.Data{"resources": response.Resources})
+
 	set := make(map[string]struct{})
 	for _, r := range response.Resources {
 		set[r.GUID] = struct{}{}
@@ -213,6 +221,7 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 }
 
 func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error) {
+	c.Logger.Info("get-live-space-guids", lager.Data{"candidate-space-guids": spaceGUIDs})
 	token = fmt.Sprintf("bearer %s", token)
 
 	liveSpaceGUIDs := make(map[string]struct{})
@@ -223,6 +232,8 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 	values.Add("per_page", strconv.Itoa(len(spaceGUIDs)+1))
 
 	route := fmt.Sprintf("/v3/spaces?%s", values.Encode())
+	c.Logger.Debug("live-space-guid-request", lager.Data{"route": route})
+
 	var response SpacesV3Response
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
@@ -233,6 +244,9 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 	if response.Pagination.TotalPages > 1 {
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
+
+	c.Logger.Debug("live-space-guid-response", lager.Data{"resources": response.Resources})
+
 	for _, space := range response.Resources {
 		liveSpaceGUIDs[space.GUID] = struct{}{}
 	}
@@ -241,6 +255,7 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 }
 
 func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {
+	c.Logger.Info("get-space-guids", lager.Data{"app-guids": appGUIDs})
 	mapping, err := c.GetAppSpaces(token, appGUIDs)
 	if err != nil {
 		return nil, err
@@ -256,10 +271,12 @@ func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error
 		ret = append(ret, spaceID)
 	}
 
+	c.Logger.Debug("space-guids", lager.Data{"space-guids": ret})
 	return ret, nil
 }
 
 func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]string, error) {
+	c.Logger.Info("get-app-spaces", lager.Data{"app-guids": appGUIDs})
 	if len(appGUIDs) < 1 {
 		return map[string]string{}, nil
 	}
@@ -271,6 +288,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	values.Add("per_page", strconv.Itoa(len(appGUIDs)))
 
 	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
+	c.Logger.Debug("get-app-spaces-request", lager.Data{"route": route})
 
 	var response AppsV3Response
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
@@ -283,6 +301,8 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
 
+	c.Logger.Debug("get-app-spaces-response", lager.Data{"resources": response.Resources})
+
 	set := make(map[string]string)
 	for _, r := range response.Resources {
 		href := r.Links.Space.Href
@@ -291,12 +311,16 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 		spaceID := parts[len(parts)-1]
 		set[appID] = spaceID
 	}
+
+	c.Logger.Debug("get-app-spaces-return", lager.Data{"app-id-space-id-mapping": set})
 	return set, nil
 }
 
 func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
+	c.Logger.Info("get-space", lager.Data{"space-guid": spaceGUID})
 	token = fmt.Sprintf("bearer %s", token)
 	route := fmt.Sprintf("/v2/spaces/%s", spaceGUID)
+	c.Logger.Debug("get-space-request", lager.Data{"route": route})
 
 	var response SpaceResponse
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
@@ -306,15 +330,18 @@ func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
 			return nil, fmt.Errorf("json client do: %s", err)
 		}
 		if typedErr.StatusCode == http.StatusNotFound {
+			c.Logger.Info("space-not-found", lager.Data{"space-guid": spaceGUID})
 			return nil, nil
 		}
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
+	c.Logger.Debug("get-space-response", lager.Data{"resources": response.Entity})
 
 	return &response, nil
 }
 
 func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (*SpaceResource, error) {
+	c.Logger.Info("get-subject-space", lager.Data{"subject-id": subjectId, "space-response": space})
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
@@ -324,14 +351,19 @@ func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (
 
 	route := fmt.Sprintf("/v2/spaces?%s", values.Encode())
 
+	c.Logger.Debug("get-subject-space-request", lager.Data{"route": route})
+
 	var response SpacesResponse
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
+	c.Logger.Debug("get-subject-space-response", lager.Data{"resources": response.Resources})
+
 	numSpaces := len(response.Resources)
 	if numSpaces == 0 {
+		c.Logger.Debug("get-subject-space-no-spaces")
 		return nil, nil
 	}
 	if numSpaces > 1 {
@@ -342,6 +374,7 @@ func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (
 }
 
 func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error) {
+	c.Logger.Info("get-subject-spaces", lager.Data{"subject-id": subjectId})
 	const maximumPageSize = "100"
 	token = fmt.Sprintf("bearer %s", token)
 
@@ -350,6 +383,8 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 
 	route := fmt.Sprintf("/v2/users/%s/spaces?%s", subjectId, values.Encode())
 
+	c.Logger.Debug("get-subject-spaces-request", lager.Data{"route": route})
+
 	var resources []SpaceResource
 	for route != "" {
 		var response SpacesResponse
@@ -357,6 +392,9 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 		if err != nil {
 			return nil, fmt.Errorf("json client do: %s", err)
 		}
+
+		c.Logger.Debug("get-subject-spaces-response", lager.Data{"resources": response.Resources, "next-url": response.NextUrl})
+
 		route = response.NextUrl
 		resources = append(resources, response.Resources...)
 	}
@@ -371,11 +409,14 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 }
 
 func (c *Client) GetSecurityGroupsWithPage(token string, page int) (GetSecurityGroupsResponse, error) {
+	c.Logger.Info("get-security-groups-with-page", lager.Data{"page": page})
+
 	token = fmt.Sprintf("bearer %s", token)
 	route := "/v3/security_groups"
 	queryParams := generatePageQueryParams(page)
 
 	route = fmt.Sprintf("%s?%s", route, queryParams)
+	c.Logger.Debug("get-security-groups-with-page-request", lager.Data{"route": route})
 
 	var response GetSecurityGroupsResponse
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
@@ -383,16 +424,22 @@ func (c *Client) GetSecurityGroupsWithPage(token string, page int) (GetSecurityG
 		return GetSecurityGroupsResponse{}, fmt.Errorf("json client do: %s", err)
 	}
 
+	c.Logger.Debug("get-security-groups-with-page-response", lager.Data{"resources": response.Resources})
+
 	return response, nil
 }
 
 func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error) {
+	c.Logger.Info("get-security-groups")
+
 	var err error
 	var securityGroups []SecurityGroupResource
 
 	for retry := 0; retry < 3; retry++ {
+		c.Logger.Debug("get-security-groups-retry-loop", lager.Data{"attempt": retry})
 		securityGroups, err = c.attemptPagination(token)
 		if err == nil {
+			c.Logger.Debug("get-security-groups-retry-loop-succeeded", lager.Data{"security-groups": securityGroups})
 			break
 		}
 	}
@@ -405,6 +452,7 @@ func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error
 }
 
 func (c *Client) attemptPagination(token string) ([]SecurityGroupResource, error) {
+	c.Logger.Info("get-security-groups-attempt-pagination")
 	securityGroups := []SecurityGroupResource{}
 
 	originalUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
@@ -416,10 +464,12 @@ func (c *Client) attemptPagination(token string) ([]SecurityGroupResource, error
 
 	for {
 		// Get page
+		c.Logger.Debug("get-security-groups-request", lager.Data{"page": page})
 		securityGroupResponse, err := c.GetSecurityGroupsWithPage(token, page)
 		if err != nil {
 			return []SecurityGroupResource{}, err
 		}
+		c.Logger.Debug("get-security-groups-response", lager.Data{"response": securityGroupResponse.Resources})
 
 		newUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
 		if err != nil {
@@ -428,18 +478,22 @@ func (c *Client) attemptPagination(token string) ([]SecurityGroupResource, error
 
 		// Check to see if there are zero ASGs
 		if securityGroupResponse.Resources == nil {
+			c.Logger.Debug("no-additional-security-groups")
 			return securityGroups, nil
 		}
 
 		// Check to make sure ASGs haven't been updated
 		if newUpdatedAt.Equal(originalUpdatedAt) {
+			c.Logger.Debug("get-security-groups-timestamps-match", lager.Data{"originalUpdatedAt": originalUpdatedAt, "newUpdatedAt": newUpdatedAt})
 			securityGroups = append(securityGroups, securityGroupResponse.Resources...)
 		} else {
+			c.Logger.Debug("get-security-groups-timestamps-differ", lager.Data{"originalUpdatedAt": originalUpdatedAt, "newUpdatedAt": newUpdatedAt})
 			return []SecurityGroupResource{}, NewUnstableSecurityGroupListError(errors.New("last_update time has changed"))
 		}
 
 		// Check if this is the last page
 		if securityGroupResponse.Pagination.Next.Href == "" {
+			c.Logger.Debug("get-security-groups-last-page", lager.Data{"page": page})
 			break
 		}
 
@@ -450,6 +504,7 @@ func (c *Client) attemptPagination(token string) ([]SecurityGroupResource, error
 }
 
 func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
+	c.Logger.Info("get-security-groups-last-update")
 	token = fmt.Sprintf("bearer %s", token)
 
 	var response SecurityGroupLatestUpdateResponse
@@ -459,7 +514,9 @@ func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
 		if !ok {
 			return time.Time{}, fmt.Errorf("json client do: %s", err)
 		}
+
 		if typedErr.StatusCode == http.StatusNotFound {
+			c.Logger.Info("get-security-groups-last-update-not-found")
 			return time.Time{}, nil
 		}
 		return time.Time{}, fmt.Errorf("json client do: %s", err)
@@ -469,6 +526,8 @@ func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, fmt.Errorf("failed parsing last_update from cloud controller: '%s'", response.LastUpdate)
 	}
+
+	c.Logger.Debug("get-security-groups-last-update-response", lager.Data{"last_update": lastUpdateTimestamp})
 
 	return lastUpdateTimestamp, nil
 }
