@@ -25,7 +25,7 @@ var (
 )
 
 func TestScaling(t *testing.T) {
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Scaling Suite")

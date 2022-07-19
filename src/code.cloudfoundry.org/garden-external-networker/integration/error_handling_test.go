@@ -62,7 +62,7 @@ var _ = Describe("Garden External Networker errors", func() {
 			"--configFile=" + fakeConfigFilePath,
 		}
 
-		command.Stdin = strings.NewReader(fmt.Sprintf(`{ "pid": %d }`, GinkgoParallelNode()))
+		command.Stdin = strings.NewReader(fmt.Sprintf(`{ "pid": %d }`, GinkgoParallelProcess()))
 	})
 
 	Context("when inputs are invalid", func() {

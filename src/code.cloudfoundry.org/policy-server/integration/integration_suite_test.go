@@ -93,7 +93,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	policyServerAsgSyncerPath = paths.AsgSyncer
 	migrateDbPath = paths.MigrateDb
 
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {
