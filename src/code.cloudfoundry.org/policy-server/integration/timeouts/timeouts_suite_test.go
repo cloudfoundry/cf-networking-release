@@ -31,7 +31,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	return []byte(policyServerPath)
 }, func(data []byte) {
 	policyServerPath = string(data)
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {
