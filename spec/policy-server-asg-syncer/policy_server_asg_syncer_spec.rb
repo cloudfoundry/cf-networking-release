@@ -77,7 +77,19 @@ module Bosh::Template::Test
       )
     end
 
-    let(:links) {[dbconn_link, db_link]}
+    let(:cc_mtls_link) do
+      Link.new(
+        name: 'cloud_controller_mtls_endpoint',
+        properties: {
+          'cc' => {
+            'tls_port' => '4444',
+            'internal_service_hostname' => 'cc.service.internal'
+           }
+        }
+      )
+    end
+
+    let(:links) {[dbconn_link, db_link, cc_mtls_link]}
 
     describe 'database_ca.crt' do
       let(:template) {job.template('config/certs/database_ca.crt')}
@@ -100,6 +112,10 @@ module Bosh::Template::Test
           'uaa_port' => 3456,
           'cc_ca_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_ca.crt',
           'cc_url' => 'http://some-cc-hostname:4567',
+          'cc_internal_ca_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_internal_ca.crt',
+          'cc_internal_client_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_internal_client.crt',
+          'cc_internal_client_key' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_internal_client.key',
+          'cc_internal_url' => 'https://cc.service.internal:4444',
           'database' => {
             'user' => 'some-database-username',
             'type' => 'some-database-type',
@@ -127,7 +143,7 @@ module Bosh::Template::Test
       end
 
       context 'when capi provides a link to the https endpoint' do
-        let(:links) {[dbconn_link, db_link, cc_link]}
+        let(:links) {[dbconn_link, db_link, cc_link, cc_mtls_link]}
 
         before do
           merged_manifest_properties.delete('cc_hostname')
@@ -153,7 +169,7 @@ module Bosh::Template::Test
       context 'when cc_hostname and cc_port property values are provided, and the link is provided' do
         let(:cc_hostname) {'use.me.pls'}
         let(:cc_port) {1234}
-        let(:links) {[dbconn_link, db_link, cc_link]}
+        let(:links) {[dbconn_link, db_link, cc_link, cc_mtls_link]}
 
         it 'uses the property values, so the link can be overridden' do
           policyServerJSON = JSON.parse(template.render(merged_manifest_properties, consumes: links))
@@ -266,6 +282,16 @@ module Bosh::Template::Test
         }.to_not raise_error
         end
       end
+      context 'when cc_mtls_link is not provided' do
+        let(:links) {[dbconn_link, db_link, cc_link]}
+
+        it 'should raise an error' do
+          expect {
+            JSON.parse(template.render(merged_manifest_properties, consumes: links))
+          }.to raise_error "Can't find link 'cloud_controller_mtls_endpoint'"
+        end
+      end
+
     end
 
     describe 'locket.ca.crt' do
