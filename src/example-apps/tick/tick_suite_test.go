@@ -54,7 +54,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	binaryPath = apps.AppPath
 	registryBinaryPath = apps.RegPath
 
-	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
 var _ = SynchronizedAfterSuite(func() {

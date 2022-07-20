@@ -34,7 +34,7 @@ var _ = Describe("Integration", func() {
 		}))
 		destinationAddress = strings.Replace(proxyDestinationServer.URL, "http://", "", 1)
 
-		listenPort = 44000 + GinkgoParallelProcess()
+		listenPort = 44000 + GinkgoParallelNode()
 		address = fmt.Sprintf("127.0.0.1:%d", listenPort)
 
 		exampleAppCmd := exec.Command(exampleAppPath)

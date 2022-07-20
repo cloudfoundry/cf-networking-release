@@ -125,7 +125,7 @@ var _ = Describe("Garden External Networker", func() {
 		fakeLogDir, err = ioutil.TempDir("", "fake-logs-")
 		Expect(err).NotTo(HaveOccurred())
 
-		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelProcess(), rand.Int63())
+		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelNode(), rand.Int63())
 
 		sleepCmd := exec.Command("sleep", "1000")
 		if runtime.GOOS == "windows" {

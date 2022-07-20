@@ -69,7 +69,7 @@ func TestAcceptance(t *testing.T) {
 		appsDir = os.Getenv("APPS_DIR")
 		Expect(appsDir).NotTo(BeEmpty())
 
-		rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+		rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 	})
 
 	RunSpecs(t, "Acceptance Suite")
