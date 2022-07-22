@@ -66,8 +66,8 @@ Others might require slight adaptations
 ### Enabling Debug Logging
 
 Most components log at the `info` level by default. In many cases, the log level can be
-adjusted at runtime by making a request to the debug server running on the VM.
-To enable debug logging ssh to the VM and make this request to the debug server:
+adjusted at runtime by making a request to the debug server of the component running on the VM.
+For example, to enable debug logs for policy server, ssh onto the VM and make this request to its debug server:
 
 ```bash
 curl -X POST -d 'DEBUG' localhost:31821/log-level
@@ -143,12 +143,12 @@ is, and open an issue against the container's CNI (e.g. [silk-release](https:git
 3. Use `ip addr show | grep -B3 <container ip>` to find the interface name, MAC address, and namespace id of the host-side interrface. Validate that the MAC
    address begins with `aa:aa:<hex-encoded-container-ip>`. Validate that the interface name matches `s-<zero-padded-container-ip>`.
    For example:
-```
-$ ip addr show | grep -B2 10.255.211.40
-64376: s-010255211040@if64375: <BROADCAST,MULTICAST,NOARP,UP,LOWER_UP> mtu 1410 qdisc noqueue state UP group default
-    link/ether aa:aa:0a:ff:d3:28 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 169.254.0.1 peer 10.255.211.40/32 scope link s-010255211040
-```
+   ```
+   $ ip addr show | grep -B2 10.255.211.40
+    64376: s-010255211040@if64375: <BROADCAST,MULTICAST,NOARP,UP,LOWER_UP> mtu 1410 qdisc noqueue state UP group default
+      link/ether aa:aa:0a:ff:d3:28 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+      inet 169.254.0.1 peer 10.255.211.40/32 scope link s-010255211040
+   ```
    The namespace id is `0`, obtained from `link-netnsid 0`. `s-010255211040` is the interface name, and `aa:aa:0a:ff:d3:28` is the MAC address (`0a` is hex for `10`, `ff` is hex for `255`,
    `d3` is hex for 211, and `28` is hex for `40`). If the interface name does not match the IP, or MAC does not match `aa:aa:<hex-endoded-ip-addr>`
    something is wrong with the way the overlay bridge was set up in the `silk-cni` binary. Review `silk-cni` logs for any errors,
@@ -158,12 +158,12 @@ $ ip addr show | grep -B2 10.255.211.40
    was an issue in `silk-cni` setting up the overlay bridge. Review `silk-cni` logs for any erors, or enable debugging on `silk-cni`
    for more information.
 5. The IP address of the `s-<zero-padded-container-ip>` interface should be 169.254.0.1, and should **ALWAYS** match the default
-   gateway denfined iside the container ([see validating container-side-networking](#validating-container-side-networking-when-using-silk-release)).
+   gateway defined inside the container ([see validating container-side-networking](#validating-container-side-networking-when-using-silk-release)).
 6. If everything else looks good, validate that the namespace ID for the container processes match the namespace ID for the host's
    `s-<zero-padded-container-ip>` interface:
    1. Run `ps -awxfu | less` to get a full host process-tree. Search the output for the container's `instance_guid` to find the
       parent `gdn` process. Scan down the `gdn` process's tree to find child processes for `diego-sshd`, `envoy`, and the app process.
-      Not the process IDs of these three processes (second column of the output).
+      Note the process IDs of these three processes (second column of the output).
     2. Validate that all three processes share the same networking namespace inode reference by running `ls -l /proc/<pid>/ns/net`.
        It should show up as a link to `net:[<namespace inode>]`.
     3. Confirm that the namespace inode matches the namespace id obtained from the `s-<zero-padded-container-ip>` interface above:
@@ -174,7 +174,7 @@ $ ip addr show | grep -B2 10.255.211.40
 1. `bosh-ssh` into the diego-cell hosting the container.
 2. Run `ps -awxfu | less` to get a full host process-tree. Search the output for the container's `instance_guid` to find the
    parent `gdn` process. Scan down the `gdn` process's tree to find child processes for `diego-sshd`, `envoy`, and the app process.
-   Not the process IDs of these three processes (second column of the output).
+   Note the process IDs of these three processes (second column of the output).
 3. Validate that all three processes share the same networking namespace inode reference by running `ls -l /proc/<pid>/ns/net`.
    It should show up as a link to `net:[<namespace inode>]`.
 4. Enter a bash shell as root in the container namespaces with `nsenter -t <app-pid> -a bash`.
