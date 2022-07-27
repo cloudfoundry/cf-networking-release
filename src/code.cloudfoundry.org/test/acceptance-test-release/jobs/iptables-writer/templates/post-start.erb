@@ -8,10 +8,16 @@
   end
 %>
 
-sudo iptables -C INPUT -s <%= network %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
+iptables_command="iptables"
+if ! command -v iptables_legacy &> /dev/null
+then
+  iptables_command="iptables-legacy"
+fi
+
+sudo $iptables_command -C INPUT -s <%= network %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
 if [ "$?" -eq 1 ]
 then
   set -e
-  sudo iptables -I INPUT 1 -s <%= network %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
+  sudo $iptables_command -I INPUT 1 -s <%= network %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
 fi
 
