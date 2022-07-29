@@ -38,8 +38,6 @@ code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIe
 code.cloudfoundry.org/lager v2.0.0+incompatible/go.mod h1:O2sS7gKP3HM2iemG+EnwvyNQK7pTSC6Foi4QiMp9sSk=
 code.cloudfoundry.org/locket v0.0.0-20220325152040-ad30c800960d h1:FpgH+4PH1PUDFrInTb5V3K1tgEiUPJVmsHnAcLiHdDo=
 code.cloudfoundry.org/locket v0.0.0-20220325152040-ad30c800960d/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
-code.cloudfoundry.org/policy_client v0.0.0-20220427143037-36975d7cc48d h1:FHnbEVper+q+NdWLZ8gaEiQI9ApeihwUwo3YvNmC0WY=
-code.cloudfoundry.org/policy_client v0.0.0-20220427143037-36975d7cc48d/go.mod h1:bzqpNvN9V1gJd0ny82Qnqxow5MFAnU97Sti/l4ORHWY=
 code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266 h1:YBn6KFZ2UWq2HzTuHL9BPvOXT38hMcsMrK9t2AjLdAQ=
 code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266/go.mod h1:bzqpNvN9V1gJd0ny82Qnqxow5MFAnU97Sti/l4ORHWY=
 code.cloudfoundry.org/rep v0.1441.2 h1:T6zkD9bjc4YGes6yhR49XeiOT6GxkWnjpECGNMQiSm4=
@@ -109,6 +107,7 @@ github.com/cloudfoundry/gosteno v0.0.0-20150423193413-0c8581caea35 h1:HdAWGlVEbF
 github.com/cloudfoundry/gosteno v0.0.0-20150423193413-0c8581caea35/go.mod h1:3YBPUR85RIrvaUTdA1dL38YSp6s3OHu1xrWLkGt2Mog=
 github.com/cloudfoundry/loggregatorlib v0.0.0-20170823162133-36eddf15ef12 h1:A+SRy/ndY6QSrN+bVWIhKDLU4t7OLFWVlLPxUWL/oGE=
 github.com/cloudfoundry/loggregatorlib v0.0.0-20170823162133-36eddf15ef12/go.mod h1:ucj7+svyACshmxV3Zze2NAcEcdbBf9scZYR+QKCX9/w=
+github.com/cloudfoundry/policy_client v0.0.0-20190731000202-6324003c2bfd/go.mod h1:SzBi4MV4jZXKT+Iph/D1Ww1BH1K+gTJMyCXjpeuGWHM=
 github.com/cloudfoundry/sonde-go v0.0.0-20171206171820-b33733203bb4 h1:cWfya7mo/zbnwYVio6eWGsFJHqYw4/k/uhwIJ1eqRPI=
 github.com/cloudfoundry/sonde-go v0.0.0-20171206171820-b33733203bb4/go.mod h1:GS0pCHd7onIsewbw8Ue9qa9pZPv2V88cUZDttK6KzgI=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
@@ -308,8 +307,8 @@ github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.10.3/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
-github.com/lib/pq v1.10.4 h1:SO9z7FRPzA03QhHKJrH5BXA6HU1rS4V2nIVrrNC1iYk=
-github.com/lib/pq v1.10.4/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/lib/pq v1.10.6 h1:jbk+ZieJ0D7EVGJYpL9QTz7/YW6UHbmdnZWYyK5cdBs=
+github.com/lib/pq v1.10.6/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/loggregator/go-bindata v0.0.0-20190422223605-5f11cfb2d7d9/go.mod h1:PvsJfK9t/8OdGvSanpYlwJ1EPoJ/hwT3c52txAzqooY=
 github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e h1:hB2xlXdHp/pmPZq0y3QnmWAArdw9PqbmotexnWx/FU8=
