@@ -195,28 +195,33 @@ var _ = Describe("Service Discovery Controller process", func() {
 			BeforeEach(func() {
 				greetMessageReply = "route-emitter-reply"
 			})
-			It("tells the route-emitter the minimum register interval as resume_pruning_delay_seconds", func(done Done) {
-				routeEmitter.Subscribe(greetMessageReply, nats.MsgHandler(func(greetMsg *nats.Msg) {
-					defer GinkgoRecover()
-					msg := *greetMsg
-					Expect(msg.Subject).To(Equal(greetMessageReply))
-					subscriberOpts := struct {
-						ID                               string
-						MinimumRegisterIntervalInSeconds int
-						PruneThresholdInSeconds          int
-						AcceptTLS                        bool
-					}{}
-					Expect(json.Unmarshal(msg.Data, &subscriberOpts)).To(Succeed())
-					Expect(subscriberOpts.MinimumRegisterIntervalInSeconds).To(Equal(1))
-					Expect(subscriberOpts.PruneThresholdInSeconds).To(Equal(120))
+			It("tells the route-emitter the minimum register interval as resume_pruning_delay_seconds", func() {
+				done := make(chan interface{})
+				timeout := 5 * 2
+				go func() {
+					routeEmitter.Subscribe(greetMessageReply, nats.MsgHandler(func(greetMsg *nats.Msg) {
+						defer GinkgoRecover()
+						msg := *greetMsg
+						Expect(msg.Subject).To(Equal(greetMessageReply))
+						subscriberOpts := struct {
+							ID                               string
+							MinimumRegisterIntervalInSeconds int
+							PruneThresholdInSeconds          int
+							AcceptTLS                        bool
+						}{}
+						Expect(json.Unmarshal(msg.Data, &subscriberOpts)).To(Succeed())
+						Expect(subscriberOpts.MinimumRegisterIntervalInSeconds).To(Equal(1))
+						Expect(subscriberOpts.PruneThresholdInSeconds).To(Equal(120))
+					}))
 					close(done)
-				}))
+				}()
+				Eventually(done, timeout).Should(BeClosed())
 				Expect(routeEmitter.PublishMsg(&nats.Msg{
 					Subject: "service-discovery.greet",
 					Reply:   greetMessageReply,
 					Data:    []byte{},
 				})).NotTo(HaveOccurred())
-			}, 5 /* <-- overall spec timeout in seconds */)
+			})
 		})
 
 		It("should return a http app json", func() {

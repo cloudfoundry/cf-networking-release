@@ -70,64 +70,69 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		It("allows policies to whitelist traffic between applications", func(done Done) {
-			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			fmt.Println("\n----- cf-pusher start ------")
-			err := cmd.Run()
-			fmt.Println("\n----- cf-pusher done -------")
-			Expect(err).NotTo(HaveOccurred())
+		It("allows policies to whitelist traffic between applications", func() {
+			done := make(chan interface{})
+			timeout := 30 * 60
+			go func() {
+				cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				fmt.Println("\n----- cf-pusher start ------")
+				err := cmd.Run()
+				fmt.Println("\n----- cf-pusher done -------")
+				Expect(err).NotTo(HaveOccurred())
 
-			By("checking that all test app instances have registered themselves")
-			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
+				By("checking that all test app instances have registered themselves")
+				checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
 
-			appIPs := getAppIPs(appRegistry)
+				appIPs := getAppIPs(appRegistry)
 
-			By("checking that the connection fails")
-			for _, appProxy := range appsProxy {
-				By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
-				assertConnectionsFail(appProxy, appIPs, ports, proxyInstances)
-			}
+				By("checking that the connection fails")
+				for _, appProxy := range appsProxy {
+					By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+					assertConnectionsFail(appProxy, appIPs, ports, proxyInstances)
+				}
 
-			By("creating policies")
-			for _, appProxy := range appsProxy {
-				createAllPolicies(appProxy, appsTest, ports)
-			}
+				By("creating policies")
+				for _, appProxy := range appsProxy {
+					createAllPolicies(appProxy, appsTest, ports)
+				}
 
-			// we should wait for minimum (pollInterval * 2)
-			By(fmt.Sprintf("waiting %s for policies to be created on cells", PolicyWaitTime))
-			time.Sleep(PolicyWaitTime)
+				// we should wait for minimum (pollInterval * 2)
+				By(fmt.Sprintf("waiting %s for policies to be created on cells", PolicyWaitTime))
+				time.Sleep(PolicyWaitTime)
 
-			By("checking that the connection succeeds")
-			for _, appProxy := range appsProxy {
-				By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
-				assertConnectionsSucceed(appProxy, appIPs, ports, proxyInstances)
-			}
+				By("checking that the connection succeeds")
+				for _, appProxy := range appsProxy {
+					By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
+					assertConnectionsSucceed(appProxy, appIPs, ports, proxyInstances)
+				}
 
-			By("deleting policies")
-			for _, appProxy := range appsProxy {
-				deleteAllPolicies(appProxy, appsTest, ports)
-			}
+				By("deleting policies")
+				for _, appProxy := range appsProxy {
+					deleteAllPolicies(appProxy, appsTest, ports)
+				}
 
-			By(fmt.Sprintf("waiting %s for policies to be deleted on cells", PolicyWaitTime))
-			time.Sleep(PolicyWaitTime)
+				By(fmt.Sprintf("waiting %s for policies to be deleted on cells", PolicyWaitTime))
+				time.Sleep(PolicyWaitTime)
 
-			By("checking that the connection fails, again")
-			for _, appProxy := range appsProxy {
-				By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
-				assertConnectionsFail(appProxy, appIPs, ports, proxyInstances)
-			}
+				By("checking that the connection fails, again")
+				for _, appProxy := range appsProxy {
+					By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+					assertConnectionsFail(appProxy, appIPs, ports, proxyInstances)
+				}
 
-			By("checking that the registry updates when apps are scaled")
-			scaleApps(appsTest, 1 /* instances */)
-			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
+				By("checking that the registry updates when apps are scaled")
+				scaleApps(appsTest, 1 /* instances */)
+				checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
 
-			scaleApps(appsTest, appInstances /* instances */)
-			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
+				scaleApps(appsTest, appInstances /* instances */)
+				checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
 
-			close(done)
-		}, 30*60 /* <-- overall spec timeout in seconds */)
+				close(done)
+			}()
+			Eventually(done, timeout).Should(BeClosed())
+		})
 	})
 })
 

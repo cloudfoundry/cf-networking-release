@@ -58,44 +58,49 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("delete-space", spaceName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		It("allows the user to configure policies", func(done Done) {
-			pushApp(appProxy, "proxy")
-			pushApp(appSmoke, "smoke", "--no-start")
-			setEnv(appSmoke, "PROXY_APP_URL", fmt.Sprintf("http://%s.%s", appProxy, config.AppsDomain))
-			start(appSmoke)
+		It("allows the user to configure policies", func() {
+			done := make(chan interface{})
+			timeout := 30 * 60
+			go func() {
+				pushApp(appProxy, "proxy")
+				pushApp(appSmoke, "smoke", "--no-start")
+				setEnv(appSmoke, "PROXY_APP_URL", fmt.Sprintf("http://%s.%s", appProxy, config.AppsDomain))
+				start(appSmoke)
 
-			scaleApp(appSmoke, appInstances)
+				scaleApp(appSmoke, appInstances)
 
-			ports := []int{8080}
-			appsSmoke := []string{appSmoke}
+				ports := []int{8080}
+				appsSmoke := []string{appSmoke}
 
-			By("checking that the connection fails")
-			runWithTimeout("check connection failures", 5*time.Minute, func() {
-				assertConnectionFails(appSmoke, appInstances)
-			})
+				By("checking that the connection fails")
+				runWithTimeout("check connection failures", 5*time.Minute, func() {
+					assertConnectionFails(appSmoke, appInstances)
+				})
 
-			By("creating policies")
-			createAllPolicies(appProxy, appsSmoke, ports, cfCli)
+				By("creating policies")
+				createAllPolicies(appProxy, appsSmoke, ports, cfCli)
 
-			// we should wait for minimum (pollInterval * 2)
-			By("waiting for policies to be created on cells")
-			time.Sleep(10 * time.Second)
+				// we should wait for minimum (pollInterval * 2)
+				By("waiting for policies to be created on cells")
+				time.Sleep(10 * time.Second)
 
-			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsSmoke))
-			runWithTimeout("check connection success", 5*time.Minute, func() {
-				assertConnectionSucceeds(appSmoke, appInstances)
-			})
+				By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsSmoke))
+				runWithTimeout("check connection success", 5*time.Minute, func() {
+					assertConnectionSucceeds(appSmoke, appInstances)
+				})
 
-			By("deleting policies")
-			deleteAllPolicies(appProxy, appsSmoke, ports, cfCli)
+				By("deleting policies")
+				deleteAllPolicies(appProxy, appsSmoke, ports, cfCli)
 
-			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsSmoke))
-			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
-				assertConnectionFails(appSmoke, appInstances)
-			})
+				By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsSmoke))
+				runWithTimeout("check connection failures, again", 5*time.Minute, func() {
+					assertConnectionFails(appSmoke, appInstances)
+				})
 
-			close(done)
-		}, 30*60 /* <-- overall spec timeout in seconds */)
+				close(done)
+			}()
+			Eventually(done, timeout).Should(BeClosed())
+		})
 	})
 })
 

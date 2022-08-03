@@ -67,78 +67,83 @@ var _ = Describe("how the container network performs at scale", func() {
 			}
 		})
 		runScalingTest := func() {
-			It("allows the user to configure policies", func(done Done) {
-				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps listening on %d ports", ts(), testConfig.ProxyApplications, testConfig.Applications, len(ports)))
-				appIPs := getAppIPs(registryApp, tickApps)
-				conns := connections(proxyApps, appIPs, ports)
+			It("allows the user to configure policies", func() {
+				done := make(chan interface{})
+				timeout := 30 * 60
+				go func() {
+					By(fmt.Sprintf("%s testing with %d source apps and %d destination apps listening on %d ports", ts(), testConfig.ProxyApplications, testConfig.Applications, len(ports)))
+					appIPs := getAppIPs(registryApp, tickApps)
+					conns := connections(proxyApps, appIPs, ports)
 
-				sample := sampleConnections(conns, testConfig.SamplePercent)
+					sample := sampleConnections(conns, testConfig.SamplePercent)
 
-				beforeCreatePolicies := make(chan string, len(sample))
-				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
-				runWithTimeout("check connection failures", Timeout_Check, func() {
-					assertConnectionFails(sample, testConfig.ProxyInstances, beforeCreatePolicies)
-				})
-				close(beforeCreatePolicies)
+					beforeCreatePolicies := make(chan string, len(sample))
+					By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
+					runWithTimeout("check connection failures", Timeout_Check, func() {
+						assertConnectionFails(sample, testConfig.ProxyInstances, beforeCreatePolicies)
+					})
+					close(beforeCreatePolicies)
 
-				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-				policies := getPolicies(proxyApps, tickApps, ports)
-				Expect(policyClient.AddPoliciesV0(getToken(), policies)).To(Succeed())
+					By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
+					policies := getPolicies(proxyApps, tickApps, ports)
+					Expect(policyClient.AddPoliciesV0(getToken(), policies)).To(Succeed())
 
-				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
-				time.Sleep(policyUpdateWaitTime)
+					By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
+					time.Sleep(policyUpdateWaitTime)
 
-				sample = sampleConnections(conns, testConfig.SamplePercent)
+					sample = sampleConnections(conns, testConfig.SamplePercent)
 
-				afterCreatePolicies := make(chan string, len(sample))
-				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d connections", ts(), len(sample), len(conns)))
-				runWithTimeout("check connection success", Timeout_Check, func() {
-					assertConnectionSucceeds(sample, testConfig.ProxyInstances, afterCreatePolicies)
-				})
-				close(afterCreatePolicies)
+					afterCreatePolicies := make(chan string, len(sample))
+					By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d connections", ts(), len(sample), len(conns)))
+					runWithTimeout("check connection success", Timeout_Check, func() {
+						assertConnectionSucceeds(sample, testConfig.ProxyInstances, afterCreatePolicies)
+					})
+					close(afterCreatePolicies)
 
-				By(fmt.Sprintf("%s sleeping for 30 seconds while policies exist", ts()))
-				time.Sleep(30 * time.Second)
+					By(fmt.Sprintf("%s sleeping for 30 seconds while policies exist", ts()))
+					time.Sleep(30 * time.Second)
 
-				By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-				Expect(policyClient.DeletePoliciesV0(getToken(), policies)).To(Succeed())
+					By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
+					Expect(policyClient.DeletePoliciesV0(getToken(), policies)).To(Succeed())
 
-				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
-				time.Sleep(policyUpdateWaitTime)
+					By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
+					time.Sleep(policyUpdateWaitTime)
 
-				sample = sampleConnections(conns, testConfig.SamplePercent)
+					sample = sampleConnections(conns, testConfig.SamplePercent)
 
-				afterDeletePolicies := make(chan string, len(sample))
-				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
-				runWithTimeout("check connection failures, again", Timeout_Check, func() {
-					assertConnectionFails(sample, testConfig.ProxyInstances, afterDeletePolicies)
-				})
-				close(afterDeletePolicies)
+					afterDeletePolicies := make(chan string, len(sample))
+					By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
+					runWithTimeout("check connection failures, again", Timeout_Check, func() {
+						assertConnectionFails(sample, testConfig.ProxyInstances, afterDeletePolicies)
+					})
+					close(afterDeletePolicies)
 
-				var beforeCreateCount, afterCreateCount, afterDeleteCount int
-				for failure := range beforeCreatePolicies {
-					beforeCreateCount++
-					fmt.Printf("before creating policies failure: %s\n", failure)
-				}
-				for failure := range afterCreatePolicies {
-					afterCreateCount++
-					fmt.Printf("after creating policies failure: %s\n", failure)
-				}
-				for failure := range afterDeletePolicies {
-					afterDeleteCount++
-					fmt.Printf("after deleting policies failure: %s\n", failure)
-				}
+					var beforeCreateCount, afterCreateCount, afterDeleteCount int
+					for failure := range beforeCreatePolicies {
+						beforeCreateCount++
+						fmt.Printf("before creating policies failure: %s\n", failure)
+					}
+					for failure := range afterCreatePolicies {
+						afterCreateCount++
+						fmt.Printf("after creating policies failure: %s\n", failure)
+					}
+					for failure := range afterDeletePolicies {
+						afterDeleteCount++
+						fmt.Printf("after deleting policies failure: %s\n", failure)
+					}
 
-				fmt.Printf("before creating policies failure count: %d\n", beforeCreateCount)
-				fmt.Printf("after creating policies failure count: %d\n", afterCreateCount)
-				fmt.Printf("after deleting policies failure count: %d\n", afterDeleteCount)
+					fmt.Printf("before creating policies failure count: %d\n", beforeCreateCount)
+					fmt.Printf("after creating policies failure count: %d\n", afterCreateCount)
+					fmt.Printf("after deleting policies failure count: %d\n", afterDeleteCount)
 
-				Expect(beforeCreateCount).To(Equal(0))
-				Expect(afterCreateCount).To(Equal(0))
-				Expect(afterDeleteCount).To(Equal(0))
+					Expect(beforeCreateCount).To(Equal(0))
+					Expect(afterCreateCount).To(Equal(0))
+					Expect(afterDeleteCount).To(Equal(0))
 
-				close(done)
-			}, 30*60) // 30 minutes
+					close(done)
+				}()
+				Eventually(done, timeout).Should(BeClosed())
+			})
 		}
 		Context("when one client with many backends", func() {
 			BeforeEach(func() {

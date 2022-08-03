@@ -56,33 +56,38 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		It("allows tasks to talk to app instances", func(done Done) {
-			By("getting the overlay ip of proxy2")
-			cmd := exec.Command("curl", "--fail", proxy2+"."+domain)
-			sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(sess, 5*time.Second).Should(gexec.Exit(0))
-			var proxy2Response ProxyResponse
-			Expect(json.Unmarshal(sess.Out.Contents(), &proxy2Response)).To(Succeed())
-			containerIP := getContainerIP(proxy2Response.ListenAddresses)
+		It("allows tasks to talk to app instances", func() {
+			done := make(chan interface{})
+			timeout := 30 * 60
+			go func() {
+				By("getting the overlay ip of proxy2")
+				cmd := exec.Command("curl", "--fail", proxy2+"."+domain)
+				sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(sess, 5*time.Second).Should(gexec.Exit(0))
+				var proxy2Response ProxyResponse
+				Expect(json.Unmarshal(sess.Out.Contents(), &proxy2Response)).To(Succeed())
+				containerIP := getContainerIP(proxy2Response.ListenAddresses)
 
-			By("Checking that the task associated with proxy1 can connect to proxy2")
-			commandToRun := `
-			while true; do
-				if curl --fail "` + containerIP + `:` + strconv.Itoa(proxy2Response.Port) + `" ; then
-					exit 0
-				fi
-			done;
-			exit 1
-			`
-			Expect(cfCLI.RunTask(proxy1, commandToRun)).To(Succeed())
+				By("Checking that the task associated with proxy1 can connect to proxy2")
+				commandToRun := `
+				while true; do
+					if curl --fail "` + containerIP + `:` + strconv.Itoa(proxy2Response.Port) + `" ; then
+						exit 0
+					fi
+				done;
+				exit 1
+				`
+				Expect(cfCLI.RunTask(proxy1, commandToRun)).To(Succeed())
 
-			Eventually(func() *gbytes.Buffer {
-				return cf.Cf("tasks", proxy1).Wait(10 * time.Second).Out
-			}, Timeout_Task_Curl).Should(gbytes.Say("SUCCEEDED"))
+				Eventually(func() *gbytes.Buffer {
+					return cf.Cf("tasks", proxy1).Wait(10 * time.Second).Out
+				}, Timeout_Task_Curl).Should(gbytes.Say("SUCCEEDED"))
 
-			close(done)
-		}, 30*60 /* <-- overall spec timeout in seconds */)
+				close(done)
+			}()
+			Eventually(done, timeout).Should(BeClosed())
+		})
 	})
 })
 

@@ -95,23 +95,28 @@ var _ = Describe("Timeout", func() {
 		})
 
 		itTimesOut := func(description string, endpointMethod string, endpointPath string, bodyString string, failureJSON string) {
-			It(fmt.Sprintf("times out %s", description), func(done Done) {
-				var body io.Reader
-				if bodyString != "" {
-					body = strings.NewReader(bodyString)
-				}
-				resp := helpers.MakeAndDoRequest(
-					endpointMethod,
-					fmt.Sprintf("%s/%s", policyServerURL, endpointPath),
-					headers,
-					body,
-				)
-				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
-				Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(failureJSON))
-
+			done := make(chan interface{})
+			timeout := float64(testTimeoutInSeconds)
+			defer GinkgoRecover()
+			go func() {
+				It(fmt.Sprintf("times out %s", description), func() {
+					var body io.Reader
+					if bodyString != "" {
+						body = strings.NewReader(bodyString)
+					}
+					resp := helpers.MakeAndDoRequest(
+						endpointMethod,
+						fmt.Sprintf("%s/%s", policyServerURL, endpointPath),
+						headers,
+						body,
+					)
+					defer resp.Body.Close()
+					Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+					Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(failureJSON))
+				})
 				close(done)
-			}, float64(testTimeoutInSeconds))
+			}()
+			Eventually(done, timeout).Should(BeClosed())
 		}
 
 		// v1
