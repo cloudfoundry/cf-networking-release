@@ -9,7 +9,7 @@
 %>
 
 iptables_command="iptables"
-if command -v iptables-legacy &> /dev/null
+if ! command -v iptables_legacy &> /dev/null
 then
   iptables_command="iptables-legacy"
 fi
