@@ -41,19 +41,35 @@ var _ = Describe("GroupTable", func() {
 	})
 
 	Describe("Create", func() {
+		var (
+			recordFoundScanner *fakeScanner
+			errorScanner       *fakeScanner
+
+			firstBlankRowScanner *fakeScanner
+		)
+
+		BeforeEach(func() {
+			recordFoundScanner = &fakeScanner{indexStub: 1}
+			errorScanner = &fakeScanner{indexStub: 1, errStub: errors.New("some error")}
+
+			firstBlankRowScanner = &fakeScanner{indexStub: 5}
+
+			fakeTx.QueryRowReturns(recordFoundScanner)
+		})
+
 		Context("when there already is a row with the provided guid", func() {
 			It("returns the id of the row and no error", func() {
-				fakeTx.QueryRowReturns(&fakeScanner{indexStub: 1})
-
 				id, err := groupTable.Create(fakeTx, "guid", "app")
 				Expect(id).To(Equal(1))
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("but there is also an error", func() {
-				It("returns -1 and an error", func() {
-					fakeTx.QueryRowReturns(&fakeScanner{indexStub: 1, errStub: errors.New("some error")})
+				BeforeEach(func() {
+					fakeTx.QueryRowReturns(errorScanner)
+				})
 
+				It("returns -1 and an error", func() {
 					id, err := groupTable.Create(fakeTx, "guid", "app")
 					Expect(id).To(Equal(-1))
 					Expect(err).To(HaveOccurred())
@@ -62,13 +78,19 @@ var _ = Describe("GroupTable", func() {
 		})
 
 		Context("when there is not a row with the provided guid", func() {
-			It("finds a blank row and populates it with the given guid", func() {
-				notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
-				firstBlankRowScanner := &fakeScanner{indexStub: 5}
+			var (
+				notFoundScanner *fakeScanner
+			)
+
+			BeforeEach(func() {
+				notFoundScanner = &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
+
 				fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
 				fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
 				fakeTx.ExecReturnsOnCall(0, nil, nil)
+			})
 
+			It("finds a blank row and populates it with the given guid", func() {
 				id, err := groupTable.Create(fakeTx, "guid", "app")
 				Expect(id).To(Equal(5))
 				Expect(err).NotTo(HaveOccurred())
@@ -102,13 +124,18 @@ var _ = Describe("GroupTable", func() {
 				Expect(savedID).To(Equal(5))
 			})
 
-			Context("when there are no empty rows that can be populated", func() {
-				It("returns -1 and an error", func() {
-					notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
-					firstBlankRowScanner := &fakeScanner{indexStub: 5, errStub: errors.New("no blank rows")}
-					fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
-					fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
+			Context("and there are no empty rows that can be populated", func() {
+				var (
+					noBlankRowScanner *fakeScanner
+				)
 
+				BeforeEach(func() {
+					noBlankRowScanner = &fakeScanner{indexStub: 5, errStub: errors.New("no blank rows")}
+					fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
+					fakeTx.QueryRowReturnsOnCall(1, noBlankRowScanner)
+				})
+
+				It("returns -1 and an error", func() {
 					id, err := groupTable.Create(fakeTx, "guid", "app")
 					Expect(id).To(Equal(-1))
 					Expect(err).To(HaveOccurred())
@@ -117,32 +144,30 @@ var _ = Describe("GroupTable", func() {
 				})
 			})
 
-			Context("when there is an error updating the row", func() {
-				It("returns -1 and an error", func() {
-					notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
-					firstBlankRowScanner := &fakeScanner{indexStub: 5}
-					fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
-					fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
+			Context("and there is an error updating the row", func() {
+				BeforeEach(func() {
 					fakeTx.ExecReturnsOnCall(0, nil, errors.New("some error"))
+				})
 
+				It("returns -1 and an error", func() {
 					id, err := groupTable.Create(fakeTx, "guid", "app")
 					Expect(id).To(Equal(-1))
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("some error"))
 				})
 
-				Context("when the error is for a duplicate entry", func() {
-					Context("and the driver is postgres", func() {
-						It("does not update the row, returns the original row, and does not error", func() {
-							notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
-							firstBlankRowScanner := &fakeScanner{indexStub: 5}
-							foundRowScanner := &fakeScanner{indexStub: 1}
-							fakeTx.DriverNameReturns("postgres")
-							fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
-							fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
-							fakeTx.QueryRowReturnsOnCall(2, foundRowScanner)
-							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Postgres error 23505: duplicate entry"))
+				Context("but the error is for a duplicate entry", func() {
+					BeforeEach(func() {
+						fakeTx.QueryRowReturnsOnCall(2, recordFoundScanner)
+					})
 
+					Context("and the driver is postgres", func() {
+						BeforeEach(func() {
+							fakeTx.DriverNameReturns("postgres")
+							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Postgres error 23505: duplicate entry"))
+						})
+
+						It("does not update the row, returns the original row, and does not error", func() {
 							id, err := groupTable.Create(fakeTx, "guid", "app")
 							Expect(id).To(Equal(1))
 							Expect(err).ToNot(HaveOccurred())
@@ -150,16 +175,12 @@ var _ = Describe("GroupTable", func() {
 					})
 
 					Context("and the driver is mysql", func() {
-						It("does not update the row, returns the original row, and does not error", func() {
-							notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
-							firstBlankRowScanner := &fakeScanner{indexStub: 5}
-							foundRowScanner := &fakeScanner{indexStub: 1}
+						BeforeEach(func() {
 							fakeTx.DriverNameReturns("mysql")
-							fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
-							fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
-							fakeTx.QueryRowReturnsOnCall(2, foundRowScanner)
 							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Mysql error 1062: duplicate entry"))
+						})
 
+						It("does not update the row, returns the original row, and does not error", func() {
 							id, err := groupTable.Create(fakeTx, "guid", "app")
 							Expect(id).To(Equal(1))
 							Expect(err).ToNot(HaveOccurred())
