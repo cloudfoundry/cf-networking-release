@@ -130,6 +130,42 @@ var _ = Describe("GroupTable", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("some error"))
 				})
+
+				Context("when the error is for a duplicate entry", func() {
+					Context("and the driver is postgres", func() {
+						It("does not update the row, returns the original row, and does not error", func() {
+							notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
+							firstBlankRowScanner := &fakeScanner{indexStub: 5}
+							foundRowScanner := &fakeScanner{indexStub: 1}
+							fakeTx.DriverNameReturns("postgres")
+							fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
+							fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
+							fakeTx.QueryRowReturnsOnCall(2, foundRowScanner)
+							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Postgres error 23505: duplicate entry"))
+
+							id, err := groupTable.Create(fakeTx, "guid", "app")
+							Expect(id).To(Equal(1))
+							Expect(err).ToNot(HaveOccurred())
+						})
+					})
+
+					Context("and the driver is mysql", func() {
+						It("does not update the row, returns the original row, and does not error", func() {
+							notFoundScanner := &fakeScanner{indexStub: -1, errStub: sql.ErrNoRows}
+							firstBlankRowScanner := &fakeScanner{indexStub: 5}
+							foundRowScanner := &fakeScanner{indexStub: 1}
+							fakeTx.DriverNameReturns("mysql")
+							fakeTx.QueryRowReturnsOnCall(0, notFoundScanner)
+							fakeTx.QueryRowReturnsOnCall(1, firstBlankRowScanner)
+							fakeTx.QueryRowReturnsOnCall(2, foundRowScanner)
+							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Mysql error 1062: duplicate entry"))
+
+							id, err := groupTable.Create(fakeTx, "guid", "app")
+							Expect(id).To(Equal(1))
+							Expect(err).ToNot(HaveOccurred())
+						})
+					})
+				})
 			})
 		})
 	})

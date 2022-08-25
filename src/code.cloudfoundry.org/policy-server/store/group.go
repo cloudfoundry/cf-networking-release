@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
@@ -27,6 +28,18 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 			} else {
 				err = g.updateRow(tx, id, guid, groupType)
 				if err != nil {
+					duplicateErrorCode := "23505" // postgres
+
+					if tx.DriverName() == "mysql" {
+						duplicateErrorCode = "1062"
+					}
+
+					if strings.Contains(err.Error(), duplicateErrorCode) {
+						// this is at the app level and is safe to ignore
+						id, _ = g.GetID(tx, guid)
+
+						return id, nil
+					}
 					return -1, err
 				}
 				return id, nil
