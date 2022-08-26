@@ -8,6 +8,9 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
+const mysqlErrorCode = "1062"
+const postgresErrorCode = "23505"
+
 //counterfeiter:generate -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
 	Create(db.Transaction, string, string) (int, error)
@@ -20,38 +23,34 @@ type GroupTable struct {
 
 func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, error) {
 	id, err := g.findIDByGuidAndType(tx, guid, groupType)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			id, err = g.firstBlankRow(tx)
-			if err != nil {
-				return -1, fmt.Errorf("failed to find available tag: %s", err.Error())
-			} else {
-				err = g.updateRow(tx, id, guid, groupType)
-				if err != nil {
-					duplicateErrorCode := "23505" // postgres
+	if err == nil {
+		return id, nil
+	}
 
-					if tx.DriverName() == "mysql" {
-						duplicateErrorCode = "1062"
-					}
-
-					if strings.Contains(err.Error(), duplicateErrorCode) {
-						// this is at the app level and is safe to ignore
-						id, returnedGroupType, _ := g.GetIDAndGroupType(tx, guid)
-
-						if returnedGroupType == groupType {
-							return id, nil
-						}
-
-						return -1, err
-					}
-					return -1, err
-				}
-				return id, nil
-			}
-		}
+	if err != sql.ErrNoRows {
 		return -1, err
 	}
-	return id, nil
+
+	id, err = g.firstBlankRow(tx)
+	if err != nil {
+		return -1, fmt.Errorf("failed to find available tag: %s", err.Error())
+	}
+
+	err = g.updateRow(tx, id, guid, groupType)
+	if err == nil {
+		return id, nil
+	}
+
+	id, returnedGroupType, _ := g.GetIDAndGroupType(tx, guid)
+	if isDuplicateError(err) && returnedGroupType == groupType {
+		return id, nil
+	}
+
+	return -1, err
+}
+
+func isDuplicateError(err error) bool {
+	return strings.Contains(err.Error(), mysqlErrorCode) || strings.Contains(err.Error(), postgresErrorCode)
 }
 
 func (g *GroupTable) findIDByGuidAndType(tx db.Transaction, guid, groupType string) (int, error) {
