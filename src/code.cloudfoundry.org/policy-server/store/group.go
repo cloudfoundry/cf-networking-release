@@ -22,31 +22,37 @@ type GroupTable struct {
 }
 
 func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, error) {
-	id, err := g.findIDByGuidAndType(tx, guid, groupType)
-	if err == nil {
+	id, findErr := g.findIDByGuidAndType(tx, guid, groupType)
+	if findErr == nil {
 		return id, nil
 	}
 
-	if err != sql.ErrNoRows {
-		return -1, err
+	if findErr != sql.ErrNoRows {
+		return -1, findErr
 	}
 
-	id, err = g.firstBlankRow(tx)
-	if err != nil {
-		return -1, fmt.Errorf("failed to find available tag: %s", err.Error())
+	id, blankRowErr := g.firstBlankRow(tx)
+	if blankRowErr != nil {
+		return -1, fmt.Errorf("failed to find available tag: %s", blankRowErr.Error())
 	}
 
-	err = g.updateRow(tx, id, guid, groupType)
-	if err == nil {
+	updateErr := g.updateRow(tx, id, guid, groupType)
+	if updateErr == nil {
 		return id, nil
 	}
 
-	id, returnedGroupType, _ := g.GetIDAndGroupType(tx, guid)
-	if isDuplicateError(err) && returnedGroupType == groupType {
-		return id, nil
+	if isDuplicateError(updateErr) {
+		id, returnedGroupType, getGroupTypeErr := g.GetIDAndGroupType(tx, guid)
+		if getGroupTypeErr != nil {
+			return -1, getGroupTypeErr
+		}
+
+		if returnedGroupType == groupType {
+			return id, nil
+		}
 	}
 
-	return -1, err
+	return -1, updateErr
 }
 
 func isDuplicateError(err error) bool {
