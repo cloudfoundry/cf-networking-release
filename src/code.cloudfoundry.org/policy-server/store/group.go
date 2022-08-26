@@ -19,7 +19,7 @@ type GroupTable struct {
 }
 
 func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, error) {
-	id, err := g.findRowByGUID(tx, guid, groupType)
+	id, err := g.findIDByGuidAndType(tx, guid, groupType)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			id, err = g.firstBlankRow(tx)
@@ -36,9 +36,13 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 
 					if strings.Contains(err.Error(), duplicateErrorCode) {
 						// this is at the app level and is safe to ignore
-						id, _ = g.GetID(tx, guid)
+						id, returnedGroupType, _ := g.GetIDAndGroupType(tx, guid)
 
-						return id, nil
+						if returnedGroupType == groupType {
+							return id, nil
+						}
+
+						return -1, err
 					}
 					return -1, err
 				}
@@ -50,7 +54,7 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 	return id, nil
 }
 
-func (g *GroupTable) findRowByGUID(tx db.Transaction, guid, groupType string) (int, error) {
+func (g *GroupTable) findIDByGuidAndType(tx db.Transaction, guid, groupType string) (int, error) {
 	var id int
 	err := tx.QueryRow(
 		tx.Rebind(`
@@ -104,4 +108,15 @@ func (g *GroupTable) GetID(tx db.Transaction, guid string) (int, error) {
 	).Scan(&id)
 
 	return id, err
+}
+
+func (g *GroupTable) GetIDAndGroupType(tx db.Transaction, guid string) (int, string, error) {
+	var id int
+	var groupType string
+	err := tx.QueryRow(
+		tx.Rebind(`SELECT id, type FROM "groups" WHERE guid = ?`),
+		guid,
+	).Scan(&id, &groupType)
+
+	return id, groupType, err
 }
