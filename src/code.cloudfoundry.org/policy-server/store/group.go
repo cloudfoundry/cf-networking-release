@@ -28,7 +28,7 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 	}
 
 	if findErr != sql.ErrNoRows {
-		return -1, findErr
+		return -1, fmt.Errorf("Error searching for ID and type: %s", findErr.Error())
 	}
 
 	id, blankRowErr := g.firstBlankRow(tx)
@@ -44,7 +44,7 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 	if isDuplicateError(updateErr) {
 		id, returnedGroupType, getGroupTypeErr := g.GetIDAndGroupType(tx, guid)
 		if getGroupTypeErr != nil {
-			return -1, getGroupTypeErr
+			return -1, fmt.Errorf("Error checking ID and Group Type match: %s", getGroupTypeErr.Error())
 		}
 
 		if returnedGroupType == groupType {
@@ -52,7 +52,7 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 		}
 	}
 
-	return -1, updateErr
+	return -1, fmt.Errorf("Error updating row: %s", updateErr.Error())
 }
 
 func isDuplicateError(err error) bool {
