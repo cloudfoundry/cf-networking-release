@@ -180,55 +180,107 @@ var _ = Describe("GroupTable", func() {
 						fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
 					})
 
-					Context("and the duplicate row's groupType matches", func() {
-						Context("and the driver is postgres", func() {
+					Context("and the driver is postgres", func() {
+						BeforeEach(func() {
+							fakeTx.DriverNameReturns("postgres")
+							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Postgres error 23505: duplicate entry"))
+						})
+
+						It("does not update the row, returns the original row, and does not error", func() {
+							id, err := groupTable.Create(fakeTx, "guid", "app")
+							Expect(id).To(Equal(1))
+							Expect(err).ToNot(HaveOccurred())
+						})
+
+						Context("and the duplicate row's groupType doesn't match", func() {
 							BeforeEach(func() {
-								fakeTx.DriverNameReturns("postgres")
-								fakeTx.ExecReturnsOnCall(0, nil, errors.New("Postgres error 23505: duplicate entry"))
+								idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow"}
+								fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
 							})
 
-							It("does not update the row, returns the original row, and does not error", func() {
+							It("returns an error", func() {
 								id, err := groupTable.Create(fakeTx, "guid", "app")
-								Expect(id).To(Equal(1))
-								Expect(err).ToNot(HaveOccurred())
-							})
-
-							Context("and the duplicate row's groupType doesn't match", func() {
-								BeforeEach(func() {
-									idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow"}
-									fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
-								})
-
-								It("returns an error", func() {
-									id, err := groupTable.Create(fakeTx, "guid", "app")
-									Expect(id).To(Equal(-1))
-									Expect(err).To(HaveOccurred())
-								})
+								Expect(id).To(Equal(-1))
+								Expect(err).To(HaveOccurred())
 							})
 						})
 
-						Context("and the driver is mysql", func() {
+						Context("and fetching the groupType fails", func() {
 							BeforeEach(func() {
-								fakeTx.DriverNameReturns("mysql")
-								fakeTx.ExecReturnsOnCall(0, nil, errors.New("Mysql error 1062: duplicate entry"))
+								idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow", errStub: errors.New("some error")}
+								fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
 							})
 
-							It("does not update the row, returns the original row, and does not error", func() {
+							It("returns an error", func() {
 								id, err := groupTable.Create(fakeTx, "guid", "app")
-								Expect(id).To(Equal(1))
-								Expect(err).ToNot(HaveOccurred())
+								Expect(id).To(Equal(-1))
+								Expect(err).To(HaveOccurred())
+								Expect(err.Error()).To(ContainSubstring("some error"))
 							})
 
-							Context("and the duplicate row's groupType doesn't match", func() {
+							Context("due to an ErrNoRows error", func() {
 								BeforeEach(func() {
-									idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow"}
+									idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow", errStub: sql.ErrNoRows}
 									fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
 								})
 
-								It("returns an error", func() {
+								It("returns the id", func() {
 									id, err := groupTable.Create(fakeTx, "guid", "app")
-									Expect(id).To(Equal(-1))
-									Expect(err).To(HaveOccurred())
+									Expect(id).To(Equal(1))
+									Expect(err).NotTo(HaveOccurred())
+								})
+							})
+						})
+					})
+
+					Context("and the driver is mysql", func() {
+						BeforeEach(func() {
+							fakeTx.DriverNameReturns("mysql")
+							fakeTx.ExecReturnsOnCall(0, nil, errors.New("Mysql error 1062: duplicate entry"))
+						})
+
+						It("does not update the row, returns the original row, and does not error", func() {
+							id, err := groupTable.Create(fakeTx, "guid", "app")
+							Expect(id).To(Equal(1))
+							Expect(err).ToNot(HaveOccurred())
+						})
+
+						Context("and the duplicate row's groupType doesn't match", func() {
+							BeforeEach(func() {
+								idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow"}
+								fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
+							})
+
+							It("returns an error", func() {
+								id, err := groupTable.Create(fakeTx, "guid", "app")
+								Expect(id).To(Equal(-1))
+								Expect(err).To(HaveOccurred())
+							})
+						})
+
+						Context("and fetching the groupType fails", func() {
+							BeforeEach(func() {
+								idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow", errStub: errors.New("some error")}
+								fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
+							})
+
+							It("returns an error", func() {
+								id, err := groupTable.Create(fakeTx, "guid", "app")
+								Expect(id).To(Equal(-1))
+								Expect(err).To(HaveOccurred())
+								Expect(err.Error()).To(ContainSubstring("some error"))
+							})
+
+							Context("due to an ErrNoRows error", func() {
+								BeforeEach(func() {
+									idAndTypeRecordScanner = &fakeScanner{idStub: 1, typeStub: "meow", errStub: sql.ErrNoRows}
+									fakeTx.QueryRowReturnsOnCall(2, idAndTypeRecordScanner)
+								})
+
+								It("returns the id", func() {
+									id, err := groupTable.Create(fakeTx, "guid", "app")
+									Expect(id).To(Equal(1))
+									Expect(err).NotTo(HaveOccurred())
 								})
 							})
 						})

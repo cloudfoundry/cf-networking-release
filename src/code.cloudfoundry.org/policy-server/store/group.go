@@ -43,11 +43,11 @@ func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, err
 
 	if isDuplicateError(updateErr) {
 		id, returnedGroupType, getGroupTypeErr := g.GetIDAndGroupType(tx, guid)
-		if getGroupTypeErr != nil {
+		if getGroupTypeErr != nil && getGroupTypeErr != sql.ErrNoRows {
 			return -1, fmt.Errorf("Error checking ID and Group Type match: %s", getGroupTypeErr.Error())
 		}
 
-		if returnedGroupType == groupType {
+		if returnedGroupType == groupType || getGroupTypeErr == sql.ErrNoRows {
 			return id, nil
 		}
 	}
