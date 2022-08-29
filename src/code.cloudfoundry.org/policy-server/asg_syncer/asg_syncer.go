@@ -106,7 +106,7 @@ func (a *ASGSyncer) Poll() error {
 		}
 		return err
 	}
-	a.Logger.Debug("successfully-fetched-security-groups")
+	a.Logger.Info("successfully-fetched-security-groups", lager.Data{"count": len(ccSGs)})
 
 	retrieveEndTime := a.Clock.Now()
 	a.MetricsSender.SendDuration(metricSecurityGroupsRetrievalFromCCDuration, retrieveEndTime.Sub(retrieveStartTime))
