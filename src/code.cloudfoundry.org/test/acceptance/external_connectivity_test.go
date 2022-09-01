@@ -118,11 +118,13 @@ var _ = Describe("external connectivity", func() {
 			Expect(cfCLI.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
 			Expect(cfCLI.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
 
-			By("restarting the app")
-			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			if !testConfig.DynamicASGsEnabled {
+				By("if dynamic asgs are not enabled, restarting the app is required")
+				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			}
 
 			By("checking that the app can use dns and http to reach the internet")
-			Eventually(canProxy, "10s", "1s").Should(Succeed())
+			Eventually(canProxy, "180s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
 
 			By("checking that the app cannot ping the internet (second time)")
@@ -131,11 +133,13 @@ var _ = Describe("external connectivity", func() {
 			By("removing the tcp security groups")
 			Expect(cfCLI.UnbindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
 
-			By("restarting the app")
-			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			if !testConfig.DynamicASGsEnabled {
+				By("restarting the app")
+				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			}
 
 			By("checking that the app cannot use http to reach the internet")
-			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+			Consistently(cannotProxy, "180s", "0.5s").Should(Succeed())
 
 			close(done)
 		}, 180 /* <-- overall spec timeout in seconds */)
@@ -151,11 +155,13 @@ var _ = Describe("external connectivity", func() {
 			By("creating and binding an icmp security group")
 			Expect(cfCLI.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
 
-			By("restarting the app")
-			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			if !testConfig.DynamicASGsEnabled {
+				By("restarting the app")
+				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			}
 
 			By("checking that the app can ping the internet")
-			Eventually(canPing, "10s", "1s").Should(Succeed())
+			Eventually(canPing, "180s", "1s").Should(Succeed())
 			Consistently(canPing, "2s", "0.5s").Should(Succeed())
 
 			close(done)
