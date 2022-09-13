@@ -80,7 +80,7 @@ var _ = Describe("CniController", func() {
 			Expect(result).To(BeIdenticalTo(expectedResult))
 
 			Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(1))
-			netc, runc := fakeCNILibrary.AddNetworkListArgsForCall(0)
+			_, netc, runc := fakeCNILibrary.AddNetworkListArgsForCall(0)
 			Expect(runc.ContainerID).To(Equal("some-handle"))
 			Expect(netc.Name).To(Equal("net-list-name"))
 			Expect(netc.CNIVersion).To(Equal("some-version"))
@@ -113,7 +113,7 @@ var _ = Describe("CniController", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(1))
-				netc, _ := fakeCNILibrary.AddNetworkListArgsForCall(0)
+				_, netc, _ := fakeCNILibrary.AddNetworkListArgsForCall(0)
 				Expect(netc.Plugins[0].Bytes).To(MatchJSON(expectedNetConfBytes))
 			})
 		})
@@ -134,7 +134,7 @@ var _ = Describe("CniController", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeCNILibrary.DelNetworkListCallCount()).To(Equal(1))
-			netc, runc := fakeCNILibrary.DelNetworkListArgsForCall(0)
+			_, netc, runc := fakeCNILibrary.DelNetworkListArgsForCall(0)
 			Expect(runc.ContainerID).To(Equal("some-handle"))
 			Expect(netc.Plugins).To(HaveLen(1))
 			Expect(netc.Plugins[0].Network.Type).To(Equal("some-plugin"))

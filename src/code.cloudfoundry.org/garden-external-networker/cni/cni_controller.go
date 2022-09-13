@@ -1,6 +1,7 @@
 package cni
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/containernetworking/cni/libcni"
@@ -47,7 +48,7 @@ func (c *CNIController) Up(namespacePath, handle string, metadata map[string]int
 		c.NetworkConfigList.Plugins[i] = networkConfig
 	}
 
-	result, err = c.CNIConfig.AddNetworkList(c.NetworkConfigList, runtimeConfig)
+	result, err = c.CNIConfig.AddNetworkList(context.TODO(), c.NetworkConfigList, runtimeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("add network list failed: %s", err)
 	}
@@ -64,7 +65,7 @@ func (c *CNIController) Down(namespacePath, handle string) error {
 		IfName:      "eth0",
 	}
 
-	err = c.CNIConfig.DelNetworkList(c.NetworkConfigList, runtimeConfig)
+	err = c.CNIConfig.DelNetworkList(context.TODO(), c.NetworkConfigList, runtimeConfig)
 
 	if err != nil {
 		return fmt.Errorf("del network failed: %s", err)

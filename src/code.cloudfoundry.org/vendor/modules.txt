@@ -140,17 +140,23 @@ github.com/cloudfoundry/gosteno/syslog
 github.com/cloudfoundry/sonde-go/events
 # github.com/cockroachdb/apd v1.1.0
 ## explicit
-# github.com/containernetworking/cni v1.0.0 => github.com/containernetworking/cni v0.6.0
-## explicit
+# github.com/containernetworking/cni v1.0.1 => github.com/containernetworking/cni v1.1.2
+## explicit; go 1.14
 github.com/containernetworking/cni/libcni
 github.com/containernetworking/cni/pkg/invoke
+github.com/containernetworking/cni/pkg/skel
 github.com/containernetworking/cni/pkg/types
 github.com/containernetworking/cni/pkg/types/020
-github.com/containernetworking/cni/pkg/types/current
+github.com/containernetworking/cni/pkg/types/040
+github.com/containernetworking/cni/pkg/types/100
+github.com/containernetworking/cni/pkg/types/create
+github.com/containernetworking/cni/pkg/types/internal
+github.com/containernetworking/cni/pkg/utils
 github.com/containernetworking/cni/pkg/version
-# github.com/containernetworking/plugins v1.0.0 => github.com/containernetworking/plugins v0.6.0
-## explicit
+# github.com/containernetworking/plugins v1.0.0 => github.com/containernetworking/plugins v1.1.1
+## explicit; go 1.17
 github.com/containernetworking/plugins/pkg/ns
+github.com/containernetworking/plugins/pkg/testutils
 # github.com/coreos/go-iptables v0.6.0
 ## explicit; go 1.16
 github.com/coreos/go-iptables/iptables
@@ -506,8 +512,8 @@ gopkg.in/validator.v2
 ## explicit; go 1.15
 gopkg.in/yaml.v2
 # github.com/nats-io/go-nats => github.com/nats-io/go-nats v1.5.1-0.20180331191609-247b2a84d8d0
-# github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
-# github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
+# github.com/containernetworking/cni => github.com/containernetworking/cni v1.1.2
+# github.com/containernetworking/plugins => github.com/containernetworking/plugins v1.1.1
 # github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 # github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
 # github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
