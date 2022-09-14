@@ -25,7 +25,11 @@ files:
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/020/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/current/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/040/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/100/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/create/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/internal/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/utils/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/version/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/plugins/pkg/ns/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
