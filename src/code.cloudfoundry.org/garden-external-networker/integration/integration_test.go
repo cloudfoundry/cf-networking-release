@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/containernetworking/plugins/pkg/ns"
+	nstestutils "github.com/containernetworking/plugins/pkg/testutils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -432,7 +433,7 @@ func runAndWait(cmd *exec.Cmd) *gexec.Session {
 }
 
 func createNetworkNamespace() ns.NetNS {
-	networkNS, err := ns.NewNS()
+	networkNS, err := nstestutils.NewNS()
 	Expect(err).ToNot(HaveOccurred())
 	return networkNS
 }
