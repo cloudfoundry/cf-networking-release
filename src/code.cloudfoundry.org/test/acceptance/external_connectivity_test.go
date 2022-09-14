@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"code.cloudfoundry.org/lib/testsupport"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -85,17 +86,17 @@ var _ = Describe("external connectivity", func() {
 		return nil
 	}
 
-	canProxy := func() error {
-		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 200, `https://docs\.cloudfoundry\.org`)
-	}
 	isReachable := func() error {
 		return checkRequest(appRoute, 200, `{"ListenAddresses":\[`)
 	}
-	canPing := func() error {
-		return checkRequest(appRoute+"ping/8.8.8.8", 200, "Ping succeeded")
+	canProxy := func() error {
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 200, `https://docs\.cloudfoundry\.org`)
 	}
 	cannotProxy := func() error {
 		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 500, "connection refused|i/o timeout")
+	}
+	canPing := func() error {
+		return checkRequest(appRoute+"ping/8.8.8.8", 200, "Ping succeeded")
 	}
 	cannotPing := func() error {
 		return checkRequest(appRoute+"ping/8.8.8.8", 500, `Ping failed to destination: 8\.8\.8\.8`)
@@ -136,8 +137,9 @@ var _ = Describe("external connectivity", func() {
 			if !testConfig.DynamicASGsEnabled {
 				By("restarting the app")
 				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			} else {
+				time.Sleep(10 * time.Second)
 			}
-
 			By("checking that the app cannot use http to reach the internet")
 			Consistently(cannotProxy, "180s", "0.5s").Should(Succeed())
 
