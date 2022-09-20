@@ -144,7 +144,7 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotProxy, "180s", "0.5s").Should(Succeed())
 
 			close(done)
-		}, 180 /* <-- overall spec timeout in seconds */)
+		}, 600 /* <-- overall spec timeout in seconds */)
 
 		It("allows outbound ICMP only if allowed", func(done Done) {
 			if testConfig.SkipICMPTests {
