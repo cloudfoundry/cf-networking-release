@@ -4,6 +4,8 @@ specificied_package="${1}"
 
 set -e -u
 
+go version # so we see the version tested in CI
+
 SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
 . "${SCRIPT_PATH}/start-db-helper"
 
