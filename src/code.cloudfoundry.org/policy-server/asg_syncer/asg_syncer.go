@@ -64,8 +64,12 @@ func (a *ASGSyncer) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 }
 
+func timeIsInitial(timetamp time.Time) bool {
+	return timetamp.IsZero() || timetamp.UnixNano() == 0
+}
+
 func valueHasNotBeenUpdated(ccTimetamp, localTimestamp time.Time) bool {
-	return !ccTimetamp.IsZero() && !ccTimetamp.After(localTimestamp)
+	return !timeIsInitial(ccTimetamp) && !ccTimetamp.After(localTimestamp)
 }
 
 func (a *ASGSyncer) Poll() error {
@@ -73,7 +77,7 @@ func (a *ASGSyncer) Poll() error {
 	a.Logger.Debug("asg-sync-started")
 	defer a.Logger.Debug("asg-sync-complete")
 
-	if a.lastSyncTime.IsZero() {
+	if timeIsInitial(a.lastSyncTime) {
 		a.Logger.Debug("initializing-lastSyncTime")
 		a.lastSyncTime = a.Clock.Now()
 	}
