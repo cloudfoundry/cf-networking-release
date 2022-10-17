@@ -12,32 +12,24 @@ replace github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.2016
 
 go 1.18
 
-replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
-
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20211221221754-f246cdd508e9
+	code.cloudfoundry.org/bbs v0.0.0-20220928214406-6d44a4df0134
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20211111210832-d3a705b8ebff
 	code.cloudfoundry.org/clock v1.0.0
-	code.cloudfoundry.org/consuladapter v0.0.0-20211122211027-9dbbfa656ee0 // indirect
 	code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20211220190808-bd0d93324d64 // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20211123184609-ead4881606b1 // indirect
 	code.cloudfoundry.org/filelock v0.0.0-20180314203404-13cd41364639
 	code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
 	code.cloudfoundry.org/go-diodes v0.0.0-20220325013804-800fb6f70e2f // indirect
-	code.cloudfoundry.org/inigo v0.0.0-20211021201637-031ac17b0ea6 // indirect
+	code.cloudfoundry.org/inigo v0.0.0-20221017175908-16defe1ae4df // indirect
 	code.cloudfoundry.org/lager v2.0.0+incompatible
-	code.cloudfoundry.org/locket v0.0.0-20220325152040-ad30c800960d
-	code.cloudfoundry.org/rep v0.1441.2 // indirect
-	code.cloudfoundry.org/routing-info v0.0.0-20210811170011-d6736bca3081 // indirect
-	code.cloudfoundry.org/tlsconfig v0.0.0-20211123175040-23cc9f05b6b3
+	code.cloudfoundry.org/locket v0.0.0-20220920165427-933b89909aba
+	code.cloudfoundry.org/tlsconfig v0.0.0-20220621140725-0e6fbd869921
 	example-apps/spammer v0.0.0-00010101000000-000000000000
-	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
-	github.com/cloudfoundry-incubator/bbs v0.0.0-20211221221754-f246cdd508e9 // indirect
 	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
-	github.com/cloudfoundry-incubator/executor v0.0.0-20211222191433-23e011088892 // indirect
 	github.com/cloudfoundry/dropsonde v1.0.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/containernetworking/cni v1.0.1
@@ -47,9 +39,6 @@ require (
 	github.com/go-test/deep v1.0.8 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2
-	github.com/hashicorp/consul v1.11.4 // indirect
-	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/serf v0.9.7 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.5
@@ -65,20 +54,17 @@ require (
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
-	github.com/pivotal-golang/clock v1.0.0 // indirect
-	github.com/pivotal-golang/lager v2.0.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/st3v/glager v0.3.0
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 	github.com/tedsuo/rata v1.0.0
-	github.com/vito/go-sse v1.0.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
-	golang.org/x/net v0.0.0-20220325170049-de3da57026de
-	golang.org/x/sys v0.0.0-20220328115105-d36c6a25d886
-	google.golang.org/genproto v0.0.0-20220324131243-acbaeb5b85eb // indirect
-	google.golang.org/grpc v1.45.0
+	golang.org/x/net v0.0.0-20221017152216-f25eb7ecb193
+	golang.org/x/sys v0.1.0
+	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a // indirect
+	google.golang.org/grpc v1.50.1
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0
 	gopkg.in/yaml.v2 v2.4.0
@@ -87,24 +73,26 @@ require (
 require code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266
 
 require (
-	code.cloudfoundry.org/cfhttp/v2 v2.0.1-0.20210513172332-4c5ee488a657 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry/gosteno v0.0.0-20150423193413-0c8581caea35 // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20171206171820-b33733203bb4 // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20220627221915-ff36de9c3435 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/square/certstrap v1.2.0 // indirect
-	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.0.0-20210106214847-113979e3529a // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/tools v0.1.12 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
