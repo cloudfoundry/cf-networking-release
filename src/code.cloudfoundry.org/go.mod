@@ -14,7 +14,7 @@ go 1.18
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20220928214406-6d44a4df0134
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20211111210832-d3a705b8ebff
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221018152553-fd5c790ce598
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20211220190808-bd0d93324d64 // indirect
@@ -42,14 +42,14 @@ require (
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/lib/pq v1.10.4 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/montanaflynn/stats v0.6.6
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v0.0.0-00010101000000-000000000000
 	github.com/nats-io/nats-top v0.4.0
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.19.0
+	github.com/onsi/gomega v1.22.1
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
@@ -94,6 +94,7 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace example-apps/spammer => ../example-apps/spammer
