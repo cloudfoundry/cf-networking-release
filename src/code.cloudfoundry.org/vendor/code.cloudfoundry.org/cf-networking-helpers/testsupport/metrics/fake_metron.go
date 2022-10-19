@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	"github.com/cloudfoundry/sonde-go/events"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type Event struct {

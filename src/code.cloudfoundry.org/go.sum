@@ -2,8 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 code.cloudfoundry.org/bbs v0.0.0-20220928214406-6d44a4df0134 h1:kxbIohPzSACHrbOzYprom4ylw1EAhwC+GtG4hp2OWtg=
 code.cloudfoundry.org/bbs v0.0.0-20220928214406-6d44a4df0134/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221018152553-fd5c790ce598 h1:VORVElY64MDcqyUvgADIvhAQ+Nj6qG4leT9VDDAigYk=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221018152553-fd5c790ce598/go.mod h1:t5LDEAAHJ96ybr5S4PUa5AAUU1qYxcVEJfJJsYxyWo4=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221019155656-7cc91f4f8f8a h1:1YYZMNoOwKnre3/OIlQDiSdkTIffZ/F/Fzp2IOoKi94=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221019155656-7cc91f4f8f8a/go.mod h1:XJiz5IjVSbTObdTdv0WgiUaUxYaFP86kxi+WKDwPFxk=
 code.cloudfoundry.org/clock v1.0.0 h1:kFXWQM4bxYvdBw2X8BbBeXwQNgfoWv1vqAk2ZZyBN2o=
 code.cloudfoundry.org/clock v1.0.0/go.mod h1:QD9Lzhd/ux6eNQVUDVRJX/RKTigpewimNYBi7ivZKY8=
 code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb h1:7PaOct9nobDcu3vJ2e7l74GfB4osC+g8LtjoqO/LGNo=

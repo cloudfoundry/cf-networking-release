@@ -14,7 +14,7 @@ go 1.18
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20220928214406-6d44a4df0134
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221018152553-fd5c790ce598
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221019155656-7cc91f4f8f8a
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20211220190808-bd0d93324d64 // indirect
@@ -38,7 +38,6 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/go-test/deep v1.0.8 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
-	github.com/golang/protobuf v1.5.2
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.5
@@ -70,7 +69,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266
+require (
+	code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266
+	github.com/golang/protobuf v1.5.2
+)
 
 require (
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
