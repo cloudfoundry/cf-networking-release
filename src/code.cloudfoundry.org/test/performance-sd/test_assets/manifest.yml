@@ -109,7 +109,7 @@ releases:
   version: latest
 stemcells:
 - alias: default
-  os: ubuntu-bionic
+  os: ubuntu-jammy
   version: latest
 update:
   canaries: 1
