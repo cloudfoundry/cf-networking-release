@@ -41,6 +41,8 @@ var _ = Describe("c2c traffic source ip", func() {
 	AfterEach(func() {
 		By("deleting the test org")
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		_, err := cfCLI.CleanupStaleNetworkPolicies()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should be the container's ip", func() {

@@ -19,6 +19,8 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 	AfterEach(func() {
 		By("deleting the org")
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		_, err := cfCLI.CleanupStaleNetworkPolicies()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Context("when a wide open ASG is configured", func() {
@@ -129,6 +131,8 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			for _, sg := range testConfig.DefaultSecurityGroups {
 				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit())
 			}
+			_, err := cfCLI.CleanupStaleNetworkPolicies()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("continues to enforce ASGs default deny", func() {
