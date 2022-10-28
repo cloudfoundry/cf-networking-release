@@ -68,6 +68,8 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 		AfterEach(func() {
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+			_, err := cfCLI.CleanupStaleNetworkPolicies()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("allows policies to whitelist traffic between applications", func(done Done) {

@@ -201,6 +201,10 @@ func (a *Adapter) RemoveNetworkPolicy(sourceApp, destApp string, port int, proto
 	return a.runCommandWithTimeout(cmd)
 }
 
+func (a *Adapter) CleanupStaleNetworkPolicies() ([]byte, error) {
+	return a.Curl("POST", "/networking/v0/external/policies/cleanup", "")
+}
+
 func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error {
 	instanceMemoryStr := fmt.Sprintf("%d", instanceMemory)
 	routesStr := fmt.Sprintf("%d", routes)

@@ -35,6 +35,8 @@ var _ = Describe("policy cleanup", func() {
 
 	AfterEach(func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		_, err := cfCLI.CleanupStaleNetworkPolicies()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("policies/cleanup endpoint", func() {
@@ -51,7 +53,7 @@ var _ = Describe("policy cleanup", func() {
 			Expect(string(allPolicies)).Should(ContainSubstring(appAGuid))
 
 			By("cleaning up stale policies")
-			stalePolicies, err := cfCLI.Curl("POST", "/networking/v0/external/policies/cleanup", "")
+			stalePolicies, err := cfCLI.CleanupStaleNetworkPolicies()
 			Expect(string(stalePolicies)).ShouldNot(ContainSubstring(appAGuid))
 
 			By("checking that policy was not deleted")
@@ -63,7 +65,7 @@ var _ = Describe("policy cleanup", func() {
 			Expect(cfCLI.Delete(appA)).To(Succeed())
 
 			By("cleaning up stale policies")
-			stalePolicies, err = cfCLI.Curl("POST", "/networking/v0/external/policies/cleanup", "")
+			stalePolicies, err = cfCLI.CleanupStaleNetworkPolicies()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(stalePolicies)).Should(ContainSubstring(appAGuid))
 
