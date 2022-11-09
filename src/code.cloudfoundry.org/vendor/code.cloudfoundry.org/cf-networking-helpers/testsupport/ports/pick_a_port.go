@@ -19,7 +19,7 @@ func PickAPort() int {
 
 	if lastPortUsed == 0 {
 		once.Do(func() {
-			const portRangeStart = 61000
+			const portRangeStart = 18000
 			lastPortUsed = portRangeStart + config.GinkgoConfig.ParallelNode
 		})
 	}
