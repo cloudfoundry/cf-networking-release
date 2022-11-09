@@ -351,7 +351,7 @@ github.com/square/certstrap/pkix
 # github.com/st3v/glager v0.3.0
 ## explicit
 github.com/st3v/glager
-# github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
+# github.com/tedsuo/ifrit v0.0.0-20220120221754-dd274de71113
 ## explicit
 github.com/tedsuo/ifrit
 github.com/tedsuo/ifrit/ginkgomon
