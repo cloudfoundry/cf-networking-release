@@ -111,7 +111,6 @@ files:
   - code.cloudfoundry.org/vendor/golang.org/x/net/idna/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/net/internal/timeseries/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/net/trace/*.go # gosub
-  - code.cloudfoundry.org/vendor/golang.org/x/sys/internal/unsafeheader/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/unix/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/unix/*.s # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/text/secure/bidirule/*.go # gosub
@@ -127,6 +126,7 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/grpclb/state/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/roundrobin/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/binarylog/grpc_binarylog_v1/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/channelz/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/codes/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/connectivity/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/credentials/*.go # gosub
@@ -136,6 +136,7 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/grpclog/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/backoff/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/balancer/gracefulswitch/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/balancerload/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/binarylog/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/buffer/*.go # gosub
@@ -147,6 +148,7 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/grpcsync/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/grpcutil/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/metadata/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/pretty/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/resolver/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/resolver/dns/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/resolver/passthrough/*.go # gosub
