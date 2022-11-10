@@ -73,6 +73,7 @@ files:
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/gosteno/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/gosteno/syslog/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/sonde-go/events/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/fatih/color/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/go-sql-driver/mysql/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/gogoproto/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/proto/*.go # gosub
@@ -85,7 +86,9 @@ files:
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/ptypes/timestamp/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/hashicorp/consul/api/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/hashicorp/go-cleanhttp/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-hclog/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/hashicorp/go-immutable-radix/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-rootcerts/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/hashicorp/golang-lru/simplelru/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/hashicorp/serf/coordinate/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/*.go # gosub
@@ -97,6 +100,10 @@ files:
   - code.cloudfoundry.org/vendor/github.com/mailru/easyjson/buffer/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/mailru/easyjson/jlexer/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/mailru/easyjson/jwriter/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/mattn/go-colorable/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/mattn/go-isatty/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/mitchellh/go-homedir/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/mitchellh/mapstructure/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/nu7hatch/gouuid/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/pkg/errors/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/tedsuo/ifrit/*.go # gosub
