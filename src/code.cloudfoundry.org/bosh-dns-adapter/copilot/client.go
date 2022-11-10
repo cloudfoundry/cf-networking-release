@@ -3,6 +3,7 @@ package copilot
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 
 	"code.cloudfoundry.org/bosh-dns-adapter/copilot/api"
 
@@ -26,7 +27,7 @@ func NewConnectedClient(serverAddr string, dialOpts ...DialOption) (*Client, err
 	}
 
 	grpcOpts := []grpc.DialOption{
-		grpc.WithBalancerName(roundrobin.Name),
+		grpc.WithDefaultServiceConfig(fmt.Sprintf(`{"loadbalancingPolicy":"%s"}`, roundrobin.Name)),
 	}
 
 	if opts.transportCredentials != nil {
