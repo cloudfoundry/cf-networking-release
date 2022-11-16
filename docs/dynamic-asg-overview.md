@@ -57,7 +57,8 @@ Private link to the google drawing [here](https://docs.google.com/drawings/d/1UZ
 
 **Steps taken to create and enforce dynamic ASGs**
 1. An operator creates and binds and ASG.
-1. A new job, the Policy Server ASG Syncer, polls Cloud Controller for all ASGs.
+1. Cloud Controller updates its internal reference to the last time ASGs were modified. **NOTE** This only occurs on `/v3` API endpoints.
+1. A new job, the Policy Server ASG Syncer, polls Cloud Controller for the last time ASGs were updated. If changes have been made, it syncs all ASGs.
    The syncer saves all the ASGs in the policy server DB.  This poll interval is
    controlled by the syncer's bosh property
    [`asg_poll_interval_seconds`](https://github.com/cloudfoundry/cf-networking-release/blob/0c5029c88e9f61bb94829b4e0b8ed6732f30f9f0/jobs/policy-server-asg-syncer/spec#L31-L33).
@@ -113,3 +114,11 @@ Dynamic ASGs is a linux-only feature. Currently there is no vxlan-policy-agent
 equivalent for windows cells. If this is a feature you are interested in, please
 open an issue as a feature request.
 
+### 8. Why are my security-group updates taking a very long time to be detected and synced through to policy-server?
+
+Because only `/v3/security_groups` endpoints update Cloud Controller's internal timestamp for when ASG info has changed, any
+ASG create/update/delete activity initiated using the `/v2/security_groups` will go unnoticed by `policy-server-asg-syncer`.
+However, upon the next ASG modification using the CF API v3 endpoints, a full sync will occur and the changes made using the
+CF API v2 endpoints will be pulled in at this time. As the CF API v2 has been deprecated for some
+time, there are no plans to address this, and it is advised to update any integrations to use the CF API v3 endpoints
+instead.
