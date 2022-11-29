@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+PIDFILE="/var/vcap/sys/run/bosh-dns-adapter/restart-bosh-dns-adapter.pid"
+
+# As this script might run longer than a monit cycle (10s) and thus might be
+# triggered several times, it must be ensured that it runs only once.
+[[ -s "$PIDFILE" ]] && exit
+
+function on_exit {
+    /var/vcap/bosh/bin/monit reload bosh-dns-adapter-healthchecker
+    rm -f $PIDFILE
+}
+
+trap on_exit EXIT
+
+echo "$BASHPID" > "$PIDFILE"
+
+LOGFILE="/var/vcap/sys/log/bosh-dns-adapter/restart-bosh-dns-adapter.log"
+echo "$(date) - pid: $BASHPID - Monit triggered restart" >> "$LOGFILE"
+
+/var/vcap/bosh/bin/monit restart bosh-dns-adapter
+sleep 1
+echo "$(date) - pid: $BASHPID - Waiting for bosh-dns-adapter to be restarted" >> "$LOGFILE"
+
+until /var/vcap/bosh/bin/monit summary | grep bosh-dns-adapter | grep -v healthchecker | grep running; do
+  sleep 1
+done
+
+echo "$(date) - pid: $BASHPID - bosh-dns-adapter was restarted" >> "$LOGFILE"

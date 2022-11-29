@@ -3,11 +3,14 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221109185658-f4620911c47e
-## explicit; go 1.17
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221117171434-3d123025a8c3
+## explicit; go 1.19
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
 code.cloudfoundry.org/cf-networking-helpers/fakes
+code.cloudfoundry.org/cf-networking-helpers/healthchecker/cmd/healthchecker
+code.cloudfoundry.org/cf-networking-helpers/healthchecker/config
+code.cloudfoundry.org/cf-networking-helpers/healthchecker/watchdog
 code.cloudfoundry.org/cf-networking-helpers/httperror
 code.cloudfoundry.org/cf-networking-helpers/json_client
 code.cloudfoundry.org/cf-networking-helpers/lagerlevel
