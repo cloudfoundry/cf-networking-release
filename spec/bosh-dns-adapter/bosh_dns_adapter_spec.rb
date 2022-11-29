@@ -31,6 +31,14 @@ module Bosh::Template::Test
       it 'sets the open file descriptor limit' do
         expect(config['processes'][0]['limits']['open_files']).to eq(65_535)
       end
+      
+      it 'adds a healthcheck process' do
+        expect(config['processes'][1]).to eq({
+          "name" => "bosh-dns-adapter-healthchecker",
+          "executable" => "/var/vcap/packages/bosh-dns-adapter/bin/healthchecker",
+          "args" => ["-c", "/var/vcap/jobs/bosh-dns-adapter/config/healthcheck.yml"]
+        })
+      end
     end
 
     describe 'config.json' do

@@ -1,0 +1,13 @@
+<%=
+config = {
+  'component_name' => 'bosh-dns-adapter-healthchecker',
+  'log_level' =>  p('healthchecker_log_level'),
+  'healthcheck_endpoint' => {
+    'host' => p('address'),
+    'port' => p('port'),
+    'path' => '/health'
+  },
+}
+
+config.to_yaml
+%>

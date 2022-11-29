@@ -4,4 +4,13 @@ check process bosh-dns-adapter
   start program "/var/vcap/jobs/bpm/bin/bpm start bosh-dns-adapter"
   stop program "/var/vcap/jobs/bpm/bin/bpm stop bosh-dns-adapter"
   group vcap
+
+check process bosh-dns-adapter-healthchecker
+  with pidfile /var/vcap/sys/run/bpm/bosh-dns-adapter/bosh-dns-adapter-healthchecker.pid
+  start program "/var/vcap/jobs/bpm/bin/bpm start bosh-dns-adapter -p bosh-dns-adapter-healthchecker"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop bosh-dns-adapter -p bosh-dns-adapter-healthchecker"
+  if 10 restarts within 100 cycles then unmonitor
+  if 1 restarts within 1 cycles then exec "/var/vcap/jobs/bosh-dns-adapter/bin/restart-bosh-dns-adapter"
+  depends on bosh-dns-adapter
+  group vcap
 <% end %>

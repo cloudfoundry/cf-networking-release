@@ -2,12 +2,14 @@
 name: bosh-dns-adapter
 
 templates:
-  bpm.yml.erb:                  config/bpm.yml
   aliases.json.erb:             dns/aliases.json
+  bpm.yml.erb:                  config/bpm.yml
   client.crt.erb:               config/certs/client.crt
   client.key.erb:               config/certs/client.key
   config.json.erb:              config/config.json
   handlers.json.erb:            dns/handlers.json
+  healthchecker.yml.erb: config/healthchecker.yml
+  restart-bosh-dns-adapter.erb: bin/restart-bosh-dns-adapter
   server_ca.crt.erb:            config/certs/server_ca.crt
 
 packages:
@@ -53,6 +55,10 @@ properties:
   log_level_address:
     description: "Address which log level endpoint listens on"
     default: 127.0.0.1
+
+  healthchecker_log_level:
+    description: "Log level for the healthchecker"
+    default: "info"
 
   internal_domains:
     description: "TLD for internal app resolution with service discovery."

@@ -36,6 +36,10 @@ type GetIP struct {
 }
 
 func (g GetIP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if isHealthCheck(req) {
+		w.WriteHeader(200)
+		return
+	}
 	name := getQueryParam(req, "name", "")
 	dnsType := getQueryParam(req, "type", "1")
 
@@ -111,6 +115,13 @@ func (g GetIP) writeErrorResponse(resp http.ResponseWriter, err error) {
 	if err != nil {
 		g.Logger.Error("Error writing to http response body", err)
 	}
+}
+
+func isHealthCheck(req *http.Request) bool {
+	if req.URL.Path == "/health" {
+		return true
+	}
+	return false
 }
 
 func getQueryParam(req *http.Request, key, defaultValue string) string {

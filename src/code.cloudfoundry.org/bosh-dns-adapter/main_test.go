@@ -598,6 +598,21 @@ var _ = Describe("Main", func() {
 			})
 		})
 	})
+	Context("Health Endpoint", func() {
+		It("should return a http 200 status on the health endpoint", func() {
+			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
+
+			var reader io.Reader
+			url := fmt.Sprintf("http://127.0.0.1:%s/health", dnsAdapterPort)
+			request, err := http.NewRequest("GET", url, reader)
+			Expect(err).To(Succeed())
+
+			resp, err := http.DefaultClient.Do(request)
+			Expect(err).To(Succeed())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		})
+	})
 
 	Context("Attempting to adjust log level", func() {
 		JustBeforeEach(func() {
