@@ -12,3 +12,6 @@ processes:
     args:
       - -c
       - /var/vcap/jobs/bosh-dns-adapter/config/healthchecker.yml
+    additional_volumes:
+      - path: /var/vcap/data/bosh-dns-adapter/counters
+        writable: true

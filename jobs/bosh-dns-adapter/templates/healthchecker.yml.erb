@@ -1,6 +1,7 @@
 <%=
 config = {
   'component_name' => 'bosh-dns-adapter-healthchecker',
+  'failure_counter_file' => p('healthchecker.failure_counter_file'),
   'log_level' =>  p('healthchecker_log_level'),
   'healthcheck_endpoint' => {
     'host' => p('address'),
