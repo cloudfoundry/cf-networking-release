@@ -16,7 +16,7 @@ replace github.com/hashicorp/consul => github.com/hashicorp/consul v1.11.4
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20211221221754-f246cdd508e9
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221117171434-3d123025a8c3
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221202172023-a3dbff0f6e70
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/consuladapter v0.0.0-20211122211027-9dbbfa656ee0 // indirect
 	code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb

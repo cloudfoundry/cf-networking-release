@@ -4,8 +4,8 @@ cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=
 code.cloudfoundry.org/bbs v0.0.0-20211221221754-f246cdd508e9 h1:kU+2M9uJOofvAJAXqdDT8XFzPJgfAMC7x9YSuIJ1Qkk=
 code.cloudfoundry.org/bbs v0.0.0-20211221221754-f246cdd508e9/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221117171434-3d123025a8c3 h1:zG5o5H4cYWfZymMLRxRTDT/++y9TWh/nsMW0n61QO7k=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221117171434-3d123025a8c3/go.mod h1:AckMTCaBOprDW2tD4G9t1vuTPhFOrl6mItQna5MdC+c=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221202172023-a3dbff0f6e70 h1:Lvdjk/4ye6L5O1BMg/M/DfbwXUFMLEjHjHc3ELrNzh0=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20221202172023-a3dbff0f6e70/go.mod h1:AckMTCaBOprDW2tD4G9t1vuTPhFOrl6mItQna5MdC+c=
 code.cloudfoundry.org/cf-test-helpers v1.0.0 h1:PSPXBwalNQL4FPS3wcXuvektq+0nEx+EiJYkypPiAmY=
 code.cloudfoundry.org/cf-test-helpers v1.0.0/go.mod h1:lOSpauhLmzEa+ZuYJTkCUelg4IJxf72Sr8oVGswH69s=
 code.cloudfoundry.org/cfhttp/v2 v2.0.1-0.20210513172332-4c5ee488a657 h1:8rnhkeAe8Bnx+8r3unO++S3syBw8P22qPbw3LLFWEoc=

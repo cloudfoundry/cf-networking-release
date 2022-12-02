@@ -74,3 +74,7 @@ properties:
     description: "The ipv4 CIDR range of virtual IP addresses to be assigned to routes on internal domains.
                   The value for this property should come from cloud_controller_container_networking_info
                   link from capi-release. This property is here only for override purposes."
+
+  healthchecker.failure_counter_file:
+    description: "File used by the healthchecker to monitor consecutive failures."
+    default: /var/vcap/data/bosh-dns-adapter/counters/consecutive_healthchecker_failures.count
