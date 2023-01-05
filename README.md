@@ -35,7 +35,9 @@ Please look at the ["Contributing to CF Networking" doc](docs/contributing.md) f
 
 ### <a name="what-is-cf-networking"></a>What does CF Networking do?
 
-- [What is CF Networking](docs/what-is-cf-networking.md) explains the problems that this release solves and describes the basic functionaltiy that this release provides.
+- [What is CF Networking](docs/what-is-cf-networking.md) explains the problems
+  that this release solves and describes the basic functionaltiy that this
+  release provides.
 
 ### <a name="cf-networking-architecture"></a>CF Networking Architecture
 
