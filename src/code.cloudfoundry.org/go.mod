@@ -51,7 +51,7 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.7 // indirect
-	github.com/montanaflynn/stats v0.6.6
+	github.com/montanaflynn/stats v0.7.0
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v0.0.0-00010101000000-000000000000
 	github.com/nats-io/nats-top v0.4.0
