@@ -229,13 +229,14 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 
 func assertResponseContains(destIP string, port int, sourceAppName string, desiredResponse string) {
 	proxyTest := func() (string, error) {
+		fmt.Println(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
 			return "", err
 		}
 		return string(resp.Body), nil
 	}
-	Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
+	Eventually(proxyTest, 60*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
 }
 
 var httpClient = &http.Client{

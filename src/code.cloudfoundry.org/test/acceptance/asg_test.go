@@ -35,7 +35,7 @@ var _ = Describe("Application Security Groups", func() {
 	BeforeEach(func() {
 		By("creating the org and space")
 		orgName = testConfig.Prefix + "dynamic-asg-org"
-		spaceName = testConfig.Prefix + "dyanmic-asg-space"
+		spaceName = testConfig.Prefix + "dynamic-asg-space"
 		setupOrgAndSpace(orgName, spaceName)
 
 		By("Pushing an app")
@@ -46,6 +46,7 @@ var _ = Describe("Application Security Groups", func() {
 	It("applies security group changes", func() {
 		internalCCPort := 9024
 		proxyRequestURL := fmt.Sprintf("http://%s.%s/proxy/cloud-controller-ng.service.cf.internal:%d/v2/info?protocol=https", appName, testConfig.AppsDomain, internalCCPort)
+		fmt.Println(proxyRequestURL)
 
 		By("checking that our app can't initially reach cloud controller over internal address")
 		resp, err := http.Get(proxyRequestURL)
@@ -58,7 +59,7 @@ var _ = Describe("Application Security Groups", func() {
 
 		By("creating and binding a security group that allows access to bosh vms for the cc port")
 		asgName = "ccAllow"
-		createASG(asgName, fmt.Sprintf(`[{"destination":"10.0.0.0/0","protocol":"tcp","ports": "%d"}]`, internalCCPort))
+		createASG(asgName, fmt.Sprintf(`[{"destination":"88.0.0.0/24","protocol":"tcp","ports": "%d"}]`, internalCCPort))
 		Expect(cfCLI.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
 
 		if !testConfig.DynamicASGsEnabled {
