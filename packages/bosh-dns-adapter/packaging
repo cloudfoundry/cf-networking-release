@@ -12,7 +12,3 @@ export GOBIN=${BOSH_INSTALL_TARGET}/bin
 pushd src/code.cloudfoundry.org
 go install code.cloudfoundry.org/bosh-dns-adapter/...
 popd
-
-pushd src/code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/healthchecker/cmd/healthchecker
-  go build -o "${BOSH_INSTALL_TARGET}/bin/healthchecker" .
-popd

@@ -16,8 +16,6 @@ files:
   - code.cloudfoundry.org/bosh-dns-adapter/handlers/*.go # gosub
   - code.cloudfoundry.org/bosh-dns-adapter/sdcclient/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/healthchecker/config/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/healthchecker/watchdog/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
@@ -28,7 +26,6 @@ files:
   - code.cloudfoundry.org/policy-server/store/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/helpers/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/migrations/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/healthchecker/cmd/healthchecker/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/bmizerany/pat/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
@@ -171,4 +168,3 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/protobuf/types/known/timestamppb/*.go # gosub
   - code.cloudfoundry.org/vendor/gopkg.in/gorp.v1/*.go # gosub
   - code.cloudfoundry.org/vendor/gopkg.in/validator.v2/*.go # gosub
-  - code.cloudfoundry.org/vendor/gopkg.in/yaml.v2/*.go # gosub

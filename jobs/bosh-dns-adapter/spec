@@ -9,11 +9,11 @@ templates:
   config.json.erb:              config/config.json
   handlers.json.erb:            dns/handlers.json
   healthchecker.yml.erb: config/healthchecker.yml
-  restart-bosh-dns-adapter.erb: bin/restart-bosh-dns-adapter
   server_ca.crt.erb:            config/certs/server_ca.crt
 
 packages:
   - bosh-dns-adapter
+  - healthchecker
 
 consumes:
   - name: service-discovery-controller

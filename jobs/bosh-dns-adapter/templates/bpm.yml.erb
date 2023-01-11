@@ -8,10 +8,10 @@ processes:
     limits:
       open_files: 65535
   - name: bosh-dns-adapter-healthchecker
-    executable: /var/vcap/packages/bosh-dns-adapter/bin/healthchecker
+    executable: /var/vcap/packages/healthchecker/bin/healthchecker
     args:
       - -c
       - /var/vcap/jobs/bosh-dns-adapter/config/healthchecker.yml
     additional_volumes:
-      - path: /var/vcap/data/bosh-dns-adapter/counters
+      - path: <%= File.dirname(p('healthchecker.failure_counter_file')) %>
         writable: true

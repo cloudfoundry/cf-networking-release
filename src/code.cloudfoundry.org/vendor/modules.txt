@@ -8,9 +8,6 @@ code.cloudfoundry.org/bbs/guidprovider
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
 code.cloudfoundry.org/cf-networking-helpers/fakes
-code.cloudfoundry.org/cf-networking-helpers/healthchecker/cmd/healthchecker
-code.cloudfoundry.org/cf-networking-helpers/healthchecker/config
-code.cloudfoundry.org/cf-networking-helpers/healthchecker/watchdog
 code.cloudfoundry.org/cf-networking-helpers/httperror
 code.cloudfoundry.org/cf-networking-helpers/json_client
 code.cloudfoundry.org/cf-networking-helpers/lagerlevel

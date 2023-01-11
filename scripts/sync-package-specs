@@ -43,8 +43,7 @@ sync_package policy-server \
   -app code.cloudfoundry.org/policy-server/cmd/migrate-db &
 
 sync_package bosh-dns-adapter \
-  -app code.cloudfoundry.org/bosh-dns-adapter \
-  -app code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/healthchecker/cmd/healthchecker &
+  -app code.cloudfoundry.org/bosh-dns-adapter &
 
 sync_package service-discovery-controller \
   -app code.cloudfoundry.org/service-discovery-controller &
