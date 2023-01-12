@@ -15,8 +15,9 @@ If any errors are encountered, they'll be printed to stderr.
 
 ## How to use it
 
-1. Create a file in this directory named `output-data`,
-and put the exact response you returned by the app there.
+1. Create a file in this directory named `output-data`, and put the exact
+   response you returned by the app there. See an example in
+   `example-output-data`.
 
 1. Either `cf push` the app to CloudFoundry, or `go run .` to run locally.
 
