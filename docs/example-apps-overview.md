@@ -29,12 +29,6 @@ This doc provides an overview of the example apps provided and the uses cases th
 **Description:** This example demonstrates container-to-container networking via HTTP and UDP between a frontend and backend app with service discovery.
 
 
-## Use case: you want to try out Eureka for service discovery
-**App:** [Spring Boot Eureka Demo](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/eureka)
-
-**Description:** This example demonstrates how apps can use Eureka for service discovery for container-to-container communications. Using Eureka was a popular method before platform service discovery was added to Cloud Foundry.
-
-
 ## Use case: you want to use an a8registry
 **App:** [tick](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/tick)
 
