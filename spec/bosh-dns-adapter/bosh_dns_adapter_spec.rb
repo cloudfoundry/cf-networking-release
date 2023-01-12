@@ -18,8 +18,7 @@ module Bosh::Template::Test
         'internal_service_mesh_domains' => [
           'myistio.internal.app.domain.'
         ],
-        'internal_route_vip_range' => '127.128.0.0/8',
-        'healthchecker.failure_counter_file' => 'meowmeow.count'
+        'internal_route_vip_range' => '127.128.0.0/8'
       }
     end
 
@@ -36,9 +35,9 @@ module Bosh::Template::Test
       it 'adds a healthcheck process' do
         expect(config['processes'][1]).to eq({
           "name" => "bosh-dns-adapter-healthchecker",
-          "executable" => "/var/vcap/packages/healtchecker/bin/healthchecker",
+          "executable" => "/var/vcap/packages/healthchecker/bin/healthchecker",
           "args" => ["-c", "/var/vcap/jobs/bosh-dns-adapter/config/healthchecker.yml"],
-          "additional_volumes" => [{"path"=>"meowmeow.count", "writable"=>true}],
+          "additional_volumes" => [{"path"=>"/var/vcap/data/bosh-dns-adapter/counters", "writable"=>true}],
         })
       end
     end
