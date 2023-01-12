@@ -33,3 +33,10 @@ This doc provides an overview of the example apps provided and the uses cases th
 **App:** [tick](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/tick)
 
 **Description:** This is a simple app that registers itself with an a8registry on a regular interval.
+
+## Use case: you want to test an invalid HTTP response
+**App:** [raw-response](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/raw-response)
+
+**Description:** This is a simple app is  designed to make writing arbitrary
+  HTTP responses out from a CloudFoundry app, bypassing any of Golang's built-in
+  net/http or net/httputil behaviors.
