@@ -29,6 +29,11 @@ This doc provides an overview of the example apps provided and the uses cases th
 **Description:** This example demonstrates container-to-container networking via HTTP and UDP between a frontend and backend app with service discovery.
 
 
+## Use case: you want to use an a8registry
+**App:** [tick](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/tick)
+
+**Description:** This is a simple app that registers itself with an a8registry on a regular interval.
+
 ## Use case: you want to test an invalid HTTP response
 **App:** [raw-response](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/raw-response)
 
