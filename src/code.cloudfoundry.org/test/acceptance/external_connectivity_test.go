@@ -138,7 +138,7 @@ var _ = Describe("external connectivity", func() {
 				By("restarting the app")
 				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 			} else {
-				time.Sleep(10 * time.Second)
+				time.Sleep(30 * time.Second)
 			}
 			By("checking that the app cannot use http to reach the internet")
 			Consistently(cannotProxy, "180s", "0.5s").Should(Succeed())
