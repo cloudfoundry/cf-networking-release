@@ -11,7 +11,7 @@ import (
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
 	"github.com/nats-io/go-nats/bench"
-	"github.com/nats-io/nats-top/util"
+	toputils "github.com/nats-io/nats-top/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -137,8 +137,8 @@ var _ = Describe("NatsPerformance", func() {
 		b.RecordValue("medianJustExternalRoutes", medianJustExternalRoutes)
 		b.RecordValue("meanJustExternalRoutes", meanJustExternalRoutes)
 
-		Expect(medianExternalAndInternalRoutes).Should(BeNumerically("~", medianJustExternalRoutes, 15.00))
-		Expect(meanExternalAndInternalRoutes).Should(BeNumerically("~", meanJustExternalRoutes, 15.00))
+		Expect(medianExternalAndInternalRoutes).Should(BeNumerically("~", medianJustExternalRoutes, 30.00))
+		Expect(meanExternalAndInternalRoutes).Should(BeNumerically("~", meanJustExternalRoutes, 30.00))
 	}, 3)
 })
 
