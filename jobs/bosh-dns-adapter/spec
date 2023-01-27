@@ -8,12 +8,12 @@ templates:
   client.key.erb:               config/certs/client.key
   config.json.erb:              config/config.json
   handlers.json.erb:            dns/handlers.json
-  healthchecker.yml.erb: config/healthchecker.yml
+  healthchecker.yml.erb:        config/healthchecker.yml
   server_ca.crt.erb:            config/certs/server_ca.crt
 
 packages:
   - bosh-dns-adapter
-  - healthchecker
+  - cf-networking-healthchecker
 
 consumes:
   - name: service-discovery-controller

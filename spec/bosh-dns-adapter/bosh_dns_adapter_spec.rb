@@ -35,7 +35,7 @@ module Bosh::Template::Test
       it 'adds a healthcheck process' do
         expect(config['processes'][1]).to eq({
           "name" => "bosh-dns-adapter-healthchecker",
-          "executable" => "/var/vcap/packages/healthchecker/bin/healthchecker",
+          "executable" => "/var/vcap/packages/cf-networking-healthchecker/bin/healthchecker",
           "args" => ["-c", "/var/vcap/jobs/bosh-dns-adapter/config/healthchecker.yml"],
           "additional_volumes" => [{"path"=>"/var/vcap/data/bosh-dns-adapter/counters", "writable"=>true}],
         })

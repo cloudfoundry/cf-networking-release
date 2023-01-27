@@ -9,7 +9,7 @@ check process bosh-dns-adapter-healthchecker
   with pidfile /var/vcap/sys/run/bpm/bosh-dns-adapter/bosh-dns-adapter-healthchecker.pid
   start program "/var/vcap/jobs/bpm/bin/bpm start bosh-dns-adapter -p bosh-dns-adapter-healthchecker"
   stop program "/var/vcap/jobs/bpm/bin/bpm stop bosh-dns-adapter -p bosh-dns-adapter-healthchecker"
-  if 1 restarts within 1 cycles then exec "/var/vcap/packages/healthchecker/bin/restart-monit-job bosh-dns-adapter <%= p('healthchecker.failure_counter_file') %>"
+  if 1 restarts within 1 cycles then exec "/var/vcap/packages/cf-networking-healthchecker/bin/restart-monit-job bosh-dns-adapter <%= p('healthchecker.failure_counter_file') %>"
   depends on bosh-dns-adapter
   group vcap
 <% end %>

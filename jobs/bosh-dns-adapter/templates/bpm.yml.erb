@@ -8,7 +8,7 @@ processes:
     limits:
       open_files: 65535
   - name: bosh-dns-adapter-healthchecker
-    executable: /var/vcap/packages/healthchecker/bin/healthchecker
+    executable: /var/vcap/packages/cf-networking-healthchecker/bin/healthchecker
     args:
       - -c
       - /var/vcap/jobs/bosh-dns-adapter/config/healthchecker.yml
