@@ -7,11 +7,11 @@ cd "${ROOT_DIR_PATH}"
 db=${DB:-"mysql"} # if not set, default to mysql
 
 if [ "$db" = "mysql" ]; then
-  docker_image=c2cnetworking/dev-mysql
+  docker_image=cloudfoundry/cf-networking-mysql
 elif [ "$db" = "mysql8" ]; then
-  docker_image=c2cnetworking/dev-mysql8
+  docker_image=cloudfoundry/cf-networking-mysql8
 else
-  docker_image=c2cnetworking/dev-postgres-ifb
+  docker_image=cloudfoundry/cf-networking-postgres-ifb
 fi
 
 docker run \
