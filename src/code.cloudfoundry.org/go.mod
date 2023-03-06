@@ -77,7 +77,7 @@ require (
 	google.golang.org/genproto v0.0.0-20220324131243-acbaeb5b85eb // indirect
 	google.golang.org/grpc v1.50.1
 	gopkg.in/gorp.v1 v1.7.2 // indirect
-	gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0
+	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
