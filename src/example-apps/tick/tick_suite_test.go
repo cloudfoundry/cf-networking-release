@@ -7,8 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
@@ -29,12 +28,12 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
 	wd, err := os.Getwd()
 	Expect(err).To(Succeed())
-	appPath, err := gexec.Build("tick")
+	appPath, err := gexec.Build("tick", "-buildvcs=false")
 	Expect(err).NotTo(HaveOccurred())
 
 	modPath := filepath.Join("..", "registry")
 	Expect(os.Chdir(modPath)).To(Succeed())
-	regPath, err := gexec.Build("registry")
+	regPath, err := gexec.Build("registry", "-buildvcs=false")
 	Expect(err).NotTo(HaveOccurred())
 	Expect(os.Chdir(wd)).To(Succeed())
 
@@ -54,7 +53,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	binaryPath = apps.AppPath
 	registryBinaryPath = apps.RegPath
 
-	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {

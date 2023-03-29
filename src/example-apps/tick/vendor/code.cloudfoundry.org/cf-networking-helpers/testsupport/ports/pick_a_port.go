@@ -3,7 +3,7 @@ package ports
 import (
 	"sync"
 
-	"github.com/onsi/ginkgo/config"
+	. "github.com/onsi/ginkgo/v2"
 )
 
 var (
@@ -19,11 +19,12 @@ func PickAPort() int {
 
 	if lastPortUsed == 0 {
 		once.Do(func() {
-			const portRangeStart = 61000
-			lastPortUsed = portRangeStart + config.GinkgoConfig.ParallelNode
+			const portRangeStart = 18000
+			lastPortUsed = portRangeStart + GinkgoParallelProcess()
 		})
 	}
 
-	lastPortUsed += config.GinkgoConfig.ParallelTotal
+	suiteCfg, _ := GinkgoConfiguration()
+	lastPortUsed += suiteCfg.ParallelTotal
 	return lastPortUsed
 }
