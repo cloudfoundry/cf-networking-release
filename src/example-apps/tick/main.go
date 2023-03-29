@@ -108,11 +108,11 @@ func mainWithError() error {
 
 	members := []grouper.Member{}
 	for i, server := range servers {
-		members = append(members, grouper.Member{fmt.Sprintf("http_server_%d", i), server})
+		members = append(members, grouper.Member{Name: fmt.Sprintf("http_server_%d", i), Runner: server})
 	}
 
 	// poller goes at the end, so that registration happens after all servers start
-	members = append(members, grouper.Member{"registration_poller", poller})
+	members = append(members, grouper.Member{Name: "registration_poller", Runner: poller})
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
 
