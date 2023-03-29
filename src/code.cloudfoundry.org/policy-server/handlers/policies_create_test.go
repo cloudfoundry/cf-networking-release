@@ -8,14 +8,14 @@ import (
 	"net/http/httptest"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	apifakes "code.cloudfoundry.org/policy-server/api/fakes"
 	"code.cloudfoundry.org/policy-server/handlers"
 	"code.cloudfoundry.org/policy-server/handlers/fakes"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

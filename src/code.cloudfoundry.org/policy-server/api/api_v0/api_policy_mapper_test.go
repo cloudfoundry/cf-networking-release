@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/policy-server/api/api_v0"
 	"code.cloudfoundry.org/policy-server/api/api_v0/fakes"
 	"code.cloudfoundry.org/policy-server/store"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

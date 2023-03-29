@@ -9,8 +9,7 @@ import (
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/api/fakes"
 	"code.cloudfoundry.org/policy-server/store"
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -251,11 +250,11 @@ var _ = Describe("ApiPolicyMapper", func() {
 	})
 
 	Describe("MapStoreTag", func() {
-		table.DescribeTable("should map store tags to api tags", func(input store.Tag, expected api.Tag) {
+		DescribeTable("should map store tags to api tags", func(input store.Tag, expected api.Tag) {
 			result := api.MapStoreTag(input)
 			Expect(result).To(Equal(expected))
 		},
-			table.Entry("direct translation",
+			Entry("direct translation",
 				store.Tag{
 					ID:   "some-id",
 					Tag:  "some-tag",
@@ -267,7 +266,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 					Type: "some-type",
 				},
 			),
-			table.Entry("direct translation",
+			Entry("direct translation",
 				store.Tag{
 					ID:   "some-other-id",
 					Tag:  "some-other-tag",
@@ -283,11 +282,11 @@ var _ = Describe("ApiPolicyMapper", func() {
 	})
 
 	Describe("MapStoreTags", func() {
-		table.DescribeTable("should map store tags to api tags", func(input []store.Tag, expected []api.Tag) {
+		DescribeTable("should map store tags to api tags", func(input []store.Tag, expected []api.Tag) {
 			result := api.MapStoreTags(input)
 			Expect(result).To(Equal(expected))
 		},
-			table.Entry("direct translation",
+			Entry("direct translation",
 				[]store.Tag{{
 					ID:   "some-id",
 					Tag:  "some-tag",
@@ -299,7 +298,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 					Type: "some-type",
 				}},
 			),
-			table.Entry("direct translation",
+			Entry("direct translation",
 				[]store.Tag{{
 					ID:   "some-id",
 					Tag:  "some-tag",

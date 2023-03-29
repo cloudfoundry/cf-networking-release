@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	helpersConfig "github.com/cloudfoundry-incubator/cf-test-helpers/config"
-	. "github.com/onsi/ginkgo"
+	helpersConfig "github.com/cloudfoundry/cf-test-helpers/v2/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )

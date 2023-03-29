@@ -6,8 +6,7 @@ import (
 	"testing"
 
 	"code.cloudfoundry.org/policy-server/integration/helpers"
-	. "github.com/onsi/ginkgo"
-	ginkgoConfig "github.com/onsi/ginkgo/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -24,14 +23,14 @@ func TestTimeouts(t *testing.T) {
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
-	policyServerPath, err := gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server", "-race")
+	policyServerPath, err := gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server", "-race", "-buildvcs=false")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
 	return []byte(policyServerPath)
 }, func(data []byte) {
 	policyServerPath = string(data)
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {

@@ -10,7 +10,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/store/fakes"
 	"code.cloudfoundry.org/policy-server/store/helpers"
@@ -18,7 +18,7 @@ import (
 	migrationsFakes "code.cloudfoundry.org/policy-server/store/migrations/fakes"
 	testhelpers "code.cloudfoundry.org/test-helpers"
 	migrate "github.com/cf-container-networking/sql-migrate"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

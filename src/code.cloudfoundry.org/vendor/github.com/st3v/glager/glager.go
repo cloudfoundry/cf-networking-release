@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"github.com/onsi/gomega/format"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/types"
@@ -63,25 +63,26 @@ type logMatcher struct {
 // This matcher works best when used with a TestLogger.
 //
 // Example:
-//   // instantiate glager.TestLogger inside your test and
-//   logger := NewLogger("test")
 //
-//   // pass it to your code and use it in there to log stuff
-//   myFunc(logger)
+//	  // instantiate glager.TestLogger inside your test and
+//	  logger := NewLogger("test")
 //
-//   // verify logging inside your test, using the logger
-//   // in this example we are interested in the log level, the message, and the
-//   // data of the log entries
-//   Expect(logger).To(HaveLogged(
-// 	   Info(
-// 		   Message("test.myFunc"),
-// 		   Data("event", "start"),
-// 	   ),
-// 	   Info(
-// 		   Message("test.myFunc"),
-// 		   Data("event", "done"),
-// 	   ),
-//   ))
+//	  // pass it to your code and use it in there to log stuff
+//	  myFunc(logger)
+//
+//	  // verify logging inside your test, using the logger
+//	  // in this example we are interested in the log level, the message, and the
+//	  // data of the log entries
+//	  Expect(logger).To(HaveLogged(
+//		   Info(
+//			   Message("test.myFunc"),
+//			   Data("event", "start"),
+//		   ),
+//		   Info(
+//			   Message("test.myFunc"),
+//			   Data("event", "done"),
+//		   ),
+//	  ))
 func HaveLogged(expectedSequence ...logEntry) types.GomegaMatcher {
 	return ContainSequence(expectedSequence...)
 }
@@ -98,24 +99,25 @@ func HaveLogged(expectedSequence ...logEntry) types.GomegaMatcher {
 // This matcher works best when used with a Buffer.
 //
 // Example:
-//   // instantiate regular lager logger and register buffer as sink
-//   log := gbytes.NewBuffer()
-//   logger := lager.NewLogger("test")
-//   logger.RegisterSink(lager.NewWriterSink(log, lager.DEBUG))
 //
-//   // pass it to your code and use it in there to log stuff
-//   myFunc(logger)
+//	  // instantiate regular lager logger and register buffer as sink
+//	  log := gbytes.NewBuffer()
+//	  logger := lager.NewLogger("test")
+//	  logger.RegisterSink(lager.NewWriterSink(log, lager.DEBUG))
 //
-//   // verify logging inside your test, using the log buffer
-//   // in this example we are only interested in the data of the log entries
-//   Expect(log).To(ContainSequence(
-// 	   Info(
-// 		   Data("event", "start"),
-// 	   ),
-// 	   Info(
-// 		   Data("event", "done"),
-// 	   ),
-//   ))
+//	  // pass it to your code and use it in there to log stuff
+//	  myFunc(logger)
+//
+//	  // verify logging inside your test, using the log buffer
+//	  // in this example we are only interested in the data of the log entries
+//	  Expect(log).To(ContainSequence(
+//		   Info(
+//			   Data("event", "start"),
+//		   ),
+//		   Info(
+//			   Data("event", "done"),
+//		   ),
+//	  ))
 func ContainSequence(expectedSequence ...logEntry) types.GomegaMatcher {
 	return &logMatcher{
 		expected: expectedSequence,
@@ -125,13 +127,13 @@ func ContainSequence(expectedSequence ...logEntry) types.GomegaMatcher {
 // Info returns a log entry of type lager.INFO that can be used with the
 // HaveLogged and ContainSequence matchers.
 func Info(options ...option) logEntry {
-	return Entry(lager.INFO, options...)
+	return LogEntry(lager.INFO, options...)
 }
 
 // Debug returns a log entry of type lager.DEBUG that can be used with the
 // HaveLogged and ContainSequence matchers.
 func Debug(options ...option) logEntry {
-	return Entry(lager.DEBUG, options...)
+	return LogEntry(lager.DEBUG, options...)
 }
 
 // AnyErr can be used to check of arbitrary errors when matching Error entries.
@@ -144,7 +146,7 @@ func Error(err error, options ...option) logEntry {
 		options = append(options, Data("error", err.Error()))
 	}
 
-	return Entry(lager.ERROR, options...)
+	return LogEntry(lager.ERROR, options...)
 }
 
 // Fatal returns a log entry of type lager.FATAL that can be used with the
@@ -154,12 +156,12 @@ func Fatal(err error, options ...option) logEntry {
 		options = append(options, Data("error", err.Error()))
 	}
 
-	return Entry(lager.FATAL, options...)
+	return LogEntry(lager.FATAL, options...)
 }
 
-// Entry returns a log entry for the specified log level that can be used with
+// LogEntry returns a log entry for the specified log level that can be used with
 // the HaveLogged and ContainSequence matchers.
-func Entry(logLevel lager.LogLevel, options ...option) logEntry {
+func LogEntry(logLevel lager.LogLevel, options ...option) logEntry {
 	entry := logEntry(lager.LogFormat{
 		LogLevel: logLevel,
 		Data:     lager.Data{},

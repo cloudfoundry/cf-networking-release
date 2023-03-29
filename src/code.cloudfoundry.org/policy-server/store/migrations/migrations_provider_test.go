@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/policy-server/store/migrations"
 	"code.cloudfoundry.org/policy-server/store/migrations/fakes"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	gmmatchers "github.com/pivotal-cf-experimental/gomegamatchers"
 )

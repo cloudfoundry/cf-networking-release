@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 //go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . HttpClient

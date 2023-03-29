@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/cf-pusher/manifest_generator"
 	"code.cloudfoundry.org/cf-pusher/models"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

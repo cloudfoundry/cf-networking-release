@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/garden-external-networker/fakes"
 	"code.cloudfoundry.org/garden-external-networker/port_allocator"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

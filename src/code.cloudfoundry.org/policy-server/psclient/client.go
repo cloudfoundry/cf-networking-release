@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 type Client struct {

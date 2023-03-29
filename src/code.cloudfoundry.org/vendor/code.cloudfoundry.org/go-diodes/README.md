@@ -1,6 +1,6 @@
 ![diode][diode-logo]
 
-[![GoDoc][go-doc-badge]][go-doc]
+[![GoDoc][go-doc-badge]][go-doc] [![travis][travis-badge]][travis]
 
 Diodes are ring buffers manipulated via atomics.
 
@@ -155,3 +155,5 @@ encounter this issue.
 [diode-logo]:   https://raw.githubusercontent.com/cloudfoundry/go-diodes/gh-pages/diode-logo.png
 [go-doc-badge]: https://godoc.org/code.cloudfoundry.org/go-diodes?status.svg
 [go-doc]:       https://godoc.org/code.cloudfoundry.org/go-diodes
+[travis-badge]: https://travis-ci.org/cloudfoundry/go-diodes.svg?branch=master
+[travis]:       https://travis-ci.org/cloudfoundry/go-diodes?branch=master

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 type BadUaaResponse struct {

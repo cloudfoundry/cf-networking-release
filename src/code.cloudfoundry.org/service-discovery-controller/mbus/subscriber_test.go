@@ -6,15 +6,15 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/clock/fakeclock"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	. "code.cloudfoundry.org/service-discovery-controller/mbus"
 	"code.cloudfoundry.org/service-discovery-controller/mbus/fakes"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	. "github.com/st3v/glager"
+	"github.com/st3v/glager"
 )
 
 var _ = Describe("Subscriber", func() {
@@ -65,7 +65,7 @@ var _ = Describe("Subscriber", func() {
 		messageRecorder = &fakes.RouteMessageRecorder{}
 
 		addressTable = &fakes.AddressTable{}
-		subcriberLogger = NewLogger("test")
+		subcriberLogger = glager.NewLogger("test")
 
 		provider = &NatsConnWithUrlProvider{Url: natsUrl}
 
@@ -107,9 +107,9 @@ var _ = Describe("Subscriber", func() {
 		Expect(serviceDiscoveryData.PruneThresholdInSeconds).To(Equal(subOpts.PruneThresholdInSeconds))
 		Expect(serviceDiscoveryData.Host).ToNot(BeEmpty())
 
-		Eventually(subcriberLogger).Should(HaveLogged(
-			Info(
-				Message("test.service-discovery.start-message-published"),
+		Eventually(subcriberLogger).Should(glager.HaveLogged(
+			glager.Info(
+				glager.Message("test.service-discovery.start-message-published"),
 			)))
 	})
 
@@ -130,9 +130,9 @@ var _ = Describe("Subscriber", func() {
 		Expect(serviceDiscoveryData.PruneThresholdInSeconds).To(Equal(subOpts.PruneThresholdInSeconds))
 		Expect(serviceDiscoveryData.Host).ToNot(BeEmpty())
 
-		Eventually(subcriberLogger).Should(HaveLogged(
-			Info(
-				Message("test.service-discovery.greet-response-published"),
+		Eventually(subcriberLogger).Should(glager.HaveLogged(
+			glager.Info(
+				glager.Message("test.service-discovery.greet-response-published"),
 			)))
 	})
 
@@ -169,10 +169,10 @@ var _ = Describe("Subscriber", func() {
 		})
 
 		It("logs a message", func() {
-			Eventually(subcriberLogger).Should(HaveLogged(
-				Info(
-					Message("test.ClosedHandler unexpected close of nats connection"),
-					Data("last_error", nil),
+			Eventually(subcriberLogger).Should(glager.HaveLogged(
+				glager.Info(
+					glager.Message("test.ClosedHandler unexpected close of nats connection"),
+					glager.Data("last_error", nil),
 				)))
 		})
 	})
@@ -182,10 +182,10 @@ var _ = Describe("Subscriber", func() {
 			gnatsServer.Shutdown()
 		})
 		It("logs a message", func() {
-			Eventually(subcriberLogger, 5*time.Second).Should(HaveLogged(
-				Info(
-					Message("test.DisconnectHandler disconnected from nats server"),
-					Data("last_error", nil),
+			Eventually(subcriberLogger, 5*time.Second).Should(glager.HaveLogged(
+				glager.Info(
+					glager.Message("test.DisconnectHandler disconnected from nats server"),
+					glager.Data("last_error", nil),
 				)))
 		})
 		It("tells the address table stop pruning", func() {
@@ -233,10 +233,10 @@ var _ = Describe("Subscriber", func() {
 			Expect(serviceDiscoveryData.Host).To(Equal("192.168.0.1"))
 		})
 		It("logs a message", func() {
-			Eventually(subcriberLogger, 5*time.Second).Should(HaveLogged(
-				Info(
-					Message("test.ReconnectHandler reconnected to nats server"),
-					Data("nats_host", "nats://"+gnatsServer.Addr().String()),
+			Eventually(subcriberLogger, 5*time.Second).Should(glager.HaveLogged(
+				glager.Info(
+					glager.Message("test.ReconnectHandler reconnected to nats server"),
+					glager.Data("nats_host", "nats://"+gnatsServer.Addr().String()),
 				)))
 		})
 		It("tells the address table to resume pruning", func() {
@@ -313,10 +313,10 @@ var _ = Describe("Subscriber", func() {
 			Eventually(func() lager.Logger {
 				fakeRouteEmitter.PublishMsg(&natsRegistryMsg)
 				return subcriberLogger
-			}).Should(HaveLogged(
-				Debug(
-					Message("test.AddressMessageHandler register msg received"),
-					Data("msgJson", json),
+			}).Should(glager.HaveLogged(
+				glager.Debug(
+					glager.Message("test.AddressMessageHandler register msg received"),
+					glager.Data("msgJson", json),
 				)))
 		})
 
@@ -331,10 +331,10 @@ var _ = Describe("Subscriber", func() {
 				Eventually(func() lager.Logger {
 					fakeRouteEmitter.PublishMsg(&natsRegistryMsg)
 					return subcriberLogger
-				}).Should(HaveLogged(
-					Info(
-						Message("test.AddressMessageHandler received a malformed register message"),
-						Data("msgJson", json),
+				}).Should(glager.HaveLogged(
+					glager.Info(
+						glager.Message("test.AddressMessageHandler received a malformed register message"),
+						glager.Data("msgJson", json),
 					)))
 
 				Expect(addressTable.AddCallCount()).To(Equal(0))
@@ -354,10 +354,10 @@ var _ = Describe("Subscriber", func() {
 				Eventually(func() lager.Logger {
 					fakeRouteEmitter.PublishMsg(&natsRegistryMsg)
 					return subcriberLogger
-				}).Should(HaveLogged(
-					Info(
-						Message("test.AddressMessageHandler received a malformed register message"),
-						Data("msgJson", json),
+				}).Should(glager.HaveLogged(
+					glager.Info(
+						glager.Message("test.AddressMessageHandler received a malformed register message"),
+						glager.Data("msgJson", json),
 					)))
 
 				Expect(addressTable.AddCallCount()).To(Equal(0))
@@ -377,10 +377,10 @@ var _ = Describe("Subscriber", func() {
 				Eventually(func() lager.Logger {
 					fakeRouteEmitter.PublishMsg(&natsRegistryMsg)
 					return subcriberLogger
-				}).Should(HaveLogged(
-					Info(
-						Message("test.AddressMessageHandler received a malformed register message"),
-						Data("msgJson", json),
+				}).Should(glager.HaveLogged(
+					glager.Info(
+						glager.Message("test.AddressMessageHandler received a malformed register message"),
+						glager.Data("msgJson", json),
 					)))
 
 				Expect(addressTable.AddCallCount()).To(Equal(0))
@@ -422,10 +422,10 @@ var _ = Describe("Subscriber", func() {
 			Eventually(func() lager.Logger {
 				fakeRouteEmitter.PublishMsg(&natsRegistryMsg)
 				return subcriberLogger
-			}).Should(HaveLogged(
-				Debug(
-					Message("test.AddressMessageHandler unregister msg received"),
-					Data("msgJson", json),
+			}).Should(glager.HaveLogged(
+				glager.Debug(
+					glager.Message("test.AddressMessageHandler unregister msg received"),
+					glager.Data("msgJson", json),
 				)))
 		})
 
@@ -440,10 +440,10 @@ var _ = Describe("Subscriber", func() {
 				Eventually(func() lager.Logger {
 					fakeRouteEmitter.PublishMsg(&natsUnRegisterMsg)
 					return subcriberLogger
-				}).Should(HaveLogged(
-					Info(
-						Message("test.AddressMessageHandler received a malformed unregister message"),
-						Data("msgJson", json),
+				}).Should(glager.HaveLogged(
+					glager.Info(
+						glager.Message("test.AddressMessageHandler received a malformed unregister message"),
+						glager.Data("msgJson", json),
 					)))
 
 				Expect(addressTable.RemoveCallCount()).To(Equal(0))
@@ -480,10 +480,10 @@ var _ = Describe("Subscriber", func() {
 				Eventually(func() lager.Logger {
 					fakeRouteEmitter.PublishMsg(&natsUnRegisterMsg)
 					return subcriberLogger
-				}).Should(HaveLogged(
-					Info(
-						Message("test.AddressMessageHandler received a malformed unregister message"),
-						Data("msgJson", json),
+				}).Should(glager.HaveLogged(
+					glager.Info(
+						glager.Message("test.AddressMessageHandler received a malformed unregister message"),
+						glager.Data("msgJson", json),
 					)))
 
 				Expect(addressTable.RemoveCallCount()).To(Equal(0))
@@ -575,10 +575,10 @@ var _ = Describe("Subscriber", func() {
 				err := subscriber.RunOnce()
 				Expect(err).To(HaveOccurred())
 
-				Expect(subcriberLogger).To(HaveLogged(
-					Error(
+				Expect(subcriberLogger).To(glager.HaveLogged(
+					glager.Error(
 						err,
-						Message("test.setupGreetMsgHandler unable to subscribe to greet messages"),
+						glager.Message("test.setupGreetMsgHandler unable to subscribe to greet messages"),
 					)))
 			})
 		})
@@ -606,10 +606,10 @@ var _ = Describe("Subscriber", func() {
 				err := subscriber.RunOnce()
 				Expect(err).To(HaveOccurred())
 
-				Expect(subcriberLogger).To(HaveLogged(
-					Error(
+				Expect(subcriberLogger).To(glager.HaveLogged(
+					glager.Error(
 						err,
-						Message("test.setupAddressMessageHandler unable to subscribe to service-discovery.register"),
+						glager.Message("test.setupAddressMessageHandler unable to subscribe to service-discovery.register"),
 					)))
 			})
 		})
@@ -637,10 +637,10 @@ var _ = Describe("Subscriber", func() {
 				err := subscriber.RunOnce()
 				Expect(err).To(HaveOccurred())
 
-				Expect(subcriberLogger).To(HaveLogged(
-					Error(
+				Expect(subcriberLogger).To(glager.HaveLogged(
+					glager.Error(
 						err,
-						Message("test.setupAddressMessageHandler unable to subscribe to service-discovery.unregister"),
+						glager.Message("test.setupAddressMessageHandler unable to subscribe to service-discovery.unregister"),
 					)))
 			})
 		})
@@ -663,10 +663,10 @@ var _ = Describe("Subscriber", func() {
 			It("logs an error", func() {
 				err := subscriber.RunOnce()
 				Expect(err).To(HaveOccurred())
-				Expect(subcriberLogger).To(HaveLogged(
-					Error(
+				Expect(subcriberLogger).To(glager.HaveLogged(
+					glager.Error(
 						err,
-						Message("test.setupGreetMsgHandler unable to flush subscribe greet message"),
+						glager.Message("test.setupGreetMsgHandler unable to flush subscribe greet message"),
 					)))
 
 			})

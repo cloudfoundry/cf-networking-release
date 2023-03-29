@@ -3,7 +3,7 @@ package api_v0_test
 import (
 	"code.cloudfoundry.org/policy-server/api/api_v0"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

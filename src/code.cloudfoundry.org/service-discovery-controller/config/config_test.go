@@ -7,8 +7,7 @@ import (
 
 	. "code.cloudfoundry.org/service-discovery-controller/config"
 	testhelpers "code.cloudfoundry.org/test-helpers"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

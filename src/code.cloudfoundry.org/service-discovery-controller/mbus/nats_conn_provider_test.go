@@ -7,7 +7,7 @@ import (
 	. "code.cloudfoundry.org/service-discovery-controller/mbus"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

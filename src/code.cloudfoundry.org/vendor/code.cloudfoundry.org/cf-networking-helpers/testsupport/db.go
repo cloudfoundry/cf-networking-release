@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 
 	"log"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

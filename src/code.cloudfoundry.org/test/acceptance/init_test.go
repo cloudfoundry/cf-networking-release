@@ -16,10 +16,9 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-pusher/cf_cli_adapter"
 	pusherConfig "code.cloudfoundry.org/cf-pusher/config"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	helpers "github.com/cloudfoundry-incubator/cf-test-helpers/config"
-	. "github.com/onsi/ginkgo"
-	ginkgoConfig "github.com/onsi/ginkgo/config"
+	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	helpers "github.com/cloudfoundry/cf-test-helpers/v2/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -69,7 +68,7 @@ func TestAcceptance(t *testing.T) {
 		appsDir = os.Getenv("APPS_DIR")
 		Expect(appsDir).NotTo(BeEmpty())
 
-		rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+		rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 	})
 
 	RunSpecs(t, "Acceptance Suite")

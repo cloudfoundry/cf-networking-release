@@ -46,7 +46,7 @@ func (c *CertWriter) WriteCA(caName string) (string, error) {
 	}
 
 	expiry := time.Now().AddDate(5, 0, 0).UTC()
-	crt, err := pkix.CreateCertificateAuthority(key, "", expiry, "", "", "", "", caName)
+	crt, err := pkix.CreateCertificateAuthority(key, "", expiry, "", "", "", "", caName, []string{})
 	if err != nil {
 		return "", fmt.Errorf("create certificate authority: %s", err)
 	}

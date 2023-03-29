@@ -34,12 +34,6 @@ for pkg in $(echo "${exclude_packages:-""}" | jq -r .[]); do
   ignored_packages+=("${pkg}")
 done
 
-install_ginkgo() {
-  if ! [ $(type -P "ginkgo") ]; then
-    go install -mod=mod github.com/onsi/ginkgo/ginkgo@v1
-  fi
-}
-
 containsElement() {
   local e match="$1"
   shift
@@ -54,7 +48,7 @@ test_package() {
   fi
   shift
   pushd "${package}" &>/dev/null
-  ginkgo --race -randomizeAllSpecs -randomizeSuites -failFast \
+  go run github.com/onsi/ginkgo/v2/ginkgo --race -randomize-all -randomize-suites -fail-fast \
       -ldflags="extldflags=-WL,--allow-multiple-definition" \
        "${@}";
   rc=$?
@@ -62,7 +56,6 @@ test_package() {
   return "${rc}"
 }
 
-install_ginkgo
 bootDB "${DB}"
 
 declare -a packages

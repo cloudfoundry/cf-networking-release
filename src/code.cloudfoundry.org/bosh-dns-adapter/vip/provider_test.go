@@ -6,7 +6,7 @@ import (
 
 	"code.cloudfoundry.org/bosh-dns-adapter/vip"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

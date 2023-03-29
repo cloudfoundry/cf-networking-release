@@ -9,10 +9,9 @@ import (
 	"time"
 
 	pusherConfig "code.cloudfoundry.org/cf-pusher/config"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	helpers "github.com/cloudfoundry-incubator/cf-test-helpers/config"
-	. "github.com/onsi/ginkgo"
-	ginkgoConfig "github.com/onsi/ginkgo/config"
+	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	helpers "github.com/cloudfoundry/cf-test-helpers/v2/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -25,7 +24,7 @@ var (
 )
 
 func TestScaling(t *testing.T) {
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Scaling Suite")

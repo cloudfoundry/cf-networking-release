@@ -7,13 +7,13 @@ import (
 	"net/http/httptest"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/policy-server/handlers"
 	"code.cloudfoundry.org/policy-server/handlers/fakes"
 	"code.cloudfoundry.org/policy-server/store"
 	storeFakes "code.cloudfoundry.org/policy-server/store/fakes"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

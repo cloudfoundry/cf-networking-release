@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/policy-server/server_metrics"
 	"code.cloudfoundry.org/policy-server/server_metrics/fakes"
 	"code.cloudfoundry.org/policy-server/store"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

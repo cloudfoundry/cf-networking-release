@@ -12,7 +12,7 @@ import (
 	"github.com/nats-io/go-nats"
 	"github.com/nats-io/go-nats/bench"
 	toputils "github.com/nats-io/nats-top/util"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

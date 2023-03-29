@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagerflags"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagerflags"
 	"code.cloudfoundry.org/lib/common"
 	"code.cloudfoundry.org/policy-server/config"
 	"code.cloudfoundry.org/policy-server/store"

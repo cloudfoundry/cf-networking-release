@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const HTTP_ERROR_METRIC_NAME = "http_error"
