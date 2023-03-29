@@ -7,8 +7,8 @@ import (
 
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagerflags"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagerflags"
 	"code.cloudfoundry.org/policy-server/server_metrics"
 	"code.cloudfoundry.org/policy-server/store"
 	"github.com/tedsuo/ifrit"

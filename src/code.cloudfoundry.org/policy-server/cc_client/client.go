@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const SECURITY_GROUPS_PER_PAGE = 5000

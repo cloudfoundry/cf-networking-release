@@ -13,10 +13,9 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	pusherConfig "code.cloudfoundry.org/cf-pusher/config"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/policy-server/api/api_v0"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/policy_client"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/rainmaker"
@@ -270,17 +269,17 @@ func getGuids(srcAppNames, dstAppNames []string) ([]string, []string) {
 	return srcGuids, dstGuids
 }
 
-func getPolicies(srcList, dstList []string, dstPorts []int) []api_v0.Policy {
+func getPolicies(srcList, dstList []string, dstPorts []int) []policy_client.PolicyV0 {
 	srcGuids, dstGuids := getGuids(srcList, dstList)
-	policies := []api_v0.Policy{}
+	policies := []policy_client.PolicyV0{}
 	for _, srcGuid := range srcGuids {
 		for _, dstGuid := range dstGuids {
 			for _, port := range dstPorts {
-				policies = append(policies, api_v0.Policy{
-					Source: api_v0.Source{
+				policies = append(policies, policy_client.PolicyV0{
+					Source: policy_client.SourceV0{
 						ID: srcGuid,
 					},
-					Destination: api_v0.Destination{
+					Destination: policy_client.DestinationV0{
 						ID:       dstGuid,
 						Port:     port,
 						Protocol: "tcp",

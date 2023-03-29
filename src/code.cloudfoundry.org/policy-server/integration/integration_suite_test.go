@@ -11,8 +11,7 @@ import (
 	"code.cloudfoundry.org/policy-server/config"
 	"code.cloudfoundry.org/policy-server/integration/helpers"
 	testhelpers "code.cloudfoundry.org/test-helpers"
-	. "github.com/onsi/ginkgo"
-	ginkgoConfig "github.com/onsi/ginkgo/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
@@ -61,22 +60,22 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
 	paths := policyServerPaths{}
 	fmt.Fprint(GinkgoWriter, "building policy-server binary...")
-	paths.External, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server", "-race")
+	paths.External, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server", "-race", "-buildvcs=false")
 	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
 	fmt.Fprint(GinkgoWriter, "building policy-server-internal binary...")
-	paths.Internal, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server-internal", "-race")
+	paths.Internal, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server-internal", "-race", "-buildvcs=false")
 	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
 	fmt.Fprint(GinkgoWriter, "building policy-server-asg-syncer binary...")
-	paths.AsgSyncer, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server-asg-syncer", "-race")
+	paths.AsgSyncer, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server-asg-syncer", "-race", "-buildvcs=false")
 	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
 	fmt.Fprint(GinkgoWriter, "building migrate-db binary...")
-	paths.MigrateDb, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/migrate-db", "-race")
+	paths.MigrateDb, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/migrate-db", "-race", "-buildvcs=false")
 	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
@@ -93,7 +92,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	policyServerAsgSyncerPath = paths.AsgSyncer
 	migrateDbPath = paths.MigrateDb
 
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {

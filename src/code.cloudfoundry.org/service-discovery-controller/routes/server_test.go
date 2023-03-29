@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/service-discovery-controller/config"
 	. "code.cloudfoundry.org/service-discovery-controller/routes"
 	"code.cloudfoundry.org/service-discovery-controller/routes/fakes"
 	testhelpers "code.cloudfoundry.org/test-helpers"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/tedsuo/ifrit"
 )

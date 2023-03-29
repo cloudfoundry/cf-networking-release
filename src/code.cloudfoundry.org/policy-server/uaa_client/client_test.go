@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/policy-server/uaa_client"
 	"code.cloudfoundry.org/policy-server/uaa_client/fakes"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 )

@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/store"
 )

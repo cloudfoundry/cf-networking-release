@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/filelock"
 	"code.cloudfoundry.org/lib/rules"
 	goiptables "github.com/coreos/go-iptables/iptables"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )

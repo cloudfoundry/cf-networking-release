@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 //go:generate counterfeiter -o ../fakes/sleeper.go --fake-name Sleeper . sleeper

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"github.com/nats-io/go-nats"
 	"github.com/pkg/errors"
 )

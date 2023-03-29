@@ -7,7 +7,7 @@ import (
 
 	"github.com/nats-io/gnatsd/server"
 	gnatsd "github.com/nats-io/gnatsd/test"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -20,7 +20,7 @@ func TestServiceDiscoveryController(t *testing.T) {
 var pathToServer string
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	path, err := gexec.Build("code.cloudfoundry.org/service-discovery-controller")
+	path, err := gexec.Build("code.cloudfoundry.org/service-discovery-controller", "-buildvcs=false")
 	Expect(err).NotTo(HaveOccurred())
 	SetDefaultEventuallyTimeout(2 * time.Second)
 	return []byte(path)

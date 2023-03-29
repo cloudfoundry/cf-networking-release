@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
 	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

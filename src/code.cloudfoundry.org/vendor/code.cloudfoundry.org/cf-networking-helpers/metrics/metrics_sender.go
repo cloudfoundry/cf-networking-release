@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 
 	dropsondemetrics "github.com/cloudfoundry/dropsonde/metrics"
 )

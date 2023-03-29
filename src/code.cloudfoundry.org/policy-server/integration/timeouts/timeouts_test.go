@@ -19,11 +19,11 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/store/migrations"
 	testhelpers "code.cloudfoundry.org/test-helpers"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 const testTimeoutInSeconds = 5

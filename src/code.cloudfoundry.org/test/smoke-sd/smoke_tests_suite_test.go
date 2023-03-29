@@ -11,10 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	helpersConfig "github.com/cloudfoundry-incubator/cf-test-helpers/config"
-	. "github.com/onsi/ginkgo"
-	ginkgoConfig "github.com/onsi/ginkgo/config"
+	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	helpersConfig "github.com/cloudfoundry/cf-test-helpers/v2/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -64,7 +63,7 @@ var _ = BeforeSuite(func() {
 	appsDir = os.Getenv("APPS_DIR")
 	Expect(appsDir).NotTo(BeEmpty())
 
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 func Auth(username, password string) {

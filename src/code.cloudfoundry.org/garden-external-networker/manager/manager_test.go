@@ -14,7 +14,7 @@ import (
 
 	"github.com/containernetworking/cni/pkg/types"
 	types020 "github.com/containernetworking/cni/pkg/types/020"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

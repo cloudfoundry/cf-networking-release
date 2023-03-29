@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 )
 
 //go:generate counterfeiter -o ./fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient

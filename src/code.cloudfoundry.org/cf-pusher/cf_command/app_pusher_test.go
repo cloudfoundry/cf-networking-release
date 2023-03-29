@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/cf-pusher/cf_command"
 	"code.cloudfoundry.org/cf-pusher/fakes"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

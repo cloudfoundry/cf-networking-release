@@ -20,7 +20,7 @@ pushd ${PACKAGE_DIR} > /dev/null
 popd > /dev/null
 
 pushd ${PACKAGE_DIR}/src/code.cloudfoundry.org > /dev/null
-  go build -o "${GOBIN}/ginkgo" github.com/onsi/ginkgo/ginkgo
+  go build -o "${GOBIN}/ginkgo" github.com/onsi/ginkgo/v2/ginkgo
 popd > /dev/null
 
 pushd ${PACKAGE_DIR}/src/code.cloudfoundry.org/test/performance-sd > /dev/null

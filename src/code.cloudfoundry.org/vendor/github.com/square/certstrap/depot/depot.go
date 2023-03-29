@@ -19,6 +19,8 @@ package depot
 
 import (
 	"errors"
+	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -98,10 +100,10 @@ func (d *FileDepot) Put(tag *Tag, data []byte) error {
 	return nil
 }
 
-// Check returns whether the file at the tag location exists and has the correct permissions
+// Check returns whether the file at the tag location exists and has permissions at least as restrictive as the given tag.
 func (d *FileDepot) Check(tag *Tag) bool {
 	name := d.path(tag.name)
-	if fi, err := os.Stat(name); err == nil && ^fi.Mode()&tag.perm == 0 {
+	if fi, err := os.Stat(name); err == nil && checkPermissions(tag.perm, fi.Mode()) {
 		return true
 	}
 	return false
@@ -113,10 +115,16 @@ func (d *FileDepot) check(tag *Tag) error {
 	if err != nil {
 		return err
 	}
-	if ^fi.Mode()&tag.perm != 0 {
-		return errors.New("permission denied")
+	if !checkPermissions(tag.perm, fi.Mode()) {
+		return fmt.Errorf("permissions too lax for %v: required no more than %v, found %v", name, tag.perm, fi.Mode())
 	}
 	return nil
+}
+
+// checkPermissions returns true if the mode bits in file are a subset of required.
+func checkPermissions(required, file fs.FileMode) bool {
+	// Clear the bits of required from file. The check passes if there are no remaining bits set.
+	return file&^required == 0
 }
 
 // Get reads the file specified by the tag
@@ -136,6 +144,7 @@ func (d *FileDepot) Delete(tag *Tag) error {
 func (d *FileDepot) List() []*Tag {
 	var tags = make([]*Tag, 0)
 
+	//nolint:errcheck
 	filepath.Walk(d.dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil

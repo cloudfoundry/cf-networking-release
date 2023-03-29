@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/bosh-dns-adapter/copilot/api"
 	"code.cloudfoundry.org/bosh-dns-adapter/copilot/fakes"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 )
