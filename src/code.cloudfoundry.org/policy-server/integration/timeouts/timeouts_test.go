@@ -95,23 +95,27 @@ var _ = Describe("Timeout", func() {
 		})
 
 		itTimesOut := func(description string, endpointMethod string, endpointPath string, bodyString string, failureJSON string) {
-			It(fmt.Sprintf("times out %s", description), func(done Done) {
-				var body io.Reader
-				if bodyString != "" {
-					body = strings.NewReader(bodyString)
-				}
-				resp := helpers.MakeAndDoRequest(
-					endpointMethod,
-					fmt.Sprintf("%s/%s", policyServerURL, endpointPath),
-					headers,
-					body,
-				)
-				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
-				Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(failureJSON))
+			It(fmt.Sprintf("times out %s", description), func() {
+				done := make(chan interface{})
+				go func() {
+					var body io.Reader
+					if bodyString != "" {
+						body = strings.NewReader(bodyString)
+					}
+					resp := helpers.MakeAndDoRequest(
+						endpointMethod,
+						fmt.Sprintf("%s/%s", policyServerURL, endpointPath),
+						headers,
+						body,
+					)
+					defer resp.Body.Close()
+					Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+					Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(failureJSON))
 
-				close(done)
-			}, float64(testTimeoutInSeconds))
+					close(done)
+				}()
+				Eventually(done, float64(testTimeoutInSeconds)).Should(BeClosed())
+			})
 		}
 
 		// v1
