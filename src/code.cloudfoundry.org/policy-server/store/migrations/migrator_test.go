@@ -1961,22 +1961,27 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numOfRoutines := 10
-					wg := sync.WaitGroup{}
-					wg.Add(numOfRoutines)
+					done := make(chan interface{})
+					go func() {
+						defer close(done)
+						numOfRoutines := 10
+						wg := sync.WaitGroup{}
+						wg.Add(numOfRoutines)
 
-					for i := 0; i < numOfRoutines; i++ {
-						go func() {
-							defer wg.Done()
-							defer GinkgoRecover()
+						for i := 0; i < numOfRoutines; i++ {
+							go func() {
+								defer wg.Done()
+								defer GinkgoRecover()
 
-							_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-							Expect(err).ToNot(HaveOccurred())
-						}()
-					}
+								_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+								Expect(err).ToNot(HaveOccurred())
+							}()
+						}
 
-					wg.Wait()
-				}, 10)
+						wg.Wait()
+					}()
+					Eventually(done, 10*time.Second).Should(BeClosed())
+				})
 			})
 
 			Context("postgres", func() {
@@ -1987,22 +1992,27 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numOfRoutines := 10
-					wg := sync.WaitGroup{}
-					wg.Add(numOfRoutines)
+					done := make(chan interface{})
+					go func() {
+						defer close(done)
+						numOfRoutines := 10
+						wg := sync.WaitGroup{}
+						wg.Add(numOfRoutines)
 
-					for i := 0; i < numOfRoutines; i++ {
-						go func() {
-							defer wg.Done()
-							defer GinkgoRecover()
+						for i := 0; i < numOfRoutines; i++ {
+							go func() {
+								defer wg.Done()
+								defer GinkgoRecover()
 
-							_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-							Expect(err).ToNot(HaveOccurred())
-						}()
-					}
+								_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+								Expect(err).ToNot(HaveOccurred())
+							}()
+						}
 
-					wg.Wait()
-				}, 10)
+						wg.Wait()
+					}()
+					Eventually(done, 10*time.Second).Should(BeClosed())
+				})
 			})
 
 		})

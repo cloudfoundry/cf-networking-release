@@ -6,8 +6,7 @@ import (
 	"net"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	ginkgoConfig "github.com/onsi/ginkgo/config"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -24,7 +23,7 @@ func TestIntegration(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
 	var err error
-	exampleAppPath, err = gexec.Build("proxy", "-race")
+	exampleAppPath, err = gexec.Build("proxy", "-race", "-buildvcs=false")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
@@ -32,7 +31,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 }, func(data []byte) {
 	exampleAppPath = string(data)
 
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelProcess()))
+	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {

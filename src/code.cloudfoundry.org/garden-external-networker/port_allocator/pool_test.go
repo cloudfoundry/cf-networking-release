@@ -2,11 +2,14 @@ package port_allocator_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"code.cloudfoundry.org/garden-external-networker/port_allocator"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 	"github.com/onsi/gomega/types"
 )
 
@@ -78,17 +81,23 @@ var _ = Describe("Tracker", func() {
 		})
 
 		Describe("performance", func() {
-			Measure("should acquire all of the ports quickly", func(b Benchmarker) {
-				tracker.Capacity = 4000
-				runtime := b.Time("runtime", func() {
-					for i := 0; i < 4000; i++ {
+			It("should aquire all the ports quickly", Serial, func() {
+				exp := gmeasure.NewExperiment("Acquiring Ports")
+				AddReportEntry(exp.Name, exp)
+				tracker.Capacity = 40_000
+				i := 0
+				exp.Sample(func(idx int) {
+					exp.MeasureDuration("runtime", func() {
+						i++
+						fmt.Printf("Iteration %d\n", i)
 						_, err := tracker.AcquireOne(pool, "some-handle")
 						Expect(err).NotTo(HaveOccurred())
-					}
-				})
-
-				Expect(runtime.Seconds()).To(BeNumerically("<", 5), "Acquiring a port shouldn't take too long.")
-			}, 10)
+					})
+				}, gmeasure.SamplingConfig{N: 40_000})
+				stats := exp.GetStats("runtime")
+				// no more than 1.5ms on average
+				Expect(stats.DurationFor(gmeasure.StatMean)).To(BeNumerically("<", 1500*time.Microsecond))
+			})
 		})
 	})
 
