@@ -57,7 +57,7 @@ var _ = Describe("NatsPerformance", func() {
 
 			By("publish messages onto service-discovery.register")
 			natsBenchmark := runNatsBenchmarker(NatsRun{0, SdcRegisterTopic})
-			generateBenchmarkGinkgoReport(exp, natsBenchmark)
+			generateBenchmarkGinkgoReport(exp, natsBenchmark, "")
 			Expect(int(natsBenchmark.MsgCnt)).To(Equal(config.NumMessages))
 
 			By("building an updated benchmark of subscribers listening on service-discovery.register")
@@ -86,81 +86,53 @@ var _ = Describe("NatsPerformance", func() {
 			i++
 			fmt.Printf("Iteration %d\n", i)
 
-			By("Running benchmark for just external routes", func() {
-				cpuChannel := make(chan float64)
-				stopCpuProfiling := make(chan struct{})
-
-				go startProfiler(exp, ProfilerExternalRoutesCPUKey, ProfilerExternalRoutesMemKey, stopCpuProfiling, cpuChannel)
-
-				var cpuValuesJustExternalRoutesSlice []float64
-				cpuMapperDone := make(chan struct{})
-
-				go func() {
-					for cpu := range cpuChannel {
-						cpuValuesJustExternalRoutesSlice = append(cpuValuesJustExternalRoutesSlice, cpu)
-					}
-					close(cpuMapperDone)
-				}()
-
-				natsBenchmark := runNatsBenchmarker(NatsRun{2, "router.register"})
-				close(stopCpuProfiling)
-
-				generateBenchmarkGinkgoReport(exp, natsBenchmark)
-
-				<-cpuMapperDone
-				var err error
-				medianJustExternalRoutes, err = stats.Median(cpuValuesJustExternalRoutesSlice)
-				Expect(err).NotTo(HaveOccurred())
-				meanJustExternalRoutes, err = stats.Mean(cpuValuesJustExternalRoutesSlice)
-				Expect(err).NotTo(HaveOccurred())
-
-			})
-
-			By("closing subscribers from previous nats benchmark run", func() {
-				closeSubscribers()
-			})
-
-			By("Running benchmark for both external and internal routes", func() {
-				cpuChannel := make(chan float64)
-				stopCpuProfiling := make(chan struct{})
-
-				go startProfiler(exp, ProfilerExternalAndInternalRoutesCPUKey, ProfilerExternalAndInternalRoutesMemKey, stopCpuProfiling, cpuChannel)
-				var cpuValueExternalAndInternalRoutesSlice []float64
-				cpuMapperDone := make(chan struct{})
-
-				go func() {
-					for cpu := range cpuChannel {
-						cpuValueExternalAndInternalRoutesSlice = append(cpuValueExternalAndInternalRoutesSlice, cpu)
-					}
-
-					close(cpuMapperDone)
-				}()
-
-				natsBenchmarkExternalAndInternalRoutes := runNatsBenchmarker(NatsRun{2, "router.register"}, NatsRun{0, "service-discovery.register"})
-				close(stopCpuProfiling)
-
-				generateBenchmarkGinkgoReport(exp, natsBenchmarkExternalAndInternalRoutes)
-
-				<-cpuMapperDone
-				var err error
-				medianExternalAndInternalRoutes, err = stats.Median(cpuValueExternalAndInternalRoutesSlice)
-				Expect(err).NotTo(HaveOccurred())
-				meanExternalAndInternalRoutes, err = stats.Mean(cpuValueExternalAndInternalRoutesSlice)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			exp.RecordValue("medianExternalAndInternalRoutes", medianExternalAndInternalRoutes)
-			exp.RecordValue("meanExternalAndInternalRoutes", meanExternalAndInternalRoutes)
-			exp.RecordValue("medianJustExternalRoutes", medianJustExternalRoutes)
-			exp.RecordValue("meanJustExternalRoutes", meanJustExternalRoutes)
+			medianJustExternalRoutes, meanJustExternalRoutes = runCpuAndMemProfle(exp, "External Routes", NatsRun{2, "router.register"})
+			medianExternalAndInternalRoutes, meanExternalAndInternalRoutes = runCpuAndMemProfle(exp, "Both External and Internal Routes", NatsRun{2, "router.register"}, NatsRun{0, "service-discovery.register"})
 
 			Expect(medianExternalAndInternalRoutes).Should(BeNumerically("~", medianJustExternalRoutes, 30.00))
 			Expect(meanExternalAndInternalRoutes).Should(BeNumerically("~", meanJustExternalRoutes, 30.00))
 
-			closeSubscribers()
 		}, gmeasure.SamplingConfig{N: 3})
 	})
 })
+
+func runCpuAndMemProfle(exp *gmeasure.Experiment, prefix string, natsRuns ...NatsRun) (median, mean float64) {
+	By(fmt.Sprintf("Running benchmark for %s", prefix), func() {
+		cpuChannel := make(chan float64)
+		stopCpuProfiling := make(chan struct{})
+
+		go startProfiler(exp, addPrefix(prefix, "CPU"), addPrefix(prefix, "Memory"), stopCpuProfiling, cpuChannel)
+
+		var cpuValuesSlice []float64
+		cpuMapperDone := make(chan struct{})
+
+		go func() {
+			for cpu := range cpuChannel {
+				cpuValuesSlice = append(cpuValuesSlice, cpu)
+			}
+			close(cpuMapperDone)
+		}()
+
+		natsBenchmark := runNatsBenchmarker(natsRuns...)
+		close(stopCpuProfiling)
+
+		generateBenchmarkGinkgoReport(exp, natsBenchmark, prefix)
+
+		<-cpuMapperDone
+		var err error
+		median, err = stats.Median(cpuValuesSlice)
+		Expect(err).NotTo(HaveOccurred())
+		mean, err = stats.Mean(cpuValuesSlice)
+		Expect(err).NotTo(HaveOccurred())
+
+		exp.RecordValue(addPrefix(prefix, "median"), median)
+		exp.RecordValue(addPrefix(prefix, "mean"), mean)
+	})
+
+	closeSubscribers()
+
+	return median, mean
+}
 
 func closeSubscribers() {
 	for _, natsConn := range subscriberNatsConnections {
@@ -249,20 +221,27 @@ func runNatsBenchmarker(natsRuns ...NatsRun) *bench.Benchmark {
 	return natsBenchmark
 }
 
-func generateBenchmarkGinkgoReport(exp *gmeasure.Experiment, bm *bench.Benchmark) {
+func generateBenchmarkGinkgoReport(exp *gmeasure.Experiment, bm *bench.Benchmark, prefix string) {
 	if bm.Pubs.HasSamples() {
 		if len(bm.Pubs.Samples) > 1 {
-			exp.RecordValue("PubStats", float64(bm.Pubs.Rate()), gmeasure.Units("msgs/sec"))
+			exp.RecordValue(addPrefix(prefix, "PubStats"), float64(bm.Pubs.Rate()), gmeasure.Units("msgs/sec"))
 			for i, stat := range bm.Pubs.Samples {
-				exp.RecordValue(fmt.Sprintf("Pub %d", i), float64(stat.MsgCnt), gmeasure.Annotation(fmt.Sprintf("publisher # %d", i)))
+				exp.RecordValue(addPrefix(prefix, fmt.Sprintf("Pub %d", i)), float64(stat.MsgCnt), gmeasure.Annotation(fmt.Sprintf("publisher # %d", i)))
 			}
-			exp.RecordValue("min", float64(bm.Pubs.MinRate()))
-			exp.RecordValue("avg", float64(bm.Pubs.AvgRate()))
-			exp.RecordValue("max", float64(bm.Pubs.MaxRate()))
-			exp.RecordValue("stddev", float64(bm.Pubs.StdDev()))
+			exp.RecordValue(addPrefix(prefix, "min"), float64(bm.Pubs.MinRate()))
+			exp.RecordValue(addPrefix(prefix, "avg"), float64(bm.Pubs.AvgRate()))
+			exp.RecordValue(addPrefix(prefix, "max"), float64(bm.Pubs.MaxRate()))
+			exp.RecordValue(addPrefix(prefix, "stddev"), float64(bm.Pubs.StdDev()))
 		}
 	}
+}
 
+func addPrefix(prefix, metricName string) string {
+	if prefix != "" {
+		return fmt.Sprintf("%s %s", prefix, metricName)
+	}
+
+	return metricName
 }
 
 func collectNatsSubscriberConnectionInfo(subscriber string) map[uint64]server.ConnInfo {
