@@ -14,6 +14,7 @@ import (
 	toputils "github.com/nats-io/nats-top/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 )
 
 const SdcRegisterTopic = "service-discovery.register"
@@ -42,104 +43,123 @@ var _ = Describe("NatsPerformance", func() {
 		closeSubscribers()
 	})
 
-	Measure(fmt.Sprintf("NATS subscriptions when publishing %d messages", config.NumMessages), func(b Benchmarker) {
-		By("building a benchmark of subscribers listening on service-discovery.register")
-		benchMarkNatsSubMap := collectNatsSubscriberConnectionInfo(SdcRegisterTopic)
+	It(fmt.Sprintf("NATS subscriptions when publishing %d messages", config.NumMessages), Serial, func() {
+		exp := gmeasure.NewExperiment("Sending and receiving messages")
+		AddReportEntry(exp.Name, exp)
 
-		By("publish messages onto service-discovery.register")
-		natsBenchmark := runNatsBenchmarker(NatsRun{0, SdcRegisterTopic})
-		generateBenchmarkGinkgoReport(b, natsBenchmark)
-		Expect(int(natsBenchmark.MsgCnt)).To(Equal(config.NumMessages))
+		i := 0
+		exp.Sample(func(idx int) {
+			i++
+			fmt.Printf("Iteration %d\n", i)
 
-		By("building an updated benchmark of subscribers listening on service-discovery.register")
-		natsSubMap := collectNatsSubscriberConnectionInfo(SdcRegisterTopic)
+			By("building a benchmark of subscribers listening on service-discovery.register")
+			benchMarkNatsSubMap := collectNatsSubscriberConnectionInfo(SdcRegisterTopic)
 
-		By("making sure service-discovery.register subscribers received every published message", func() {
-			for key, benchMarkVal := range benchMarkNatsSubMap {
-				Expect(int(natsSubMap[key].OutMsgs-benchMarkVal.OutMsgs)).To(Equal(config.NumMessages), fmt.Sprintf("Benchmark: %+v \\n \\n Got %+v", benchMarkVal, natsSubMap[key]))
-			}
-		})
+			By("publish messages onto service-discovery.register")
+			natsBenchmark := runNatsBenchmarker(NatsRun{0, SdcRegisterTopic})
+			generateBenchmarkGinkgoReport(exp, natsBenchmark)
+			Expect(int(natsBenchmark.MsgCnt)).To(Equal(config.NumMessages))
 
-	}, 3)
+			By("building an updated benchmark of subscribers listening on service-discovery.register")
+			natsSubMap := collectNatsSubscriberConnectionInfo(SdcRegisterTopic)
 
-	Measure("SDC subscription CPU load does not greatly increase Nats CPU", func(b Benchmarker) {
+			By("making sure service-discovery.register subscribers received every published message", func() {
+				for key, benchMarkVal := range benchMarkNatsSubMap {
+					Expect(int(natsSubMap[key].OutMsgs-benchMarkVal.OutMsgs)).To(Equal(config.NumMessages), fmt.Sprintf("Benchmark: %+v \\n \\n Got %+v", benchMarkVal, natsSubMap[key]))
+				}
+			})
+		}, gmeasure.SamplingConfig{N: 3})
+	})
+
+	It("SDC subscription CPU load does not greatly increase Nats CPU", Serial, func() {
 		var medianJustExternalRoutes float64
 		var meanJustExternalRoutes float64
 
 		var medianExternalAndInternalRoutes float64
 		var meanExternalAndInternalRoutes float64
 
-		By("Running benchmark for just external routes", func() {
-			cpuChannel := make(chan float64)
-			stopCpuProfiling := make(chan struct{})
+		exp := gmeasure.NewExperiment("")
+		AddReportEntry(exp.Name, exp)
 
-			go startProfiler(b, ProfilerExternalRoutesCPUKey, ProfilerExternalRoutesMemKey, stopCpuProfiling, cpuChannel)
+		i := 0
+		exp.Sample(func(idx int) {
+			i++
+			fmt.Printf("Iteration %d\n", i)
 
-			var cpuValuesJustExternalRoutesSlice []float64
-			cpuMapperDone := make(chan struct{})
+			By("Running benchmark for just external routes", func() {
+				cpuChannel := make(chan float64)
+				stopCpuProfiling := make(chan struct{})
 
-			go func() {
-				for cpu := range cpuChannel {
-					cpuValuesJustExternalRoutesSlice = append(cpuValuesJustExternalRoutesSlice, cpu)
-				}
-				close(cpuMapperDone)
-			}()
+				go startProfiler(exp, ProfilerExternalRoutesCPUKey, ProfilerExternalRoutesMemKey, stopCpuProfiling, cpuChannel)
 
-			natsBenchmark := runNatsBenchmarker(NatsRun{2, "router.register"})
-			close(stopCpuProfiling)
+				var cpuValuesJustExternalRoutesSlice []float64
+				cpuMapperDone := make(chan struct{})
 
-			generateBenchmarkGinkgoReport(b, natsBenchmark)
+				go func() {
+					for cpu := range cpuChannel {
+						cpuValuesJustExternalRoutesSlice = append(cpuValuesJustExternalRoutesSlice, cpu)
+					}
+					close(cpuMapperDone)
+				}()
 
-			<-cpuMapperDone
-			var err error
-			medianJustExternalRoutes, err = stats.Median(cpuValuesJustExternalRoutesSlice)
-			Expect(err).NotTo(HaveOccurred())
-			meanJustExternalRoutes, err = stats.Mean(cpuValuesJustExternalRoutesSlice)
-			Expect(err).NotTo(HaveOccurred())
+				natsBenchmark := runNatsBenchmarker(NatsRun{2, "router.register"})
+				close(stopCpuProfiling)
 
-		})
+				generateBenchmarkGinkgoReport(exp, natsBenchmark)
 
-		By("closing subscribers from previous nats benchmark run", func() {
+				<-cpuMapperDone
+				var err error
+				medianJustExternalRoutes, err = stats.Median(cpuValuesJustExternalRoutesSlice)
+				Expect(err).NotTo(HaveOccurred())
+				meanJustExternalRoutes, err = stats.Mean(cpuValuesJustExternalRoutesSlice)
+				Expect(err).NotTo(HaveOccurred())
+
+			})
+
+			By("closing subscribers from previous nats benchmark run", func() {
+				closeSubscribers()
+			})
+
+			By("Running benchmark for both external and internal routes", func() {
+				cpuChannel := make(chan float64)
+				stopCpuProfiling := make(chan struct{})
+
+				go startProfiler(exp, ProfilerExternalAndInternalRoutesCPUKey, ProfilerExternalAndInternalRoutesMemKey, stopCpuProfiling, cpuChannel)
+				var cpuValueExternalAndInternalRoutesSlice []float64
+				cpuMapperDone := make(chan struct{})
+
+				go func() {
+					for cpu := range cpuChannel {
+						cpuValueExternalAndInternalRoutesSlice = append(cpuValueExternalAndInternalRoutesSlice, cpu)
+					}
+
+					close(cpuMapperDone)
+				}()
+
+				natsBenchmarkExternalAndInternalRoutes := runNatsBenchmarker(NatsRun{2, "router.register"}, NatsRun{0, "service-discovery.register"})
+				close(stopCpuProfiling)
+
+				generateBenchmarkGinkgoReport(exp, natsBenchmarkExternalAndInternalRoutes)
+
+				<-cpuMapperDone
+				var err error
+				medianExternalAndInternalRoutes, err = stats.Median(cpuValueExternalAndInternalRoutesSlice)
+				Expect(err).NotTo(HaveOccurred())
+				meanExternalAndInternalRoutes, err = stats.Mean(cpuValueExternalAndInternalRoutesSlice)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			exp.RecordValue("medianExternalAndInternalRoutes", medianExternalAndInternalRoutes)
+			exp.RecordValue("meanExternalAndInternalRoutes", meanExternalAndInternalRoutes)
+			exp.RecordValue("medianJustExternalRoutes", medianJustExternalRoutes)
+			exp.RecordValue("meanJustExternalRoutes", meanJustExternalRoutes)
+
+			Expect(medianExternalAndInternalRoutes).Should(BeNumerically("~", medianJustExternalRoutes, 30.00))
+			Expect(meanExternalAndInternalRoutes).Should(BeNumerically("~", meanJustExternalRoutes, 30.00))
+
 			closeSubscribers()
-		})
-
-		By("Running benchmark for both external and internal routes", func() {
-			cpuChannel := make(chan float64)
-			stopCpuProfiling := make(chan struct{})
-
-			go startProfiler(b, ProfilerExternalAndInternalRoutesCPUKey, ProfilerExternalAndInternalRoutesMemKey, stopCpuProfiling, cpuChannel)
-			var cpuValueExternalAndInternalRoutesSlice []float64
-			cpuMapperDone := make(chan struct{})
-
-			go func() {
-				for cpu := range cpuChannel {
-					cpuValueExternalAndInternalRoutesSlice = append(cpuValueExternalAndInternalRoutesSlice, cpu)
-				}
-
-				close(cpuMapperDone)
-			}()
-
-			natsBenchmarkExternalAndInternalRoutes := runNatsBenchmarker(NatsRun{2, "router.register"}, NatsRun{0, "service-discovery.register"})
-			close(stopCpuProfiling)
-
-			generateBenchmarkGinkgoReport(b, natsBenchmarkExternalAndInternalRoutes)
-
-			<-cpuMapperDone
-			var err error
-			medianExternalAndInternalRoutes, err = stats.Median(cpuValueExternalAndInternalRoutesSlice)
-			Expect(err).NotTo(HaveOccurred())
-			meanExternalAndInternalRoutes, err = stats.Mean(cpuValueExternalAndInternalRoutesSlice)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		b.RecordValue("medianExternalAndInternalRoutes", medianExternalAndInternalRoutes)
-		b.RecordValue("meanExternalAndInternalRoutes", meanExternalAndInternalRoutes)
-		b.RecordValue("medianJustExternalRoutes", medianJustExternalRoutes)
-		b.RecordValue("meanJustExternalRoutes", meanJustExternalRoutes)
-
-		Expect(medianExternalAndInternalRoutes).Should(BeNumerically("~", medianJustExternalRoutes, 30.00))
-		Expect(meanExternalAndInternalRoutes).Should(BeNumerically("~", meanJustExternalRoutes, 30.00))
-	}, 3)
+		}, gmeasure.SamplingConfig{N: 3})
+	})
 })
 
 func closeSubscribers() {
@@ -154,14 +174,14 @@ func closeSubscribers() {
 	subscriberNatsConnections = []*nats.Conn{}
 }
 
-func startProfiler(ginkgoBenchmarker Benchmarker, cpuKey, memKey string, stopCpuProfiling chan struct{}, cpuValuesChannel chan float64) {
+func startProfiler(exp *gmeasure.Experiment, cpuKey, memKey string, stopCpuProfiling chan struct{}, cpuValuesChannel chan float64) {
 	defer GinkgoRecover()
 	natsTopEngine := toputils.NewEngine(config.NatsURL, config.NatsMonitoringPort, 1000, 0)
 	natsTopEngine.SetupHTTP()
 
 	go func() {
 		defer GinkgoRecover()
-		Expect(natsTopEngine.MonitorStats()).ShouldNot(HaveOccurred())
+		Expect(natsTopEngine.MonitorStats()).To(Succeed())
 	}()
 
 	for {
@@ -170,8 +190,8 @@ func startProfiler(ginkgoBenchmarker Benchmarker, cpuKey, memKey string, stopCpu
 			if !ok {
 				continue
 			}
-			ginkgoBenchmarker.RecordValue(cpuKey, natsStats.Varz.CPU)
-			ginkgoBenchmarker.RecordValue(memKey, float64(natsStats.Varz.Mem))
+			exp.RecordValue(cpuKey, natsStats.Varz.CPU)
+			exp.RecordValue(memKey, float64(natsStats.Varz.Mem))
 			Expect(int(natsStats.Varz.SlowConsumers)).To(Equal(0))
 			cpuValuesChannel <- natsStats.Varz.CPU
 		case <-stopCpuProfiling:
@@ -221,6 +241,7 @@ func runNatsBenchmarker(natsRuns ...NatsRun) *bench.Benchmark {
 		natsConn.Close()
 		end := time.Now()
 		time.Sleep(1 * time.Second)
+
 		natsBenchmark.AddSubSample(bench.NewSample(config.NumMessages, NATS_MSG_SIZE, startSubscribers, end, natsConn))
 	}
 
@@ -228,17 +249,17 @@ func runNatsBenchmarker(natsRuns ...NatsRun) *bench.Benchmark {
 	return natsBenchmark
 }
 
-func generateBenchmarkGinkgoReport(b Benchmarker, bm *bench.Benchmark) {
+func generateBenchmarkGinkgoReport(exp *gmeasure.Experiment, bm *bench.Benchmark) {
 	if bm.Pubs.HasSamples() {
 		if len(bm.Pubs.Samples) > 1 {
-			b.RecordValue("PubStats", float64(bm.Pubs.Rate()), "msgs/sec")
+			exp.RecordValue("PubStats", float64(bm.Pubs.Rate()), gmeasure.Units("msgs/sec"))
 			for i, stat := range bm.Pubs.Samples {
-				b.RecordValue(fmt.Sprintf("Pub %d", i), float64(stat.MsgCnt), fmt.Sprintf("publisher # %d", i))
+				exp.RecordValue(fmt.Sprintf("Pub %d", i), float64(stat.MsgCnt), gmeasure.Annotation(fmt.Sprintf("publisher # %d", i)))
 			}
-			b.RecordValue("min", float64(bm.Pubs.MinRate()))
-			b.RecordValue("avg", float64(bm.Pubs.AvgRate()))
-			b.RecordValue("max", float64(bm.Pubs.MaxRate()))
-			b.RecordValue("stddev", float64(bm.Pubs.StdDev()))
+			exp.RecordValue("min", float64(bm.Pubs.MinRate()))
+			exp.RecordValue("avg", float64(bm.Pubs.AvgRate()))
+			exp.RecordValue("max", float64(bm.Pubs.MaxRate()))
+			exp.RecordValue("stddev", float64(bm.Pubs.StdDev()))
 		}
 	}
 
