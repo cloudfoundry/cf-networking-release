@@ -1,7 +1,5 @@
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230329170711-09de7154565b h1:3UEMtXJkJTbPlGNjDlF+Q9lVqhUusgSCFwmG6vDq3r0=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230329170711-09de7154565b/go.mod h1:m7EaGgLsn0jM3QXghuV7W9IXlFzY5Ohf/I97wHjvO8c=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230329203411-34bd9d8446bd h1:+EcpFNP0P6NgQqUim90YkUWdPrYR4tY1EYNNWKe8xY0=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230329203411-34bd9d8446bd/go.mod h1:m7EaGgLsn0jM3QXghuV7W9IXlFzY5Ohf/I97wHjvO8c=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230405132800-3ab029b13e12 h1:ySPTyY55G5ZMPH7HGXM4kDxjHLEwGsUXpLdnj1gN7X8=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230405132800-3ab029b13e12/go.mod h1:m7EaGgLsn0jM3QXghuV7W9IXlFzY5Ohf/I97wHjvO8c=
 code.cloudfoundry.org/localip v0.0.0-20210608161955-43c3ec713c20 h1:wUuKExmeHyMJ0m9g9HKjJjHn3US4j4kWrDxqUsSQmRg=
 code.cloudfoundry.org/localip v0.0.0-20210608161955-43c3ec713c20/go.mod h1:s8cV87W5BJK6yJIEOswgQ1aLkccff9JCTYnVOjCPyDY=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
