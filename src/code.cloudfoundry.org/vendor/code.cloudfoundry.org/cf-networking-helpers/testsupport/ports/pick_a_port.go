@@ -17,11 +17,10 @@ func PickAPort() int {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	suiteCfg, _ := GinkgoConfiguration()
 	if lastPortUsed == 0 {
 		once.Do(func() {
 			const portRangeStart = 18000
-			lastPortUsed = portRangeStart + GinkgoParallelProcess()*suiteCfg.ParallelTotal
+			lastPortUsed = portRangeStart + GinkgoParallelProcess()*200
 		})
 	}
 
