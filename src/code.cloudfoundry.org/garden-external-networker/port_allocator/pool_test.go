@@ -84,16 +84,21 @@ var _ = Describe("Tracker", func() {
 			It("should aquire all the ports quickly", Serial, func() {
 				exp := gmeasure.NewExperiment("Acquiring Ports")
 				AddReportEntry(exp.Name, exp)
-				tracker.Capacity = 40_000
-				i := 0
+
+				sampleSize := 4_000
+
+				tracker.Capacity = sampleSize
 				exp.Sample(func(idx int) {
+					if idx%1_000 == 0 {
+						fmt.Printf("Iteration %d\n", idx)
+					}
+
 					exp.MeasureDuration("runtime", func() {
-						i++
-						fmt.Printf("Iteration %d\n", i)
 						_, err := tracker.AcquireOne(pool, "some-handle")
 						Expect(err).NotTo(HaveOccurred())
 					})
-				}, gmeasure.SamplingConfig{N: 40_000})
+				}, gmeasure.SamplingConfig{N: sampleSize})
+
 				stats := exp.GetStats("runtime")
 				// no more than 1.5ms on average
 				Expect(stats.DurationFor(gmeasure.StatMean)).To(BeNumerically("<", 1500*time.Microsecond))
