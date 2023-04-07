@@ -20,7 +20,7 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20230329145323-970bd2fbac5a
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230405132800-3ab029b13e12
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230405200337-cf765a8ab0b3
 	code.cloudfoundry.org/cf-test-helpers v1.0.0
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/debugserver v0.0.0-20230329140605-8c21649a9a42
