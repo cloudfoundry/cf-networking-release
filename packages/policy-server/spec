@@ -17,17 +17,11 @@ files:
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/middleware/adapter/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cfhttp/v2/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/clock/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/consuladapter/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/diego-logging-client/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/go-diodes/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/go-loggregator/v8/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/go-loggregator/v8/rfc5424/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/go-loggregator/v8/rpc/loggregator_v2/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/*.go # gosub
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/lagerflags/*.go # gosub
+  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/v3/*.go # gosub
+  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/v3/internal/truncate/*.go # gosub
+  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/v3/lagerflags/*.go # gosub
   - code.cloudfoundry.org/lib/common/*.go # gosub
   - code.cloudfoundry.org/lib/nonmutualtls/*.go # gosub
   - code.cloudfoundry.org/lib/poller/*.go # gosub
@@ -53,7 +47,6 @@ files:
   - code.cloudfoundry.org/policy-server/store/migrations/*.go # gosub
   - code.cloudfoundry.org/policy-server/uaa_client/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/tlsconfig/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/armon/go-metrics/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/bmizerany/pat/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
@@ -70,29 +63,18 @@ files:
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/metricbatcher/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/cloudfoundry/gosteno/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/cloudfoundry/gosteno/syslog/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/sonde-go/events/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/fatih/color/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/go-sql-driver/mysql/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/gogoproto/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/proto/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/jsonpb/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/proto/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/ptypes/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/ptypes/any/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/ptypes/duration/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/golang/protobuf/ptypes/timestamp/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/consul/api/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-cleanhttp/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-hclog/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-immutable-radix/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-rootcerts/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/golang-lru/simplelru/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/hashicorp/serf/coordinate/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/reflectx/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/josharian/intern/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/oid/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/scram/*.go # gosub
@@ -100,11 +82,9 @@ files:
   - code.cloudfoundry.org/vendor/github.com/mailru/easyjson/buffer/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/mailru/easyjson/jlexer/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/mailru/easyjson/jwriter/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/mattn/go-colorable/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/mattn/go-isatty/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/mitchellh/go-homedir/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/mitchellh/mapstructure/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/nu7hatch/gouuid/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/openzipkin/zipkin-go/idgenerator/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/openzipkin/zipkin-go/model/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/pkg/errors/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/tedsuo/ifrit/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/tedsuo/ifrit/grouper/*.go # gosub
