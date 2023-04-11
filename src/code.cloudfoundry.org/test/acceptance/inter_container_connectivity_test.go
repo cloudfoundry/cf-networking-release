@@ -72,7 +72,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("allows policies to whitelist traffic between applications", func(done Done) {
+		It("allows policies to whitelist traffic between applications", func() {
 			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -127,9 +127,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			scaleApps(appsTest, appInstances /* instances */)
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
-
-			close(done)
-		}, 30*60 /* <-- overall spec timeout in seconds */)
+		}, SpecTimeout(30*time.Minute))
 	})
 })
 
