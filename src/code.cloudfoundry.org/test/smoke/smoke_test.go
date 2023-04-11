@@ -58,7 +58,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("delete-space", spaceName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		It("allows the user to configure policies", func(done Done) {
+		It("allows the user to configure policies", func() {
 			pushApp(appProxy, "proxy")
 			pushApp(appSmoke, "smoke", "--no-start")
 			setEnv(appSmoke, "PROXY_APP_URL", fmt.Sprintf("http://%s.%s", appProxy, config.AppsDomain))
@@ -94,8 +94,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 				assertConnectionFails(appSmoke, appInstances)
 			})
 
-			close(done)
-		}, 30*60 /* <-- overall spec timeout in seconds */)
+		})
 	})
 })
 
