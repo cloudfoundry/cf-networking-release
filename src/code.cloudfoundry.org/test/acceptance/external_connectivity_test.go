@@ -103,7 +103,7 @@ var _ = Describe("external connectivity", func() {
 	}
 
 	Describe("basic (legacy) network behavior for an app", func() {
-		It("makes the app reachable from the router, and the app can reach the internet only if allowed", func(done Done) {
+		It("makes the app reachable from the router, and the app can reach the internet only if allowed", func() {
 			By("checking that the app is reachable via the router")
 			Eventually(isReachable, "10s", "1s").Should(Succeed())
 			Consistently(isReachable, "2s", "0.5s").Should(Succeed())
@@ -142,11 +142,9 @@ var _ = Describe("external connectivity", func() {
 			}
 			By("checking that the app cannot use http to reach the internet")
 			Consistently(cannotProxy, "180s", "0.5s").Should(Succeed())
+		}, SpecTimeout(10*time.Minute))
 
-			close(done)
-		}, 600 /* <-- overall spec timeout in seconds */)
-
-		It("allows outbound ICMP only if allowed", func(done Done) {
+		It("allows outbound ICMP only if allowed", func() {
 			if testConfig.SkipICMPTests {
 				Skip("Test config has 'skip_icmp_test: true', skipping ICMP connectivity tests")
 			}
@@ -165,9 +163,7 @@ var _ = Describe("external connectivity", func() {
 			By("checking that the app can ping the internet")
 			Eventually(canPing, "180s", "1s").Should(Succeed())
 			Consistently(canPing, "2s", "0.5s").Should(Succeed())
-
-			close(done)
-		}, 180 /* <-- overall spec timeout in seconds */)
+		}, SpecTimeout(3*time.Minute))
 	})
 })
 

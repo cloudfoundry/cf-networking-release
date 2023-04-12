@@ -58,14 +58,16 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("allows tasks to talk to app instances", func(done Done) {
+		It("allows tasks to talk to app instances", func() {
 			By("getting the overlay ip of proxy2")
 			cmd := exec.Command("curl", "--fail", proxy2+"."+domain)
 			sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(sess, 5*time.Second).Should(gexec.Exit(0))
+
 			var proxy2Response ProxyResponse
 			Expect(json.Unmarshal(sess.Out.Contents(), &proxy2Response)).To(Succeed())
+
 			containerIP := getContainerIP(proxy2Response.ListenAddresses)
 
 			By("Checking that the task associated with proxy1 can connect to proxy2")
@@ -82,9 +84,7 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			Eventually(func() *gbytes.Buffer {
 				return cf.Cf("tasks", proxy1).Wait(10 * time.Second).Out
 			}, Timeout_Task_Curl).Should(gbytes.Say("SUCCEEDED"))
-
-			close(done)
-		}, 30*60 /* <-- overall spec timeout in seconds */)
+		}, SpecTimeout(30*time.Minute))
 	})
 })
 

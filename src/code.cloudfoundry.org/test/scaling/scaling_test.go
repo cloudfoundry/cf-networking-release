@@ -66,7 +66,7 @@ var _ = Describe("how the container network performs at scale", func() {
 			}
 		})
 		runScalingTest := func() {
-			It("allows the user to configure policies", func(done Done) {
+			It("allows the user to configure policies", func() {
 				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps listening on %d ports", ts(), testConfig.ProxyApplications, testConfig.Applications, len(ports)))
 				appIPs := getAppIPs(registryApp, tickApps)
 				conns := connections(proxyApps, appIPs, ports)
@@ -135,9 +135,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				Expect(beforeCreateCount).To(Equal(0))
 				Expect(afterCreateCount).To(Equal(0))
 				Expect(afterDeleteCount).To(Equal(0))
-
-				close(done)
-			}, 30*60) // 30 minutes
+			}, SpecTimeout(30*time.Minute))
 		}
 		Context("when one client with many backends", func() {
 			BeforeEach(func() {
