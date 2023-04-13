@@ -66,7 +66,7 @@ var _ = Describe("how the container network performs at scale", func() {
 			}
 		})
 		runScalingTest := func() {
-			It("allows the user to configure policies", func() {
+			It("allows the user to configure policies", func(ctx SpecContext) {
 				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps listening on %d ports", ts(), testConfig.ProxyApplications, testConfig.Applications, len(ports)))
 				appIPs := getAppIPs(registryApp, tickApps)
 				conns := connections(proxyApps, appIPs, ports)

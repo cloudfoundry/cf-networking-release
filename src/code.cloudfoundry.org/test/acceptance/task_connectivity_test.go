@@ -58,7 +58,7 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("allows tasks to talk to app instances", func() {
+		It("allows tasks to talk to app instances", func(ctx SpecContext) {
 			By("getting the overlay ip of proxy2")
 			cmd := exec.Command("curl", "--fail", proxy2+"."+domain)
 			sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
