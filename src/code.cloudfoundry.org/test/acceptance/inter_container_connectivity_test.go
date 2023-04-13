@@ -72,7 +72,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("allows policies to whitelist traffic between applications", func() {
+		It("allows policies to whitelist traffic between applications", func(ctx SpecContext) {
 			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
