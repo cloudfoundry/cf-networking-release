@@ -2,6 +2,7 @@ package acceptance_test
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -101,18 +102,18 @@ var _ = Describe("Application Security Groups", func() {
 		Expect(cfCLI.UnbindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
 
 		if !testConfig.DynamicASGsEnabled {
-			By("if dynamics asgs are not enabled, validating an app restart is required")
-			Consistently(func() string {
-				resp, err = http.Get(proxyRequestURL)
-				Expect(err).NotTo(HaveOccurred())
+			By("if dynamic asgs are not enabled, validating an app restart is required")
+			time.Sleep(10 * time.Second)
+			resp, err = http.Get(proxyRequestURL)
+			Expect(err).NotTo(HaveOccurred())
 
-				respBytes, err = ioutil.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
-				resp.Body.Close()
-				return string(respBytes)
-			}).Should(MatchRegexp("api_version"))
+			respBytes, err = io.ReadAll(resp.Body)
+			Expect(err).ToNot(HaveOccurred())
+			resp.Body.Close()
+			response := string(respBytes)
+			Expect(response).To(MatchRegexp("api_version"))
 
-			Expect(cf.Cf("restart", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("restart", appName).Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
 		}
 
 		By("checking that our app can no longer reach cloud controller over internal address")
