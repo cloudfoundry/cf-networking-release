@@ -113,7 +113,7 @@ var _ = Describe("Application Security Groups", func() {
 			response := string(respBytes)
 			Expect(response).To(MatchRegexp("api_version"))
 
-			Expect(cf.Cf("restart", appName).Wait(Config.CfPushTimeoutDuration())).To(Exit(0))
+			Expect(cf.Cf("restart", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		}
 
 		By("checking that our app can no longer reach cloud controller over internal address")
