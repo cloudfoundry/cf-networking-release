@@ -2,6 +2,8 @@ package cf_command
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 )
 
 //go:generate counterfeiter -o ../fakes/push_cli_adapter.go --fake-name PushCLIAdapter . pushCLIAdapter
@@ -67,7 +69,21 @@ func (a *AppPusher) Push() error {
 			defer func() { <-sem }()
 
 			if a.shouldPushApp(o.Name) {
-				err := a.Adapter.Push(o.Name, a.Directory, m)
+				var err error
+				for attempt := 1; attempt <= 3; attempt++ {
+					err = a.Adapter.Push(o.Name, a.Directory, m)
+					if err == nil {
+						break
+					}
+
+					if attempt < 3 {
+						fmt.Printf("Failed to push app '%s' on attempt number %d. Retrying...\n", o.Name, attempt)
+						time.Sleep(10 * time.Second)
+					} else {
+						fmt.Printf("Failed to push app '%s' on attempt number %d. Max attempts reached. Bailing...\n", o.Name, attempt)
+					}
+				}
+
 				if err != nil {
 					errs <- err
 				}
