@@ -2,6 +2,7 @@ package cf_command_test
 
 import (
 	"errors"
+	"fmt"
 	"sync/atomic"
 
 	"code.cloudfoundry.org/cf-pusher/cf_command"
@@ -16,6 +17,7 @@ var _ = Describe("AppPusher", func() {
 		appPusher   *cf_command.AppPusher
 		fakeAdapter *fakes.PushCLIAdapter
 	)
+
 	BeforeEach(func() {
 		fakeAdapter = &fakes.PushCLIAdapter{}
 		appPusher = &cf_command.AppPusher{
@@ -25,6 +27,7 @@ var _ = Describe("AppPusher", func() {
 			ManifestPath: "some/tmp/dir/manifest.yml",
 		}
 	})
+
 	Describe("Push", func() {
 		BeforeEach(func() {
 			appPusher.Applications = []cf_command.Application{
@@ -33,6 +36,7 @@ var _ = Describe("AppPusher", func() {
 				},
 			}
 		})
+
 		It("writes out the manifest and uses it", func() {
 			err := appPusher.Push()
 			Expect(err).NotTo(HaveOccurred())
@@ -42,48 +46,82 @@ var _ = Describe("AppPusher", func() {
 			Expect(dir).To(Equal("some/dir"))
 			Expect(manifestFile).To(Equal("some/tmp/dir/manifest.yml"))
 		})
+
+		Context("when pushing an app fails", func() {
+			BeforeEach(func() {
+				var callCount uint32 = 0
+				fakeAdapter.PushStub = func(x, y, z string) error {
+					count := atomic.AddUint32(&callCount, 1)
+					if count < 3 {
+						return errors.New("potato")
+					} else {
+						return nil
+					}
+				}
+			})
+
+			It("retries pushing the app twice", func() {
+				err := appPusher.Push()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeAdapter.PushCallCount()).To(Equal(3))
+
+				for pushAttempt := 0; pushAttempt < 3; pushAttempt++ {
+					name, dir, manifestFile := fakeAdapter.PushArgsForCall(pushAttempt)
+					Expect(name).To(Equal("failed-getting-guid"))
+					Expect(dir).To(Equal("some/dir"))
+					Expect(manifestFile).To(Equal("some/tmp/dir/manifest.yml"))
+				}
+			})
+		})
+
 		Context("when there are multiple apps", func() {
 			BeforeEach(func() {
 				appPusher.Applications = []cf_command.Application{}
 				for i := 0; i < 10; i++ {
 					app := cf_command.Application{
-						Name: "failed-getting-guid",
+						Name: fmt.Sprintf("failed-getting-guid-%d", i),
 					}
 					appPusher.Applications = append(appPusher.Applications, app)
 				}
 			})
+
 			It("calls check and then push for each app", func() {
 				err := appPusher.Push()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeAdapter.AppGuidCallCount()).To(Equal(0))
 				Expect(fakeAdapter.PushCallCount()).To(Equal(10))
 			})
+
 			Context("when pushing an app fails", func() {
 				BeforeEach(func() {
 					fakeAdapter.PushReturns(errors.New("potato"))
 				})
+
 				It("return the error", func() {
 					err := appPusher.Push()
 					Expect(err).To(MatchError("potato"))
 				})
 			})
+
 			Context("when pushing the last app fails", func() {
 				BeforeEach(func() {
-					var callCount uint32 = 0
-					fakeAdapter.PushStub = func(x, y, z string) error {
-						count := atomic.AddUint32(&callCount, 1)
-						if count == 10 {
+					fakeAdapter.PushStub = func(name, y, z string) error {
+						if name == "failed-getting-guid-9" {
 							return errors.New("potato")
 						}
 						return nil
 					}
 				})
+
 				It("return the error", func() {
 					err := appPusher.Push()
 					Expect(err).To(MatchError("potato"))
+					Expect(fakeAdapter.PushCallCount()).To(Equal(12))
 				})
 			})
 		})
+
 		Context("when SkipIfPresent is true", func() {
 			BeforeEach(func() {
 				appPusher.SkipIfPresent = true
