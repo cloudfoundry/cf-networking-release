@@ -145,7 +145,7 @@ func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpa
 			SkipIfPresent:           true,
 			DesiredRunningInstances: 1,
 
-			RetryAttempts: 3,
+			PushAttempts: 3,
 			RetryWaitTime: 10 * time.Second,
 		},
 	}

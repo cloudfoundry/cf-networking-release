@@ -192,7 +192,7 @@ func main() {
 		SkipIfPresent:           true,
 		DesiredRunningInstances: 1,
 
-		RetryAttempts: 3,
+		PushAttempts: 3,
 		RetryWaitTime: 10 * time.Second,
 	}
 	tickAppPusher := cf_command.AppPusher{
@@ -204,7 +204,7 @@ func main() {
 		SkipIfPresent:           true,
 		DesiredRunningInstances: scaleGroup.TickInstances,
 
-		RetryAttempts: 3,
+		PushAttempts: 3,
 		RetryWaitTime: 10 * time.Second,
 	}
 	proxyAppPusher := cf_command.AppPusher{
@@ -216,7 +216,7 @@ func main() {
 		SkipIfPresent:           true,
 		DesiredRunningInstances: scaleGroup.ProxyInstances,
 
-		RetryAttempts: 3,
+		PushAttempts: 3,
 		RetryWaitTime: 10 * time.Second,
 	}
 

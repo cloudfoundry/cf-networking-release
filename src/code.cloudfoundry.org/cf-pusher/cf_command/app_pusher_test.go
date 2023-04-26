@@ -27,7 +27,7 @@ var _ = Describe("AppPusher", func() {
 			Directory:    "some/dir",
 			ManifestPath: "some/tmp/dir/manifest.yml",
 
-			RetryAttempts: 3,
+			PushAttempts: 3,
 			RetryWaitTime: time.Millisecond,
 		}
 	})
@@ -56,7 +56,7 @@ var _ = Describe("AppPusher", func() {
 				var callCount uint32 = 0
 				fakeAdapter.PushStub = func(x, y, z string) error {
 					count := atomic.AddUint32(&callCount, 1)
-					if count < uint32(appPusher.RetryAttempts) {
+					if count < uint32(appPusher.PushAttempts) {
 						return errors.New("potato")
 					} else {
 						return nil
@@ -64,13 +64,13 @@ var _ = Describe("AppPusher", func() {
 				}
 			})
 
-			It("retries pushing the app according to the RetryAttempts field", func() {
+			It("retries pushing the app according to the PushAttempts field", func() {
 				err := appPusher.Push()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(fakeAdapter.PushCallCount()).To(Equal(appPusher.RetryAttempts))
+				Expect(fakeAdapter.PushCallCount()).To(Equal(appPusher.PushAttempts))
 
-				for pushAttempt := 0; pushAttempt < appPusher.RetryAttempts; pushAttempt++ {
+				for pushAttempt := 0; pushAttempt < appPusher.PushAttempts; pushAttempt++ {
 					name, dir, manifestFile := fakeAdapter.PushArgsForCall(pushAttempt)
 					Expect(name).To(Equal("failed-getting-guid"))
 					Expect(dir).To(Equal("some/dir"))

@@ -27,7 +27,7 @@ type AppPusher struct {
 	SkipIfPresent           bool
 	DesiredRunningInstances int
 
-	RetryAttempts int
+	PushAttempts  int
 	RetryWaitTime time.Duration
 }
 
@@ -79,7 +79,7 @@ func (a *AppPusher) Push() error {
 						break
 					}
 
-					if attempt < a.RetryAttempts {
+					if attempt < a.PushAttempts {
 						fmt.Printf("Failed to push app '%s' on attempt number %d. Retrying...\n", o.Name, attempt)
 						time.Sleep(a.RetryWaitTime)
 					} else {
