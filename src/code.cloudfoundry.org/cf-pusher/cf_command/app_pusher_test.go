@@ -3,6 +3,8 @@ package cf_command_test
 import (
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"sync/atomic"
 	"time"
 
@@ -27,9 +29,10 @@ var _ = Describe("AppPusher", func() {
 			Directory:    "some/dir",
 			ManifestPath: "some/tmp/dir/manifest.yml",
 
-			PushAttempts: 3,
+			PushAttempts:  3,
 			RetryWaitTime: time.Millisecond,
 		}
+		log.SetOutput(io.Discard)
 	})
 
 	Describe("Push", func() {

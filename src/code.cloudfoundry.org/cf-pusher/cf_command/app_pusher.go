@@ -2,7 +2,7 @@ package cf_command
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"time"
 )
 
@@ -80,10 +80,10 @@ func (a *AppPusher) Push() error {
 					}
 
 					if attempt < a.PushAttempts {
-						fmt.Printf("Failed to push app '%s' on attempt number %d. Retrying...\n", o.Name, attempt)
+						log.Printf("Failed to push app '%s' on attempt number %d. Retrying...\n", o.Name, attempt)
 						time.Sleep(a.RetryWaitTime)
 					} else {
-						fmt.Printf("Failed to push app '%s' on attempt number %d. Max attempts reached. Bailing...\n", o.Name, attempt)
+						log.Printf("Failed to push app '%s' on attempt number %d. Max attempts reached. Bailing...\n", o.Name, attempt)
 					}
 				}
 
