@@ -56,7 +56,7 @@ var _ = Describe("AppPusher", func() {
 				var callCount uint32 = 0
 				fakeAdapter.PushStub = func(x, y, z string) error {
 					count := atomic.AddUint32(&callCount, 1)
-					if count < 3 {
+					if count < uint32(appPusher.RetryAttempts) {
 						return errors.New("potato")
 					} else {
 						return nil
@@ -64,13 +64,13 @@ var _ = Describe("AppPusher", func() {
 				}
 			})
 
-			It("retries pushing the app twice", func() {
+			It("retries pushing the app according to the RetryAttempts field", func() {
 				err := appPusher.Push()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(fakeAdapter.PushCallCount()).To(Equal(3))
+				Expect(fakeAdapter.PushCallCount()).To(Equal(appPusher.RetryAttempts))
 
-				for pushAttempt := 0; pushAttempt < 3; pushAttempt++ {
+				for pushAttempt := 0; pushAttempt < appPusher.RetryAttempts; pushAttempt++ {
 					name, dir, manifestFile := fakeAdapter.PushArgsForCall(pushAttempt)
 					Expect(name).To(Equal("failed-getting-guid"))
 					Expect(dir).To(Equal("some/dir"))
