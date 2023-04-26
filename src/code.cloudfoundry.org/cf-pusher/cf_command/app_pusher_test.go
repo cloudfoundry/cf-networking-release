@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	"code.cloudfoundry.org/cf-pusher/cf_command"
 	"code.cloudfoundry.org/cf-pusher/fakes"
@@ -25,6 +26,9 @@ var _ = Describe("AppPusher", func() {
 			Concurrency:  2,
 			Directory:    "some/dir",
 			ManifestPath: "some/tmp/dir/manifest.yml",
+
+			RetryAttempts: 3,
+			RetryWaitTime: time.Millisecond,
 		}
 	})
 

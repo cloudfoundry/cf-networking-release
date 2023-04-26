@@ -191,6 +191,9 @@ func main() {
 		Directory:               registryAppDirectory,
 		SkipIfPresent:           true,
 		DesiredRunningInstances: 1,
+
+		RetryAttempts: 3,
+		RetryWaitTime: 10 * time.Second,
 	}
 	tickAppPusher := cf_command.AppPusher{
 		Applications:            tickApps,
@@ -200,6 +203,9 @@ func main() {
 		Directory:               tickAppDirectory,
 		SkipIfPresent:           true,
 		DesiredRunningInstances: scaleGroup.TickInstances,
+
+		RetryAttempts: 3,
+		RetryWaitTime: 10 * time.Second,
 	}
 	proxyAppPusher := cf_command.AppPusher{
 		Applications:            proxyApps,
@@ -209,6 +215,9 @@ func main() {
 		Directory:               proxyAppDirectory,
 		SkipIfPresent:           true,
 		DesiredRunningInstances: scaleGroup.ProxyInstances,
+
+		RetryAttempts: 3,
+		RetryWaitTime: 10 * time.Second,
 	}
 
 	asgChecker := cf_command.ASGChecker{

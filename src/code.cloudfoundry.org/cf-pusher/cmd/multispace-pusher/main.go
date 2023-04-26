@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/cf-pusher/cf_cli_adapter"
 	"code.cloudfoundry.org/cf-pusher/cf_command"
@@ -143,6 +144,9 @@ func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpa
 			Directory:               filepath.Join(appsDir, "proxy"),
 			SkipIfPresent:           true,
 			DesiredRunningInstances: 1,
+
+			RetryAttempts: 3,
+			RetryWaitTime: 10 * time.Second,
 		},
 	}
 }
