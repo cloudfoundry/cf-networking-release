@@ -163,7 +163,11 @@ var _ = Describe("external connectivity", func() {
 			By("checking that the app can ping the internet")
 			Eventually(canPing, "180s", "1s").Should(Succeed())
 			Consistently(canPing, "2s", "0.5s").Should(Succeed())
-		}, SpecTimeout(3*time.Minute))
+		}, SpecTimeout(
+			(2*Timeout_Push)+ // Two 'cf pushes' occur in this test
+				(180*time.Second)+ // One 180s 'Eventually'
+				(2*2*time.Second), // Two 2s 'Consistently'
+		))
 	})
 })
 
