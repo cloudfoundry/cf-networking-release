@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net"
 
-	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+	"code.cloudfoundry.org/cf-networking-helpers/db/monitor"
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/go-sql-driver/mysql"

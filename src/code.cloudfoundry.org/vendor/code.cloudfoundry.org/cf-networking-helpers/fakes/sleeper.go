@@ -21,9 +21,10 @@ func (fake *Sleeper) Sleep(arg1 time.Duration) {
 	fake.sleepArgsForCall = append(fake.sleepArgsForCall, struct {
 		arg1 time.Duration
 	}{arg1})
+	stub := fake.SleepStub
 	fake.recordInvocation("Sleep", []interface{}{arg1})
 	fake.sleepMutex.Unlock()
-	if fake.SleepStub != nil {
+	if stub != nil {
 		fake.SleepStub(arg1)
 	}
 }
@@ -34,10 +35,17 @@ func (fake *Sleeper) SleepCallCount() int {
 	return len(fake.sleepArgsForCall)
 }
 
+func (fake *Sleeper) SleepCalls(stub func(time.Duration)) {
+	fake.sleepMutex.Lock()
+	defer fake.sleepMutex.Unlock()
+	fake.SleepStub = stub
+}
+
 func (fake *Sleeper) SleepArgsForCall(i int) time.Duration {
 	fake.sleepMutex.RLock()
 	defer fake.sleepMutex.RUnlock()
-	return fake.sleepArgsForCall[i].arg1
+	argsForCall := fake.sleepArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *Sleeper) Invocations() map[string][][]interface{} {

@@ -10,11 +10,31 @@ import (
 )
 
 type Transaction struct {
-	ExecStub        func(query string, args ...interface{}) (sql.Result, error)
+	CommitStub        func() error
+	commitMutex       sync.RWMutex
+	commitArgsForCall []struct {
+	}
+	commitReturns struct {
+		result1 error
+	}
+	commitReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DriverNameStub        func() string
+	driverNameMutex       sync.RWMutex
+	driverNameArgsForCall []struct {
+	}
+	driverNameReturns struct {
+		result1 string
+	}
+	driverNameReturnsOnCall map[int]struct {
+		result1 string
+	}
+	ExecStub        func(string, ...interface{}) (sql.Result, error)
 	execMutex       sync.RWMutex
 	execArgsForCall []struct {
-		query string
-		args  []interface{}
+		arg1 string
+		arg2 []interface{}
 	}
 	execReturns struct {
 		result1 sql.Result
@@ -24,11 +44,11 @@ type Transaction struct {
 		result1 sql.Result
 		result2 error
 	}
-	QueryRowStub        func(query string, args ...interface{}) db.RowScanner
+	QueryRowStub        func(string, ...interface{}) db.RowScanner
 	queryRowMutex       sync.RWMutex
 	queryRowArgsForCall []struct {
-		query string
-		args  []interface{}
+		arg1 string
+		arg2 []interface{}
 	}
 	queryRowReturns struct {
 		result1 db.RowScanner
@@ -36,11 +56,11 @@ type Transaction struct {
 	queryRowReturnsOnCall map[int]struct {
 		result1 db.RowScanner
 	}
-	QueryxStub        func(query string, args ...interface{}) (*sqlx.Rows, error)
+	QueryxStub        func(string, ...interface{}) (*sqlx.Rows, error)
 	queryxMutex       sync.RWMutex
 	queryxArgsForCall []struct {
-		query string
-		args  []interface{}
+		arg1 string
+		arg2 []interface{}
 	}
 	queryxReturns struct {
 		result1 *sqlx.Rows
@@ -49,24 +69,6 @@ type Transaction struct {
 	queryxReturnsOnCall map[int]struct {
 		result1 *sqlx.Rows
 		result2 error
-	}
-	CommitStub        func() error
-	commitMutex       sync.RWMutex
-	commitArgsForCall []struct{}
-	commitReturns     struct {
-		result1 error
-	}
-	commitReturnsOnCall map[int]struct {
-		result1 error
-	}
-	RollbackStub        func() error
-	rollbackMutex       sync.RWMutex
-	rollbackArgsForCall []struct{}
-	rollbackReturns     struct {
-		result1 error
-	}
-	rollbackReturnsOnCall map[int]struct {
-		result1 error
 	}
 	RebindStub        func(string) string
 	rebindMutex       sync.RWMutex
@@ -79,35 +81,144 @@ type Transaction struct {
 	rebindReturnsOnCall map[int]struct {
 		result1 string
 	}
-	DriverNameStub        func() string
-	driverNameMutex       sync.RWMutex
-	driverNameArgsForCall []struct{}
-	driverNameReturns     struct {
-		result1 string
+	RollbackStub        func() error
+	rollbackMutex       sync.RWMutex
+	rollbackArgsForCall []struct {
 	}
-	driverNameReturnsOnCall map[int]struct {
-		result1 string
+	rollbackReturns struct {
+		result1 error
+	}
+	rollbackReturnsOnCall map[int]struct {
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Transaction) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (fake *Transaction) Commit() error {
+	fake.commitMutex.Lock()
+	ret, specificReturn := fake.commitReturnsOnCall[len(fake.commitArgsForCall)]
+	fake.commitArgsForCall = append(fake.commitArgsForCall, struct {
+	}{})
+	stub := fake.CommitStub
+	fakeReturns := fake.commitReturns
+	fake.recordInvocation("Commit", []interface{}{})
+	fake.commitMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *Transaction) CommitCallCount() int {
+	fake.commitMutex.RLock()
+	defer fake.commitMutex.RUnlock()
+	return len(fake.commitArgsForCall)
+}
+
+func (fake *Transaction) CommitCalls(stub func() error) {
+	fake.commitMutex.Lock()
+	defer fake.commitMutex.Unlock()
+	fake.CommitStub = stub
+}
+
+func (fake *Transaction) CommitReturns(result1 error) {
+	fake.commitMutex.Lock()
+	defer fake.commitMutex.Unlock()
+	fake.CommitStub = nil
+	fake.commitReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Transaction) CommitReturnsOnCall(i int, result1 error) {
+	fake.commitMutex.Lock()
+	defer fake.commitMutex.Unlock()
+	fake.CommitStub = nil
+	if fake.commitReturnsOnCall == nil {
+		fake.commitReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.commitReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Transaction) DriverName() string {
+	fake.driverNameMutex.Lock()
+	ret, specificReturn := fake.driverNameReturnsOnCall[len(fake.driverNameArgsForCall)]
+	fake.driverNameArgsForCall = append(fake.driverNameArgsForCall, struct {
+	}{})
+	stub := fake.DriverNameStub
+	fakeReturns := fake.driverNameReturns
+	fake.recordInvocation("DriverName", []interface{}{})
+	fake.driverNameMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *Transaction) DriverNameCallCount() int {
+	fake.driverNameMutex.RLock()
+	defer fake.driverNameMutex.RUnlock()
+	return len(fake.driverNameArgsForCall)
+}
+
+func (fake *Transaction) DriverNameCalls(stub func() string) {
+	fake.driverNameMutex.Lock()
+	defer fake.driverNameMutex.Unlock()
+	fake.DriverNameStub = stub
+}
+
+func (fake *Transaction) DriverNameReturns(result1 string) {
+	fake.driverNameMutex.Lock()
+	defer fake.driverNameMutex.Unlock()
+	fake.DriverNameStub = nil
+	fake.driverNameReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *Transaction) DriverNameReturnsOnCall(i int, result1 string) {
+	fake.driverNameMutex.Lock()
+	defer fake.driverNameMutex.Unlock()
+	fake.DriverNameStub = nil
+	if fake.driverNameReturnsOnCall == nil {
+		fake.driverNameReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.driverNameReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *Transaction) Exec(arg1 string, arg2 ...interface{}) (sql.Result, error) {
 	fake.execMutex.Lock()
 	ret, specificReturn := fake.execReturnsOnCall[len(fake.execArgsForCall)]
 	fake.execArgsForCall = append(fake.execArgsForCall, struct {
-		query string
-		args  []interface{}
-	}{query, args})
-	fake.recordInvocation("Exec", []interface{}{query, args})
+		arg1 string
+		arg2 []interface{}
+	}{arg1, arg2})
+	stub := fake.ExecStub
+	fakeReturns := fake.execReturns
+	fake.recordInvocation("Exec", []interface{}{arg1, arg2})
 	fake.execMutex.Unlock()
-	if fake.ExecStub != nil {
-		return fake.ExecStub(query, args...)
+	if stub != nil {
+		return stub(arg1, arg2...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.execReturns.result1, fake.execReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *Transaction) ExecCallCount() int {
@@ -116,13 +227,22 @@ func (fake *Transaction) ExecCallCount() int {
 	return len(fake.execArgsForCall)
 }
 
+func (fake *Transaction) ExecCalls(stub func(string, ...interface{}) (sql.Result, error)) {
+	fake.execMutex.Lock()
+	defer fake.execMutex.Unlock()
+	fake.ExecStub = stub
+}
+
 func (fake *Transaction) ExecArgsForCall(i int) (string, []interface{}) {
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
-	return fake.execArgsForCall[i].query, fake.execArgsForCall[i].args
+	argsForCall := fake.execArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *Transaction) ExecReturns(result1 sql.Result, result2 error) {
+	fake.execMutex.Lock()
+	defer fake.execMutex.Unlock()
 	fake.ExecStub = nil
 	fake.execReturns = struct {
 		result1 sql.Result
@@ -131,6 +251,8 @@ func (fake *Transaction) ExecReturns(result1 sql.Result, result2 error) {
 }
 
 func (fake *Transaction) ExecReturnsOnCall(i int, result1 sql.Result, result2 error) {
+	fake.execMutex.Lock()
+	defer fake.execMutex.Unlock()
 	fake.ExecStub = nil
 	if fake.execReturnsOnCall == nil {
 		fake.execReturnsOnCall = make(map[int]struct {
@@ -144,22 +266,24 @@ func (fake *Transaction) ExecReturnsOnCall(i int, result1 sql.Result, result2 er
 	}{result1, result2}
 }
 
-func (fake *Transaction) QueryRow(query string, args ...interface{}) db.RowScanner {
+func (fake *Transaction) QueryRow(arg1 string, arg2 ...interface{}) db.RowScanner {
 	fake.queryRowMutex.Lock()
 	ret, specificReturn := fake.queryRowReturnsOnCall[len(fake.queryRowArgsForCall)]
 	fake.queryRowArgsForCall = append(fake.queryRowArgsForCall, struct {
-		query string
-		args  []interface{}
-	}{query, args})
-	fake.recordInvocation("QueryRow", []interface{}{query, args})
+		arg1 string
+		arg2 []interface{}
+	}{arg1, arg2})
+	stub := fake.QueryRowStub
+	fakeReturns := fake.queryRowReturns
+	fake.recordInvocation("QueryRow", []interface{}{arg1, arg2})
 	fake.queryRowMutex.Unlock()
-	if fake.QueryRowStub != nil {
-		return fake.QueryRowStub(query, args...)
+	if stub != nil {
+		return stub(arg1, arg2...)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.queryRowReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *Transaction) QueryRowCallCount() int {
@@ -168,13 +292,22 @@ func (fake *Transaction) QueryRowCallCount() int {
 	return len(fake.queryRowArgsForCall)
 }
 
+func (fake *Transaction) QueryRowCalls(stub func(string, ...interface{}) db.RowScanner) {
+	fake.queryRowMutex.Lock()
+	defer fake.queryRowMutex.Unlock()
+	fake.QueryRowStub = stub
+}
+
 func (fake *Transaction) QueryRowArgsForCall(i int) (string, []interface{}) {
 	fake.queryRowMutex.RLock()
 	defer fake.queryRowMutex.RUnlock()
-	return fake.queryRowArgsForCall[i].query, fake.queryRowArgsForCall[i].args
+	argsForCall := fake.queryRowArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *Transaction) QueryRowReturns(result1 db.RowScanner) {
+	fake.queryRowMutex.Lock()
+	defer fake.queryRowMutex.Unlock()
 	fake.QueryRowStub = nil
 	fake.queryRowReturns = struct {
 		result1 db.RowScanner
@@ -182,6 +315,8 @@ func (fake *Transaction) QueryRowReturns(result1 db.RowScanner) {
 }
 
 func (fake *Transaction) QueryRowReturnsOnCall(i int, result1 db.RowScanner) {
+	fake.queryRowMutex.Lock()
+	defer fake.queryRowMutex.Unlock()
 	fake.QueryRowStub = nil
 	if fake.queryRowReturnsOnCall == nil {
 		fake.queryRowReturnsOnCall = make(map[int]struct {
@@ -193,22 +328,24 @@ func (fake *Transaction) QueryRowReturnsOnCall(i int, result1 db.RowScanner) {
 	}{result1}
 }
 
-func (fake *Transaction) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+func (fake *Transaction) Queryx(arg1 string, arg2 ...interface{}) (*sqlx.Rows, error) {
 	fake.queryxMutex.Lock()
 	ret, specificReturn := fake.queryxReturnsOnCall[len(fake.queryxArgsForCall)]
 	fake.queryxArgsForCall = append(fake.queryxArgsForCall, struct {
-		query string
-		args  []interface{}
-	}{query, args})
-	fake.recordInvocation("Queryx", []interface{}{query, args})
+		arg1 string
+		arg2 []interface{}
+	}{arg1, arg2})
+	stub := fake.QueryxStub
+	fakeReturns := fake.queryxReturns
+	fake.recordInvocation("Queryx", []interface{}{arg1, arg2})
 	fake.queryxMutex.Unlock()
-	if fake.QueryxStub != nil {
-		return fake.QueryxStub(query, args...)
+	if stub != nil {
+		return stub(arg1, arg2...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.queryxReturns.result1, fake.queryxReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *Transaction) QueryxCallCount() int {
@@ -217,13 +354,22 @@ func (fake *Transaction) QueryxCallCount() int {
 	return len(fake.queryxArgsForCall)
 }
 
+func (fake *Transaction) QueryxCalls(stub func(string, ...interface{}) (*sqlx.Rows, error)) {
+	fake.queryxMutex.Lock()
+	defer fake.queryxMutex.Unlock()
+	fake.QueryxStub = stub
+}
+
 func (fake *Transaction) QueryxArgsForCall(i int) (string, []interface{}) {
 	fake.queryxMutex.RLock()
 	defer fake.queryxMutex.RUnlock()
-	return fake.queryxArgsForCall[i].query, fake.queryxArgsForCall[i].args
+	argsForCall := fake.queryxArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *Transaction) QueryxReturns(result1 *sqlx.Rows, result2 error) {
+	fake.queryxMutex.Lock()
+	defer fake.queryxMutex.Unlock()
 	fake.QueryxStub = nil
 	fake.queryxReturns = struct {
 		result1 *sqlx.Rows
@@ -232,6 +378,8 @@ func (fake *Transaction) QueryxReturns(result1 *sqlx.Rows, result2 error) {
 }
 
 func (fake *Transaction) QueryxReturnsOnCall(i int, result1 *sqlx.Rows, result2 error) {
+	fake.queryxMutex.Lock()
+	defer fake.queryxMutex.Unlock()
 	fake.QueryxStub = nil
 	if fake.queryxReturnsOnCall == nil {
 		fake.queryxReturnsOnCall = make(map[int]struct {
@@ -245,101 +393,23 @@ func (fake *Transaction) QueryxReturnsOnCall(i int, result1 *sqlx.Rows, result2 
 	}{result1, result2}
 }
 
-func (fake *Transaction) Commit() error {
-	fake.commitMutex.Lock()
-	ret, specificReturn := fake.commitReturnsOnCall[len(fake.commitArgsForCall)]
-	fake.commitArgsForCall = append(fake.commitArgsForCall, struct{}{})
-	fake.recordInvocation("Commit", []interface{}{})
-	fake.commitMutex.Unlock()
-	if fake.CommitStub != nil {
-		return fake.CommitStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.commitReturns.result1
-}
-
-func (fake *Transaction) CommitCallCount() int {
-	fake.commitMutex.RLock()
-	defer fake.commitMutex.RUnlock()
-	return len(fake.commitArgsForCall)
-}
-
-func (fake *Transaction) CommitReturns(result1 error) {
-	fake.CommitStub = nil
-	fake.commitReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Transaction) CommitReturnsOnCall(i int, result1 error) {
-	fake.CommitStub = nil
-	if fake.commitReturnsOnCall == nil {
-		fake.commitReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.commitReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Transaction) Rollback() error {
-	fake.rollbackMutex.Lock()
-	ret, specificReturn := fake.rollbackReturnsOnCall[len(fake.rollbackArgsForCall)]
-	fake.rollbackArgsForCall = append(fake.rollbackArgsForCall, struct{}{})
-	fake.recordInvocation("Rollback", []interface{}{})
-	fake.rollbackMutex.Unlock()
-	if fake.RollbackStub != nil {
-		return fake.RollbackStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.rollbackReturns.result1
-}
-
-func (fake *Transaction) RollbackCallCount() int {
-	fake.rollbackMutex.RLock()
-	defer fake.rollbackMutex.RUnlock()
-	return len(fake.rollbackArgsForCall)
-}
-
-func (fake *Transaction) RollbackReturns(result1 error) {
-	fake.RollbackStub = nil
-	fake.rollbackReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Transaction) RollbackReturnsOnCall(i int, result1 error) {
-	fake.RollbackStub = nil
-	if fake.rollbackReturnsOnCall == nil {
-		fake.rollbackReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.rollbackReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *Transaction) Rebind(arg1 string) string {
 	fake.rebindMutex.Lock()
 	ret, specificReturn := fake.rebindReturnsOnCall[len(fake.rebindArgsForCall)]
 	fake.rebindArgsForCall = append(fake.rebindArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.RebindStub
+	fakeReturns := fake.rebindReturns
 	fake.recordInvocation("Rebind", []interface{}{arg1})
 	fake.rebindMutex.Unlock()
-	if fake.RebindStub != nil {
-		return fake.RebindStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.rebindReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *Transaction) RebindCallCount() int {
@@ -348,13 +418,22 @@ func (fake *Transaction) RebindCallCount() int {
 	return len(fake.rebindArgsForCall)
 }
 
+func (fake *Transaction) RebindCalls(stub func(string) string) {
+	fake.rebindMutex.Lock()
+	defer fake.rebindMutex.Unlock()
+	fake.RebindStub = stub
+}
+
 func (fake *Transaction) RebindArgsForCall(i int) string {
 	fake.rebindMutex.RLock()
 	defer fake.rebindMutex.RUnlock()
-	return fake.rebindArgsForCall[i].arg1
+	argsForCall := fake.rebindArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *Transaction) RebindReturns(result1 string) {
+	fake.rebindMutex.Lock()
+	defer fake.rebindMutex.Unlock()
 	fake.RebindStub = nil
 	fake.rebindReturns = struct {
 		result1 string
@@ -362,6 +441,8 @@ func (fake *Transaction) RebindReturns(result1 string) {
 }
 
 func (fake *Transaction) RebindReturnsOnCall(i int, result1 string) {
+	fake.rebindMutex.Lock()
+	defer fake.rebindMutex.Unlock()
 	fake.RebindStub = nil
 	if fake.rebindReturnsOnCall == nil {
 		fake.rebindReturnsOnCall = make(map[int]struct {
@@ -373,63 +454,76 @@ func (fake *Transaction) RebindReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *Transaction) DriverName() string {
-	fake.driverNameMutex.Lock()
-	ret, specificReturn := fake.driverNameReturnsOnCall[len(fake.driverNameArgsForCall)]
-	fake.driverNameArgsForCall = append(fake.driverNameArgsForCall, struct{}{})
-	fake.recordInvocation("DriverName", []interface{}{})
-	fake.driverNameMutex.Unlock()
-	if fake.DriverNameStub != nil {
-		return fake.DriverNameStub()
+func (fake *Transaction) Rollback() error {
+	fake.rollbackMutex.Lock()
+	ret, specificReturn := fake.rollbackReturnsOnCall[len(fake.rollbackArgsForCall)]
+	fake.rollbackArgsForCall = append(fake.rollbackArgsForCall, struct {
+	}{})
+	stub := fake.RollbackStub
+	fakeReturns := fake.rollbackReturns
+	fake.recordInvocation("Rollback", []interface{}{})
+	fake.rollbackMutex.Unlock()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.driverNameReturns.result1
+	return fakeReturns.result1
 }
 
-func (fake *Transaction) DriverNameCallCount() int {
-	fake.driverNameMutex.RLock()
-	defer fake.driverNameMutex.RUnlock()
-	return len(fake.driverNameArgsForCall)
+func (fake *Transaction) RollbackCallCount() int {
+	fake.rollbackMutex.RLock()
+	defer fake.rollbackMutex.RUnlock()
+	return len(fake.rollbackArgsForCall)
 }
 
-func (fake *Transaction) DriverNameReturns(result1 string) {
-	fake.DriverNameStub = nil
-	fake.driverNameReturns = struct {
-		result1 string
+func (fake *Transaction) RollbackCalls(stub func() error) {
+	fake.rollbackMutex.Lock()
+	defer fake.rollbackMutex.Unlock()
+	fake.RollbackStub = stub
+}
+
+func (fake *Transaction) RollbackReturns(result1 error) {
+	fake.rollbackMutex.Lock()
+	defer fake.rollbackMutex.Unlock()
+	fake.RollbackStub = nil
+	fake.rollbackReturns = struct {
+		result1 error
 	}{result1}
 }
 
-func (fake *Transaction) DriverNameReturnsOnCall(i int, result1 string) {
-	fake.DriverNameStub = nil
-	if fake.driverNameReturnsOnCall == nil {
-		fake.driverNameReturnsOnCall = make(map[int]struct {
-			result1 string
+func (fake *Transaction) RollbackReturnsOnCall(i int, result1 error) {
+	fake.rollbackMutex.Lock()
+	defer fake.rollbackMutex.Unlock()
+	fake.RollbackStub = nil
+	if fake.rollbackReturnsOnCall == nil {
+		fake.rollbackReturnsOnCall = make(map[int]struct {
+			result1 error
 		})
 	}
-	fake.driverNameReturnsOnCall[i] = struct {
-		result1 string
+	fake.rollbackReturnsOnCall[i] = struct {
+		result1 error
 	}{result1}
 }
 
 func (fake *Transaction) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.commitMutex.RLock()
+	defer fake.commitMutex.RUnlock()
+	fake.driverNameMutex.RLock()
+	defer fake.driverNameMutex.RUnlock()
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
 	fake.queryRowMutex.RLock()
 	defer fake.queryRowMutex.RUnlock()
 	fake.queryxMutex.RLock()
 	defer fake.queryxMutex.RUnlock()
-	fake.commitMutex.RLock()
-	defer fake.commitMutex.RUnlock()
-	fake.rollbackMutex.RLock()
-	defer fake.rollbackMutex.RUnlock()
 	fake.rebindMutex.RLock()
 	defer fake.rebindMutex.RUnlock()
-	fake.driverNameMutex.RLock()
-	defer fake.driverNameMutex.RUnlock()
+	fake.rollbackMutex.RLock()
+	defer fake.rollbackMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

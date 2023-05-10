@@ -9,10 +9,10 @@ import (
 )
 
 type MySQLAdapter struct {
-	ParseDSNStub        func(dsn string) (cfg *mysql.Config, err error)
+	ParseDSNStub        func(string) (*mysql.Config, error)
 	parseDSNMutex       sync.RWMutex
 	parseDSNArgsForCall []struct {
-		dsn string
+		arg1 string
 	}
 	parseDSNReturns struct {
 		result1 *mysql.Config
@@ -22,11 +22,11 @@ type MySQLAdapter struct {
 		result1 *mysql.Config
 		result2 error
 	}
-	RegisterTLSConfigStub        func(key string, config *tls.Config) error
+	RegisterTLSConfigStub        func(string, *tls.Config) error
 	registerTLSConfigMutex       sync.RWMutex
 	registerTLSConfigArgsForCall []struct {
-		key    string
-		config *tls.Config
+		arg1 string
+		arg2 *tls.Config
 	}
 	registerTLSConfigReturns struct {
 		result1 error
@@ -38,21 +38,23 @@ type MySQLAdapter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *MySQLAdapter) ParseDSN(dsn string) (cfg *mysql.Config, err error) {
+func (fake *MySQLAdapter) ParseDSN(arg1 string) (*mysql.Config, error) {
 	fake.parseDSNMutex.Lock()
 	ret, specificReturn := fake.parseDSNReturnsOnCall[len(fake.parseDSNArgsForCall)]
 	fake.parseDSNArgsForCall = append(fake.parseDSNArgsForCall, struct {
-		dsn string
-	}{dsn})
-	fake.recordInvocation("ParseDSN", []interface{}{dsn})
+		arg1 string
+	}{arg1})
+	stub := fake.ParseDSNStub
+	fakeReturns := fake.parseDSNReturns
+	fake.recordInvocation("ParseDSN", []interface{}{arg1})
 	fake.parseDSNMutex.Unlock()
-	if fake.ParseDSNStub != nil {
-		return fake.ParseDSNStub(dsn)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.parseDSNReturns.result1, fake.parseDSNReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *MySQLAdapter) ParseDSNCallCount() int {
@@ -61,13 +63,22 @@ func (fake *MySQLAdapter) ParseDSNCallCount() int {
 	return len(fake.parseDSNArgsForCall)
 }
 
+func (fake *MySQLAdapter) ParseDSNCalls(stub func(string) (*mysql.Config, error)) {
+	fake.parseDSNMutex.Lock()
+	defer fake.parseDSNMutex.Unlock()
+	fake.ParseDSNStub = stub
+}
+
 func (fake *MySQLAdapter) ParseDSNArgsForCall(i int) string {
 	fake.parseDSNMutex.RLock()
 	defer fake.parseDSNMutex.RUnlock()
-	return fake.parseDSNArgsForCall[i].dsn
+	argsForCall := fake.parseDSNArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *MySQLAdapter) ParseDSNReturns(result1 *mysql.Config, result2 error) {
+	fake.parseDSNMutex.Lock()
+	defer fake.parseDSNMutex.Unlock()
 	fake.ParseDSNStub = nil
 	fake.parseDSNReturns = struct {
 		result1 *mysql.Config
@@ -76,6 +87,8 @@ func (fake *MySQLAdapter) ParseDSNReturns(result1 *mysql.Config, result2 error) 
 }
 
 func (fake *MySQLAdapter) ParseDSNReturnsOnCall(i int, result1 *mysql.Config, result2 error) {
+	fake.parseDSNMutex.Lock()
+	defer fake.parseDSNMutex.Unlock()
 	fake.ParseDSNStub = nil
 	if fake.parseDSNReturnsOnCall == nil {
 		fake.parseDSNReturnsOnCall = make(map[int]struct {
@@ -89,22 +102,24 @@ func (fake *MySQLAdapter) ParseDSNReturnsOnCall(i int, result1 *mysql.Config, re
 	}{result1, result2}
 }
 
-func (fake *MySQLAdapter) RegisterTLSConfig(key string, config *tls.Config) error {
+func (fake *MySQLAdapter) RegisterTLSConfig(arg1 string, arg2 *tls.Config) error {
 	fake.registerTLSConfigMutex.Lock()
 	ret, specificReturn := fake.registerTLSConfigReturnsOnCall[len(fake.registerTLSConfigArgsForCall)]
 	fake.registerTLSConfigArgsForCall = append(fake.registerTLSConfigArgsForCall, struct {
-		key    string
-		config *tls.Config
-	}{key, config})
-	fake.recordInvocation("RegisterTLSConfig", []interface{}{key, config})
+		arg1 string
+		arg2 *tls.Config
+	}{arg1, arg2})
+	stub := fake.RegisterTLSConfigStub
+	fakeReturns := fake.registerTLSConfigReturns
+	fake.recordInvocation("RegisterTLSConfig", []interface{}{arg1, arg2})
 	fake.registerTLSConfigMutex.Unlock()
-	if fake.RegisterTLSConfigStub != nil {
-		return fake.RegisterTLSConfigStub(key, config)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.registerTLSConfigReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *MySQLAdapter) RegisterTLSConfigCallCount() int {
@@ -113,13 +128,22 @@ func (fake *MySQLAdapter) RegisterTLSConfigCallCount() int {
 	return len(fake.registerTLSConfigArgsForCall)
 }
 
+func (fake *MySQLAdapter) RegisterTLSConfigCalls(stub func(string, *tls.Config) error) {
+	fake.registerTLSConfigMutex.Lock()
+	defer fake.registerTLSConfigMutex.Unlock()
+	fake.RegisterTLSConfigStub = stub
+}
+
 func (fake *MySQLAdapter) RegisterTLSConfigArgsForCall(i int) (string, *tls.Config) {
 	fake.registerTLSConfigMutex.RLock()
 	defer fake.registerTLSConfigMutex.RUnlock()
-	return fake.registerTLSConfigArgsForCall[i].key, fake.registerTLSConfigArgsForCall[i].config
+	argsForCall := fake.registerTLSConfigArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *MySQLAdapter) RegisterTLSConfigReturns(result1 error) {
+	fake.registerTLSConfigMutex.Lock()
+	defer fake.registerTLSConfigMutex.Unlock()
 	fake.RegisterTLSConfigStub = nil
 	fake.registerTLSConfigReturns = struct {
 		result1 error
@@ -127,6 +151,8 @@ func (fake *MySQLAdapter) RegisterTLSConfigReturns(result1 error) {
 }
 
 func (fake *MySQLAdapter) RegisterTLSConfigReturnsOnCall(i int, result1 error) {
+	fake.registerTLSConfigMutex.Lock()
+	defer fake.registerTLSConfigMutex.Unlock()
 	fake.RegisterTLSConfigStub = nil
 	if fake.registerTLSConfigReturnsOnCall == nil {
 		fake.registerTLSConfigReturnsOnCall = make(map[int]struct {

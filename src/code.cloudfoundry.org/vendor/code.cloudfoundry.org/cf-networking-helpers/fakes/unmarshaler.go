@@ -8,11 +8,11 @@ import (
 )
 
 type Unmarshaler struct {
-	UnmarshalStub        func(input []byte, output interface{}) error
+	UnmarshalStub        func([]byte, interface{}) error
 	unmarshalMutex       sync.RWMutex
 	unmarshalArgsForCall []struct {
-		input  []byte
-		output interface{}
+		arg1 []byte
+		arg2 interface{}
 	}
 	unmarshalReturns struct {
 		result1 error
@@ -24,27 +24,29 @@ type Unmarshaler struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Unmarshaler) Unmarshal(input []byte, output interface{}) error {
-	var inputCopy []byte
-	if input != nil {
-		inputCopy = make([]byte, len(input))
-		copy(inputCopy, input)
+func (fake *Unmarshaler) Unmarshal(arg1 []byte, arg2 interface{}) error {
+	var arg1Copy []byte
+	if arg1 != nil {
+		arg1Copy = make([]byte, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.unmarshalMutex.Lock()
 	ret, specificReturn := fake.unmarshalReturnsOnCall[len(fake.unmarshalArgsForCall)]
 	fake.unmarshalArgsForCall = append(fake.unmarshalArgsForCall, struct {
-		input  []byte
-		output interface{}
-	}{inputCopy, output})
-	fake.recordInvocation("Unmarshal", []interface{}{inputCopy, output})
+		arg1 []byte
+		arg2 interface{}
+	}{arg1Copy, arg2})
+	stub := fake.UnmarshalStub
+	fakeReturns := fake.unmarshalReturns
+	fake.recordInvocation("Unmarshal", []interface{}{arg1Copy, arg2})
 	fake.unmarshalMutex.Unlock()
-	if fake.UnmarshalStub != nil {
-		return fake.UnmarshalStub(input, output)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.unmarshalReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *Unmarshaler) UnmarshalCallCount() int {
@@ -53,13 +55,22 @@ func (fake *Unmarshaler) UnmarshalCallCount() int {
 	return len(fake.unmarshalArgsForCall)
 }
 
+func (fake *Unmarshaler) UnmarshalCalls(stub func([]byte, interface{}) error) {
+	fake.unmarshalMutex.Lock()
+	defer fake.unmarshalMutex.Unlock()
+	fake.UnmarshalStub = stub
+}
+
 func (fake *Unmarshaler) UnmarshalArgsForCall(i int) ([]byte, interface{}) {
 	fake.unmarshalMutex.RLock()
 	defer fake.unmarshalMutex.RUnlock()
-	return fake.unmarshalArgsForCall[i].input, fake.unmarshalArgsForCall[i].output
+	argsForCall := fake.unmarshalArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *Unmarshaler) UnmarshalReturns(result1 error) {
+	fake.unmarshalMutex.Lock()
+	defer fake.unmarshalMutex.Unlock()
 	fake.UnmarshalStub = nil
 	fake.unmarshalReturns = struct {
 		result1 error
@@ -67,6 +78,8 @@ func (fake *Unmarshaler) UnmarshalReturns(result1 error) {
 }
 
 func (fake *Unmarshaler) UnmarshalReturnsOnCall(i int, result1 error) {
+	fake.unmarshalMutex.Lock()
+	defer fake.unmarshalMutex.Unlock()
 	fake.UnmarshalStub = nil
 	if fake.unmarshalReturnsOnCall == nil {
 		fake.unmarshalReturnsOnCall = make(map[int]struct {

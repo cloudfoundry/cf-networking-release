@@ -8,14 +8,14 @@ import (
 )
 
 type JSONClient struct {
-	DoStub        func(method, route string, reqData, respData interface{}, token string) error
+	DoStub        func(string, string, interface{}, interface{}, string) error
 	doMutex       sync.RWMutex
 	doArgsForCall []struct {
-		method   string
-		route    string
-		reqData  interface{}
-		respData interface{}
-		token    string
+		arg1 string
+		arg2 string
+		arg3 interface{}
+		arg4 interface{}
+		arg5 string
 	}
 	doReturns struct {
 		result1 error
@@ -27,25 +27,27 @@ type JSONClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *JSONClient) Do(method string, route string, reqData interface{}, respData interface{}, token string) error {
+func (fake *JSONClient) Do(arg1 string, arg2 string, arg3 interface{}, arg4 interface{}, arg5 string) error {
 	fake.doMutex.Lock()
 	ret, specificReturn := fake.doReturnsOnCall[len(fake.doArgsForCall)]
 	fake.doArgsForCall = append(fake.doArgsForCall, struct {
-		method   string
-		route    string
-		reqData  interface{}
-		respData interface{}
-		token    string
-	}{method, route, reqData, respData, token})
-	fake.recordInvocation("Do", []interface{}{method, route, reqData, respData, token})
+		arg1 string
+		arg2 string
+		arg3 interface{}
+		arg4 interface{}
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.DoStub
+	fakeReturns := fake.doReturns
+	fake.recordInvocation("Do", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.doMutex.Unlock()
-	if fake.DoStub != nil {
-		return fake.DoStub(method, route, reqData, respData, token)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.doReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *JSONClient) DoCallCount() int {
@@ -54,13 +56,22 @@ func (fake *JSONClient) DoCallCount() int {
 	return len(fake.doArgsForCall)
 }
 
+func (fake *JSONClient) DoCalls(stub func(string, string, interface{}, interface{}, string) error) {
+	fake.doMutex.Lock()
+	defer fake.doMutex.Unlock()
+	fake.DoStub = stub
+}
+
 func (fake *JSONClient) DoArgsForCall(i int) (string, string, interface{}, interface{}, string) {
 	fake.doMutex.RLock()
 	defer fake.doMutex.RUnlock()
-	return fake.doArgsForCall[i].method, fake.doArgsForCall[i].route, fake.doArgsForCall[i].reqData, fake.doArgsForCall[i].respData, fake.doArgsForCall[i].token
+	argsForCall := fake.doArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *JSONClient) DoReturns(result1 error) {
+	fake.doMutex.Lock()
+	defer fake.doMutex.Unlock()
 	fake.DoStub = nil
 	fake.doReturns = struct {
 		result1 error
@@ -68,6 +79,8 @@ func (fake *JSONClient) DoReturns(result1 error) {
 }
 
 func (fake *JSONClient) DoReturnsOnCall(i int, result1 error) {
+	fake.doMutex.Lock()
+	defer fake.doMutex.Unlock()
 	fake.DoStub = nil
 	if fake.doReturnsOnCall == nil {
 		fake.doReturnsOnCall = make(map[int]struct {

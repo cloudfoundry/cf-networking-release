@@ -32,15 +32,17 @@ func (fake *HTTPClient) Do(arg1 *http.Request) (*http.Response, error) {
 	fake.doArgsForCall = append(fake.doArgsForCall, struct {
 		arg1 *http.Request
 	}{arg1})
+	stub := fake.DoStub
+	fakeReturns := fake.doReturns
 	fake.recordInvocation("Do", []interface{}{arg1})
 	fake.doMutex.Unlock()
-	if fake.DoStub != nil {
-		return fake.DoStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.doReturns.result1, fake.doReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *HTTPClient) DoCallCount() int {
@@ -49,13 +51,22 @@ func (fake *HTTPClient) DoCallCount() int {
 	return len(fake.doArgsForCall)
 }
 
+func (fake *HTTPClient) DoCalls(stub func(*http.Request) (*http.Response, error)) {
+	fake.doMutex.Lock()
+	defer fake.doMutex.Unlock()
+	fake.DoStub = stub
+}
+
 func (fake *HTTPClient) DoArgsForCall(i int) *http.Request {
 	fake.doMutex.RLock()
 	defer fake.doMutex.RUnlock()
-	return fake.doArgsForCall[i].arg1
+	argsForCall := fake.doArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *HTTPClient) DoReturns(result1 *http.Response, result2 error) {
+	fake.doMutex.Lock()
+	defer fake.doMutex.Unlock()
 	fake.DoStub = nil
 	fake.doReturns = struct {
 		result1 *http.Response
@@ -64,6 +75,8 @@ func (fake *HTTPClient) DoReturns(result1 *http.Response, result2 error) {
 }
 
 func (fake *HTTPClient) DoReturnsOnCall(i int, result1 *http.Response, result2 error) {
+	fake.doMutex.Lock()
+	defer fake.doMutex.Unlock()
 	fake.DoStub = nil
 	if fake.doReturnsOnCall == nil {
 		fake.doReturnsOnCall = make(map[int]struct {

@@ -7,44 +7,19 @@ import (
 )
 
 type MetricsSender struct {
+	IncrementCounterStub        func(string)
+	incrementCounterMutex       sync.RWMutex
+	incrementCounterArgsForCall []struct {
+		arg1 string
+	}
 	SendDurationStub        func(string, time.Duration)
 	sendDurationMutex       sync.RWMutex
 	sendDurationArgsForCall []struct {
 		arg1 string
 		arg2 time.Duration
 	}
-	IncrementCounterStub        func(string)
-	incrementCounterMutex       sync.RWMutex
-	incrementCounterArgsForCall []struct {
-		arg1 string
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *MetricsSender) SendDuration(arg1 string, arg2 time.Duration) {
-	fake.sendDurationMutex.Lock()
-	fake.sendDurationArgsForCall = append(fake.sendDurationArgsForCall, struct {
-		arg1 string
-		arg2 time.Duration
-	}{arg1, arg2})
-	fake.recordInvocation("SendDuration", []interface{}{arg1, arg2})
-	fake.sendDurationMutex.Unlock()
-	if fake.SendDurationStub != nil {
-		fake.SendDurationStub(arg1, arg2)
-	}
-}
-
-func (fake *MetricsSender) SendDurationCallCount() int {
-	fake.sendDurationMutex.RLock()
-	defer fake.sendDurationMutex.RUnlock()
-	return len(fake.sendDurationArgsForCall)
-}
-
-func (fake *MetricsSender) SendDurationArgsForCall(i int) (string, time.Duration) {
-	fake.sendDurationMutex.RLock()
-	defer fake.sendDurationMutex.RUnlock()
-	return fake.sendDurationArgsForCall[i].arg1, fake.sendDurationArgsForCall[i].arg2
 }
 
 func (fake *MetricsSender) IncrementCounter(arg1 string) {
@@ -52,9 +27,10 @@ func (fake *MetricsSender) IncrementCounter(arg1 string) {
 	fake.incrementCounterArgsForCall = append(fake.incrementCounterArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.IncrementCounterStub
 	fake.recordInvocation("IncrementCounter", []interface{}{arg1})
 	fake.incrementCounterMutex.Unlock()
-	if fake.IncrementCounterStub != nil {
+	if stub != nil {
 		fake.IncrementCounterStub(arg1)
 	}
 }
@@ -65,19 +41,59 @@ func (fake *MetricsSender) IncrementCounterCallCount() int {
 	return len(fake.incrementCounterArgsForCall)
 }
 
+func (fake *MetricsSender) IncrementCounterCalls(stub func(string)) {
+	fake.incrementCounterMutex.Lock()
+	defer fake.incrementCounterMutex.Unlock()
+	fake.IncrementCounterStub = stub
+}
+
 func (fake *MetricsSender) IncrementCounterArgsForCall(i int) string {
 	fake.incrementCounterMutex.RLock()
 	defer fake.incrementCounterMutex.RUnlock()
-	return fake.incrementCounterArgsForCall[i].arg1
+	argsForCall := fake.incrementCounterArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *MetricsSender) SendDuration(arg1 string, arg2 time.Duration) {
+	fake.sendDurationMutex.Lock()
+	fake.sendDurationArgsForCall = append(fake.sendDurationArgsForCall, struct {
+		arg1 string
+		arg2 time.Duration
+	}{arg1, arg2})
+	stub := fake.SendDurationStub
+	fake.recordInvocation("SendDuration", []interface{}{arg1, arg2})
+	fake.sendDurationMutex.Unlock()
+	if stub != nil {
+		fake.SendDurationStub(arg1, arg2)
+	}
+}
+
+func (fake *MetricsSender) SendDurationCallCount() int {
+	fake.sendDurationMutex.RLock()
+	defer fake.sendDurationMutex.RUnlock()
+	return len(fake.sendDurationArgsForCall)
+}
+
+func (fake *MetricsSender) SendDurationCalls(stub func(string, time.Duration)) {
+	fake.sendDurationMutex.Lock()
+	defer fake.sendDurationMutex.Unlock()
+	fake.SendDurationStub = stub
+}
+
+func (fake *MetricsSender) SendDurationArgsForCall(i int) (string, time.Duration) {
+	fake.sendDurationMutex.RLock()
+	defer fake.sendDurationMutex.RUnlock()
+	argsForCall := fake.sendDurationArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *MetricsSender) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.sendDurationMutex.RLock()
-	defer fake.sendDurationMutex.RUnlock()
 	fake.incrementCounterMutex.RLock()
 	defer fake.incrementCounterMutex.RUnlock()
+	fake.sendDurationMutex.RLock()
+	defer fake.sendDurationMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

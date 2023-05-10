@@ -8,10 +8,10 @@ import (
 )
 
 type Marshaler struct {
-	MarshalStub        func(input interface{}) ([]byte, error)
+	MarshalStub        func(interface{}) ([]byte, error)
 	marshalMutex       sync.RWMutex
 	marshalArgsForCall []struct {
-		input interface{}
+		arg1 interface{}
 	}
 	marshalReturns struct {
 		result1 []byte
@@ -25,21 +25,23 @@ type Marshaler struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Marshaler) Marshal(input interface{}) ([]byte, error) {
+func (fake *Marshaler) Marshal(arg1 interface{}) ([]byte, error) {
 	fake.marshalMutex.Lock()
 	ret, specificReturn := fake.marshalReturnsOnCall[len(fake.marshalArgsForCall)]
 	fake.marshalArgsForCall = append(fake.marshalArgsForCall, struct {
-		input interface{}
-	}{input})
-	fake.recordInvocation("Marshal", []interface{}{input})
+		arg1 interface{}
+	}{arg1})
+	stub := fake.MarshalStub
+	fakeReturns := fake.marshalReturns
+	fake.recordInvocation("Marshal", []interface{}{arg1})
 	fake.marshalMutex.Unlock()
-	if fake.MarshalStub != nil {
-		return fake.MarshalStub(input)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.marshalReturns.result1, fake.marshalReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *Marshaler) MarshalCallCount() int {
@@ -48,13 +50,22 @@ func (fake *Marshaler) MarshalCallCount() int {
 	return len(fake.marshalArgsForCall)
 }
 
+func (fake *Marshaler) MarshalCalls(stub func(interface{}) ([]byte, error)) {
+	fake.marshalMutex.Lock()
+	defer fake.marshalMutex.Unlock()
+	fake.MarshalStub = stub
+}
+
 func (fake *Marshaler) MarshalArgsForCall(i int) interface{} {
 	fake.marshalMutex.RLock()
 	defer fake.marshalMutex.RUnlock()
-	return fake.marshalArgsForCall[i].input
+	argsForCall := fake.marshalArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *Marshaler) MarshalReturns(result1 []byte, result2 error) {
+	fake.marshalMutex.Lock()
+	defer fake.marshalMutex.Unlock()
 	fake.MarshalStub = nil
 	fake.marshalReturns = struct {
 		result1 []byte
@@ -63,6 +74,8 @@ func (fake *Marshaler) MarshalReturns(result1 []byte, result2 error) {
 }
 
 func (fake *Marshaler) MarshalReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.marshalMutex.Lock()
+	defer fake.marshalMutex.Unlock()
 	fake.MarshalStub = nil
 	if fake.marshalReturnsOnCall == nil {
 		fake.marshalReturnsOnCall = make(map[int]struct {

@@ -1,6 +1,6 @@
 package metrics
 
-import "code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
+import "code.cloudfoundry.org/cf-networking-helpers/db/monitor"
 
 type Db interface {
 	OpenConnections() int
