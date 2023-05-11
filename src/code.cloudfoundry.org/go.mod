@@ -11,9 +11,6 @@ replace (
 	github.com/nats-io/go-nats => github.com/nats-io/go-nats v1.5.1-0.20180331191609-247b2a84d8d0
 	github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
 
-	// Needed until https://github.com/st3v/glager/pull/6/files is merged
-	github.com/st3v/glager v0.3.0 => github.com/geofffranks/glager v0.0.0-20230329153253-21ef5c265920
-
 	// Prevents test failures in bosh-dns-adapter when grpc is upgraded
 	google.golang.org/grpc => google.golang.org/grpc v1.50.1
 )
@@ -52,7 +49,7 @@ require (
 	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
 	github.com/pkg/errors v0.9.1
-	github.com/st3v/glager v0.3.0
+	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.10.0

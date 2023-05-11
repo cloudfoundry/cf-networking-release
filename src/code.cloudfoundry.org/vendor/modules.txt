@@ -301,7 +301,7 @@ github.com/pkg/errors
 ## explicit; go 1.18
 github.com/square/certstrap/depot
 github.com/square/certstrap/pkix
-# github.com/st3v/glager v0.3.0 => github.com/geofffranks/glager v0.0.0-20230329153253-21ef5c265920
+# github.com/st3v/glager v0.4.0
 ## explicit; go 1.20
 github.com/st3v/glager
 # github.com/tedsuo/ifrit v0.0.0-20230330192023-5cba443a66c4
