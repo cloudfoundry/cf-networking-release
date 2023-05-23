@@ -37,7 +37,7 @@ require (
 	github.com/coreos/go-iptables v0.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/montanaflynn/stats v0.7.0
+	github.com/montanaflynn/stats v0.7.1
 	github.com/nats-io/gnatsd v0.0.0-00010101000000-000000000000
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.0.0-00010101000000-000000000000
