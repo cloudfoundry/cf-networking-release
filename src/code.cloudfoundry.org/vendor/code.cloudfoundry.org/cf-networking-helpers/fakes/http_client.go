@@ -9,6 +9,10 @@ import (
 )
 
 type HTTPClient struct {
+	CloseIdleConnectionsStub        func()
+	closeIdleConnectionsMutex       sync.RWMutex
+	closeIdleConnectionsArgsForCall []struct {
+	}
 	DoStub        func(*http.Request) (*http.Response, error)
 	doMutex       sync.RWMutex
 	doArgsForCall []struct {
@@ -24,6 +28,30 @@ type HTTPClient struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *HTTPClient) CloseIdleConnections() {
+	fake.closeIdleConnectionsMutex.Lock()
+	fake.closeIdleConnectionsArgsForCall = append(fake.closeIdleConnectionsArgsForCall, struct {
+	}{})
+	stub := fake.CloseIdleConnectionsStub
+	fake.recordInvocation("CloseIdleConnections", []interface{}{})
+	fake.closeIdleConnectionsMutex.Unlock()
+	if stub != nil {
+		fake.CloseIdleConnectionsStub()
+	}
+}
+
+func (fake *HTTPClient) CloseIdleConnectionsCallCount() int {
+	fake.closeIdleConnectionsMutex.RLock()
+	defer fake.closeIdleConnectionsMutex.RUnlock()
+	return len(fake.closeIdleConnectionsArgsForCall)
+}
+
+func (fake *HTTPClient) CloseIdleConnectionsCalls(stub func()) {
+	fake.closeIdleConnectionsMutex.Lock()
+	defer fake.closeIdleConnectionsMutex.Unlock()
+	fake.CloseIdleConnectionsStub = stub
 }
 
 func (fake *HTTPClient) Do(arg1 *http.Request) (*http.Response, error) {
@@ -93,6 +121,8 @@ func (fake *HTTPClient) DoReturnsOnCall(i int, result1 *http.Response, result2 e
 func (fake *HTTPClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.closeIdleConnectionsMutex.RLock()
+	defer fake.closeIdleConnectionsMutex.RUnlock()
 	fake.doMutex.RLock()
 	defer fake.doMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

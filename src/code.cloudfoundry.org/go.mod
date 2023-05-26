@@ -16,13 +16,13 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20230515223356-08ff19fb906a
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230510133512-ebb4c931f5d5
+	code.cloudfoundry.org/bbs v0.0.0-20230523220553-f3900dad6cae
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230523192906-a0bc5865c476
 	code.cloudfoundry.org/cf-test-helpers v1.0.0
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20230508035730-c4fc5f67e21e
+	code.cloudfoundry.org/debugserver v0.0.0-20230522035716-70a733dc508f
 	code.cloudfoundry.org/filelock v0.0.0-20230410204127-470838d066c5
-	code.cloudfoundry.org/garden v0.0.0-20230516175132-234178722499
+	code.cloudfoundry.org/garden v0.0.0-20230522165130-8444ff5a31d7
 	code.cloudfoundry.org/lager/v3 v3.0.1
 	code.cloudfoundry.org/locket v0.0.0-20230424201354-6cd5416498b6
 	code.cloudfoundry.org/policy_client v0.0.0-20230405194717-ac8a054e5f69
@@ -31,7 +31,7 @@ require (
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
 	github.com/cloudfoundry/cf-test-helpers/v2 v2.5.0
-	github.com/cloudfoundry/dropsonde v1.0.1-0.20230324134055-c6dd7c5e990e
+	github.com/cloudfoundry/dropsonde v1.1.0
 	github.com/containernetworking/cni v1.1.2
 	github.com/containernetworking/plugins v1.3.0
 	github.com/coreos/go-iptables v0.6.0
@@ -60,9 +60,9 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20230515195705-efc368ee68d3 // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20230515215713-3427f375fdf6 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20230508203442-8ce2048f62dc // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20230522195718-40495b68ac2e // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20230522215716-7a601daf48ee // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20230522165527-d4e956b4bd30 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -90,7 +90,7 @@ require (
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
-	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526015343-6ee61e4f9d5f // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

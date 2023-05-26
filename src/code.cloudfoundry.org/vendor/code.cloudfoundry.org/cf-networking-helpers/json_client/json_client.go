@@ -16,11 +16,13 @@ import (
 //go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . HttpClient
 type HttpClient interface {
 	Do(*http.Request) (*http.Response, error)
+	CloseIdleConnections()
 }
 
 //go:generate counterfeiter -o ../fakes/json_client.go --fake-name JSONClient . JsonClient
 type JsonClient interface {
 	Do(method, route string, reqData, respData interface{}, token string) error
+	CloseIdleConnections()
 }
 
 func New(logger lager.Logger, httpClient HttpClient, baseURL string) JsonClient {
@@ -48,6 +50,10 @@ type HttpResponseCodeError struct {
 
 func (h *HttpResponseCodeError) Error() string {
 	return fmt.Sprintf("http status %d: %s", h.StatusCode, h.Message)
+}
+
+func (c *Client) CloseIdleConnections() {
+	c.HttpClient.CloseIdleConnections()
 }
 
 func (c *Client) Do(method, route string, reqData, respData interface{}, token string) error {

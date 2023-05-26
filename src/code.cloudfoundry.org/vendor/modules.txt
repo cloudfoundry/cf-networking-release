@@ -1,9 +1,9 @@
-# code.cloudfoundry.org/bbs v0.0.0-20230515223356-08ff19fb906a
+# code.cloudfoundry.org/bbs v0.0.0-20230523220553-f3900dad6cae
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230510133512-ebb4c931f5d5
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230523192906-a0bc5865c476
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -27,22 +27,22 @@ code.cloudfoundry.org/cf-test-helpers/config
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20230508035730-c4fc5f67e21e
+# code.cloudfoundry.org/debugserver v0.0.0-20230522035716-70a733dc508f
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20230515195705-efc368ee68d3
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20230522195718-40495b68ac2e
 ## explicit; go 1.20
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20230515215713-3427f375fdf6
+# code.cloudfoundry.org/durationjson v0.0.0-20230522215716-7a601daf48ee
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20230410204127-470838d066c5
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20230516175132-234178722499
+# code.cloudfoundry.org/garden v0.0.0-20230522165130-8444ff5a31d7
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
-# code.cloudfoundry.org/go-diodes v0.0.0-20230508203442-8ce2048f62dc
+# code.cloudfoundry.org/go-diodes v0.0.0-20230522165527-d4e956b4bd30
 ## explicit; go 1.18
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v8 v8.0.5
@@ -108,7 +108,7 @@ github.com/cloudfoundry/cf-test-helpers/v2/commandstarter
 github.com/cloudfoundry/cf-test-helpers/v2/config
 github.com/cloudfoundry/cf-test-helpers/v2/internal
 github.com/cloudfoundry/cf-test-helpers/v2/silentcommandstarter
-# github.com/cloudfoundry/dropsonde v1.0.1-0.20230324134055-c6dd7c5e990e
+# github.com/cloudfoundry/dropsonde v1.1.0
 ## explicit; go 1.18
 github.com/cloudfoundry/dropsonde
 github.com/cloudfoundry/dropsonde/emitter
@@ -396,7 +396,7 @@ golang.org/x/text/width
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
-# google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20230526015343-6ee61e4f9d5f
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.55.0 => google.golang.org/grpc v1.50.1

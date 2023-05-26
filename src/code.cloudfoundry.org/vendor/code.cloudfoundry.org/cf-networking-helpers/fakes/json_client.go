@@ -8,6 +8,10 @@ import (
 )
 
 type JSONClient struct {
+	CloseIdleConnectionsStub        func()
+	closeIdleConnectionsMutex       sync.RWMutex
+	closeIdleConnectionsArgsForCall []struct {
+	}
 	DoStub        func(string, string, interface{}, interface{}, string) error
 	doMutex       sync.RWMutex
 	doArgsForCall []struct {
@@ -25,6 +29,30 @@ type JSONClient struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *JSONClient) CloseIdleConnections() {
+	fake.closeIdleConnectionsMutex.Lock()
+	fake.closeIdleConnectionsArgsForCall = append(fake.closeIdleConnectionsArgsForCall, struct {
+	}{})
+	stub := fake.CloseIdleConnectionsStub
+	fake.recordInvocation("CloseIdleConnections", []interface{}{})
+	fake.closeIdleConnectionsMutex.Unlock()
+	if stub != nil {
+		fake.CloseIdleConnectionsStub()
+	}
+}
+
+func (fake *JSONClient) CloseIdleConnectionsCallCount() int {
+	fake.closeIdleConnectionsMutex.RLock()
+	defer fake.closeIdleConnectionsMutex.RUnlock()
+	return len(fake.closeIdleConnectionsArgsForCall)
+}
+
+func (fake *JSONClient) CloseIdleConnectionsCalls(stub func()) {
+	fake.closeIdleConnectionsMutex.Lock()
+	defer fake.closeIdleConnectionsMutex.Unlock()
+	fake.CloseIdleConnectionsStub = stub
 }
 
 func (fake *JSONClient) Do(arg1 string, arg2 string, arg3 interface{}, arg4 interface{}, arg5 string) error {
@@ -95,6 +123,8 @@ func (fake *JSONClient) DoReturnsOnCall(i int, result1 error) {
 func (fake *JSONClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.closeIdleConnectionsMutex.RLock()
+	defer fake.closeIdleConnectionsMutex.RUnlock()
 	fake.doMutex.RLock()
 	defer fake.doMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
