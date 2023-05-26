@@ -38,7 +38,7 @@ func main() {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error accepting: %s\n")
+			fmt.Fprintf(os.Stderr, "Error accepting: %s\n", err)
 			os.Exit(1)
 		}
 		// Handle connections in a new goroutine.
