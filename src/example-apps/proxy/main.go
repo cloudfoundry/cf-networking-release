@@ -29,6 +29,7 @@ func main() {
 	mux.Handle("/stats", &handlers.StatsHandler{Stats: stats})
 	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
 	mux.Handle("/upload", &handlers.UploadHandler{})
+	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{})
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
