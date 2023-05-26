@@ -120,6 +120,14 @@ $ curl https://proxy.mydomain.com/proxy/appB.apps.internal/echosourceip
 10.255.208.54 # IP address of the proxy app making the request
 ```
 
+## `/eventuallyfail`
+
+[Eventually Fail handler)(./handlers/eventually_fail.go) responds to the first
+5 requests with a 200 status code. After the 5th request the endpoint responds
+with a 500 status code. You can configure how many times the endpoint should
+succeed before failing by setting the `EVENTUALLY_FAIL_AFTER_COUNT` env var.
+This endpoint was created to test app healthchecks.
+
 ## `/ping/${destination}`
 
 [Ping handler](./handlers/ping_handler.go) shells out to `ping` to ping the
