@@ -1,21 +1,15 @@
 title = "TOML Marshal Testing"
 
-[basic]
-  bool = true
-  date = 1979-05-27T07:32:00Z
-  float = 123.4
-  float64 = 123.456782132399
-  int = 5000
-  string = "Bite me"
-  uint = 5001
-
 [basic_lists]
+  floats = [12.3,45.6,78.9]
   bools = [true,false,true]
   dates = [1979-05-27T07:32:00Z,1980-05-27T07:32:00Z]
-  floats = [12.3,45.6,78.9]
   ints = [8001,8001,8002]
-  strings = ["One","Two","Three"]
   uints = [5002,5003]
+  strings = ["One","Two","Three"]
+
+[[subdocptrs]]
+  name = "Second"
 
 [basic_map]
   one = "one"
@@ -23,17 +17,23 @@ title = "TOML Marshal Testing"
 
 [subdoc]
 
+  [subdoc.second]
+    name = "Second"
+
   [subdoc.first]
     name = "First"
 
-  [subdoc.second]
-    name = "Second"
+[basic]
+  uint = 5001
+  bool = true
+  float = 123.4
+  float64 = 123.456782132399
+  int = 5000
+  string = "Bite me"
+  date = 1979-05-27T07:32:00Z
 
 [[subdoclist]]
   name = "List.First"
 
 [[subdoclist]]
   name = "List.Second"
-
-[[subdocptrs]]
-  name = "Second"

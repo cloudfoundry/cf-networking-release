@@ -11,20 +11,19 @@ replace github.com/dgrijalva/jwt-go => github.com/dgrijalva/jwt-go v2.3.0+incomp
 go 1.20
 
 require (
-	github.com/Sirupsen/logrus v0.8.7
-	github.com/amalgam8/amalgam8 v0.0.0-00010101000000-000000000000
-	github.com/codegangsta/cli v1.8.1-0.20150711215404-bca61c476e3c
+	github.com/Sirupsen/logrus v1.9.2
+	github.com/amalgam8/amalgam8 v1.1.0
+	github.com/codegangsta/cli v1.22.13
 )
 
 require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/ant0ine/go-json-rest v3.3.2+incompatible // indirect
-	github.com/garyburd/redigo v1.6.2 // indirect
+	github.com/garyburd/redigo v1.6.4 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/nicksnyder/go-i18n v1.10.1 // indirect
-	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
