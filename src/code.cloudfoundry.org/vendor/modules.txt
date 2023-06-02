@@ -42,7 +42,7 @@ code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20230522165130-8444ff5a31d7
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
-# code.cloudfoundry.org/go-diodes v0.0.0-20230522165527-d4e956b4bd30
+# code.cloudfoundry.org/go-diodes v0.0.0-20230601213405-527858bc5898
 ## explicit; go 1.18
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v8 v8.0.5
@@ -123,7 +123,7 @@ github.com/cloudfoundry/dropsonde/metric_sender
 github.com/cloudfoundry/dropsonde/metricbatcher
 github.com/cloudfoundry/dropsonde/metrics
 github.com/cloudfoundry/dropsonde/runtime_stats
-# github.com/cloudfoundry/sonde-go v0.0.0-20230412182205-eaf74d09b55a
+# github.com/cloudfoundry/sonde-go v0.0.0-20230601214134-20e0b3c2ed5c
 ## explicit; go 1.17
 github.com/cloudfoundry/sonde-go/events
 # github.com/cockroachdb/apd v1.1.0
@@ -183,7 +183,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20230510103437-eeec1cb781c3
+# github.com/google/pprof v0.0.0-20230602150820-91b7bce49751
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
@@ -232,7 +232,7 @@ github.com/nats-io/nuid
 # github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 ## explicit
 github.com/nu7hatch/gouuid
-# github.com/onsi/ginkgo/v2 v2.9.5
+# github.com/onsi/ginkgo/v2 v2.9.7
 ## explicit; go 1.18
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -392,11 +392,11 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.9.1
+# golang.org/x/tools v0.9.3
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20230526015343-6ee61e4f9d5f
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.55.0 => google.golang.org/grpc v1.50.1

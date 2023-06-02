@@ -42,7 +42,7 @@ require (
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.0.0-00010101000000-000000000000
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.9.5
+	github.com/onsi/ginkgo/v2 v2.9.7
 	github.com/onsi/gomega v1.27.7
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -62,13 +62,13 @@ require (
 require (
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20230522195718-40495b68ac2e // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20230522215716-7a601daf48ee // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20230522165527-d4e956b4bd30 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20230601213405-527858bc5898 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0 // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20230412182205-eaf74d09b55a // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20230601214134-20e0b3c2ed5c // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
@@ -78,7 +78,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/pprof v0.0.0-20230510103437-eeec1cb781c3 // indirect
+	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -89,8 +89,8 @@ require (
 	go.step.sm/crypto v0.28.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	golang.org/x/tools v0.9.1 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526015343-6ee61e4f9d5f // indirect
+	golang.org/x/tools v0.9.3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
