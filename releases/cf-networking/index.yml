@@ -31,6 +31,8 @@ builds:
     version: 3.11.0
   2057e1b1-38e0-4aee-4dd5-562a1a849189:
     version: 2.6.0
+  26a59029-8ea4-46ea-51d0-c2ac1300e749:
+    version: 3.28.0
   28f16ffb-a41b-4df4-655c-62b7b268c42b:
     version: 3.10.0
   2bb33dd3-fa36-4878-720d-e51fb3dfe60f:
