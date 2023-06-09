@@ -1,4 +1,4 @@
-# github.com/Sirupsen/logrus v1.9.2 => github.com/Sirupsen/logrus v0.8.7
+# github.com/Sirupsen/logrus v1.9.3 => github.com/Sirupsen/logrus v0.8.7
 ## explicit
 github.com/Sirupsen/logrus
 github.com/Sirupsen/logrus/formatters/logstash
