@@ -2,8 +2,8 @@ package migrations
 
 var migration_v0075 = map[string][]string{
 	"mysql": []string{
-		`ALTER TABLE security_groups DROP FOREIGN KEY security_groups_pkey;`,
-		`ALTER TABLE security_groups ALTER COLUMN id type bigint;`,
+		`ALTER TABLE security_groups DROP PRIMARY KEY;`,
+		`ALTER TABLE security_groups MODIFY COLUMN id bigint;`,
 		`ALTER TABLE security_groups ADD PRIMARY KEY (id);`,
 	},
 	"postgres": []string{
