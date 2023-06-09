@@ -22,7 +22,7 @@ require (
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20230522035716-70a733dc508f
 	code.cloudfoundry.org/filelock v0.0.0-20230410204127-470838d066c5
-	code.cloudfoundry.org/garden v0.0.0-20230522165130-8444ff5a31d7
+	code.cloudfoundry.org/garden v0.0.0-20230606175514-ac53c57dca87
 	code.cloudfoundry.org/lager/v3 v3.0.1
 	code.cloudfoundry.org/locket v0.0.0-20230424201354-6cd5416498b6
 	code.cloudfoundry.org/policy_client v0.0.0-20230405194717-ac8a054e5f69
@@ -42,8 +42,8 @@ require (
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.0.0-00010101000000-000000000000
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.9.7
-	github.com/onsi/gomega v1.27.7
+	github.com/onsi/ginkgo/v2 v2.10.0
+	github.com/onsi/gomega v1.27.8
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
@@ -62,13 +62,13 @@ require (
 require (
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20230522195718-40495b68ac2e // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20230522215716-7a601daf48ee // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20230601213405-527858bc5898 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20230606195509-9853201afab8 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0 // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20230601214134-20e0b3c2ed5c // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20230606195250-c7c0fdf1ccc4 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
