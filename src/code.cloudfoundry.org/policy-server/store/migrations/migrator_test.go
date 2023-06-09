@@ -1952,6 +1952,44 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V75 - Migrate the security_groups id from int to bigint - security_groups", func() {
+			It("should migrate", func() {
+				tableName := "security_groups"
+
+				By("performing migration")
+				migrateTo("75")
+
+				By("Confirming table id was modified")
+				var dataType string
+				queryTableIdType := fmt.Sprintf("SELECT DATA_TYPE AS dataType FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '%s' AND COLUMN_NAME = 'id'", tableName)
+				err := realDb.QueryRow(queryTableIdType).Scan(&dataType)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dataType).To(Equal("bigint"))
+			})
+		})
+
+		Describe("V76 - Adjust the max size of the bigint data type - security_groups", func() {
+			BeforeEach(func() {
+				if realDb.DriverName() != "postgres" {
+					Skip("skipping postgres test")
+				}
+			})
+
+			It("should migrate", func() {
+				tableName := "security_groups"
+
+				By("performing migration")
+				migrateTo("76")
+
+				By("Confirming table id was modified")
+				var maxvalue int
+				queryTableIdType := fmt.Sprintf("SELECT max_value AS maxValue FROM PG_SEQUENCES WHERE SEQUENCENAME = '%s_id_seq'", tableName)
+				err := realDb.QueryRow(queryTableIdType).Scan(&maxvalue)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(maxvalue).To(Equal(9223372036854775807))
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
