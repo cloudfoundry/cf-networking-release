@@ -16,17 +16,17 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20230523220553-f3900dad6cae
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230523192906-a0bc5865c476
+	code.cloudfoundry.org/bbs v0.0.0-20230613195751-0eae9414b1d5
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230612154752-c7ca3c7cbadf
 	code.cloudfoundry.org/cf-test-helpers v1.0.0
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20230522035716-70a733dc508f
-	code.cloudfoundry.org/filelock v0.0.0-20230410204127-470838d066c5
-	code.cloudfoundry.org/garden v0.0.0-20230606175514-ac53c57dca87
-	code.cloudfoundry.org/lager/v3 v3.0.1
-	code.cloudfoundry.org/locket v0.0.0-20230424201354-6cd5416498b6
+	code.cloudfoundry.org/debugserver v0.0.0-20230612151301-d597b20f28ce
+	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
+	code.cloudfoundry.org/garden v0.0.0-20230613201438-2d96d24986f8
+	code.cloudfoundry.org/lager/v3 v3.0.2
+	code.cloudfoundry.org/locket v0.0.0-20230612151453-08e003863044
 	code.cloudfoundry.org/policy_client v0.0.0-20230405194717-ac8a054e5f69
-	code.cloudfoundry.org/tlsconfig v0.0.0-20230320190829-8f91c367795b
+	code.cloudfoundry.org/tlsconfig v0.0.0-20230612153104-23c0622de227
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -52,16 +52,16 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.10.0
-	golang.org/x/sys v0.8.0
-	google.golang.org/grpc v1.55.0
+	golang.org/x/net v0.11.0
+	golang.org/x/sys v0.9.0
+	google.golang.org/grpc v1.56.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20230522195718-40495b68ac2e // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20230522215716-7a601daf48ee // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20230612151813-119d7fd9c963 // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20230612152544-cdd056aaf83d // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20230606195509-9853201afab8 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -87,9 +87,9 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.28.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
-	golang.org/x/tools v0.9.3 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
+	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
