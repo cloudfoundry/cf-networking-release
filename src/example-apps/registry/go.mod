@@ -13,7 +13,7 @@ go 1.20
 require (
 	github.com/Sirupsen/logrus v1.9.3
 	github.com/amalgam8/amalgam8 v1.1.0
-	github.com/codegangsta/cli v1.22.13
+	github.com/codegangsta/cli v1.22.14
 )
 
 require (
