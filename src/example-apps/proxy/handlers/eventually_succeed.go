@@ -18,8 +18,9 @@ const succeedAfterDefault = 5
 func (h *EventuallySucceedHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
 	cc := h.IncrementCallCount(logger)
+	succeedAfter := getSucceedAfter()
 
-	if cc > getSuccessAfter() {
+	if cc > succeedAfter {
 		logger.Println("EventuallySucceed handler succeeded")
 		resp.WriteHeader(http.StatusOK)
 	} else {
@@ -35,7 +36,7 @@ func (h *EventuallySucceedHandler) IncrementCallCount(logger *log.Logger) int {
 	return h.callCount
 }
 
-func getSuccessAfter() int {
+func getSucceedAfter() int {
 	if v, ok := os.LookupEnv("EVENTUALLY_SUCCEED_AFTER_COUNT"); ok {
 		count, err := strconv.Atoi(v)
 		if err != nil {

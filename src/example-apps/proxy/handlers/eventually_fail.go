@@ -18,8 +18,9 @@ const failAfterDefault = 5
 func (h *EventuallyFailHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
 	cc := h.IncrementCallCount(logger)
+	failAfter := getFailAfter()
 
-	if cc > getFailAfter() {
+	if cc > failAfter {
 		logger.Println("EventuallyFail handler failed")
 		resp.WriteHeader(http.StatusInternalServerError)
 	} else {
