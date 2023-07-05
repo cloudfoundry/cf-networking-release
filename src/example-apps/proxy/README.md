@@ -128,6 +128,14 @@ with a 500 status code. You can configure how many times the endpoint should
 succeed before failing by setting the `EVENTUALLY_FAIL_AFTER_COUNT` env var.
 This endpoint was created to test app healthchecks.
 
+## `/eventuallysucceed`
+
+[Eventually Succeed handler)(./handlers/eventually_succeed.go) responds to the first
+5 requests with a 500 status code. After the 5th request the endpoint responds
+with a 200 status code. You can configure how many times the endpoint should
+fail before succeeding by setting the `EVENTUALLY_SUCCEED_AFTER_COUNT` env var.
+This endpoint was created to test app healthchecks.
+
 ## `/ping/${destination}`
 
 [Ping handler](./handlers/ping_handler.go) shells out to `ping` to ping the
