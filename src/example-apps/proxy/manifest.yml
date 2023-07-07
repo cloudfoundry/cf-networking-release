@@ -4,5 +4,11 @@ applications:
     memory: 32M
     disk_quota: 32M
     buildpacks: [go_buildpack]
+    # health-check-type: http
+    # health-check-http-endpoint: '/meow'
+    readiness-health-check-http-endpoint: /ready
+    readiness-health-check-invocation-timeout: 10
+    readiness-health-check-type: http
+    timeout: 80
     env:
       GOPACKAGENAME: proxy
