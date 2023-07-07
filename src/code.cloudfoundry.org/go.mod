@@ -22,10 +22,10 @@ require (
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20230612151301-d597b20f28ce
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
-	code.cloudfoundry.org/garden v0.0.0-20230620180307-c5e06332af84
+	code.cloudfoundry.org/garden v0.0.0-20230704175957-6902f659028e
 	code.cloudfoundry.org/lager/v3 v3.0.2
 	code.cloudfoundry.org/locket v0.0.0-20230612151453-08e003863044
-	code.cloudfoundry.org/policy_client v0.0.0-20230405194717-ac8a054e5f69
+	code.cloudfoundry.org/policy_client v0.0.0-20230612154641-3ca0c384fc40
 	code.cloudfoundry.org/tlsconfig v0.0.0-20230612153104-23c0622de227
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -37,10 +37,10 @@ require (
 	github.com/coreos/go-iptables v0.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/montanaflynn/stats v0.7.0
-	github.com/nats-io/gnatsd v0.0.0-00010101000000-000000000000
+	github.com/montanaflynn/stats v0.7.1
+	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-top v0.0.0-00010101000000-000000000000
+	github.com/nats-io/nats-top v0.6.1
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
@@ -52,9 +52,9 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.11.0
-	golang.org/x/sys v0.9.0
-	google.golang.org/grpc v1.56.1
+	golang.org/x/net v0.12.0
+	golang.org/x/sys v0.10.0
+	google.golang.org/grpc v1.56.2
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -78,7 +78,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
+	github.com/google/pprof v0.0.0-20230705174524-200ffdc848b8 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -86,11 +86,11 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.28.0 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/text v0.10.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230629202037-9506855d4529 // indirect
+	go.step.sm/crypto v0.32.2 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/tools v0.11.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
