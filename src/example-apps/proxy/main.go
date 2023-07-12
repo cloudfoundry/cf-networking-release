@@ -11,11 +11,13 @@ import (
 
 const succeedAfterDefault = 5
 const failAfterDefault = 5
+const flapIntervalDefault = 5
 
 func main() {
 	port := getEnvVar("PORT", 0, true)
 	failAfterCount := getEnvVar("EVENTUALLY_FAIL_AFTER_COUNT", failAfterDefault, false)
 	succeedAfterCount := getEnvVar("EVENTUALLY_SUCCEED_AFTER_COUNT", succeedAfterDefault, false)
+	flapInterval := getEnvVar("FLAP_INTERVAL", flapIntervalDefault, false)
 	stats := &handlers.Stats{Latency: []float64{}}
 
 	mux := http.NewServeMux()
@@ -32,6 +34,7 @@ func main() {
 	mux.Handle("/upload", &handlers.UploadHandler{})
 	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{FailAfterCount: failAfterCount})
 	mux.Handle("/eventuallysucceed", &handlers.EventuallySucceedHandler{SucceedAfterCount: succeedAfterCount})
+	mux.Handle("/flap", &handlers.FlapHandler{FlapInterval: flapInterval})
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
