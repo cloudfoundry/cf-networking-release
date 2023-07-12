@@ -9,12 +9,13 @@ import (
 	"strconv"
 )
 
+const succeedAfterDefault = 5
+const failAfterDefault = 5
+
 func main() {
-	systemPortString := os.Getenv("PORT")
-	port, err := strconv.Atoi(systemPortString)
-	if err != nil {
-		log.Fatal("invalid required env var PORT")
-	}
+	port := getEnvVar("PORT", 0, true)
+	failAfterCount := getEnvVar("EVENTUALLY_FAIL_AFTER_COUNT", failAfterDefault, false)
+	succeedAfterCount := getEnvVar("EVENTUALLY_SUCCEED_AFTER_COUNT", succeedAfterDefault, false)
 	stats := &handlers.Stats{Latency: []float64{}}
 
 	mux := http.NewServeMux()
@@ -29,8 +30,26 @@ func main() {
 	mux.Handle("/stats", &handlers.StatsHandler{Stats: stats})
 	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
 	mux.Handle("/upload", &handlers.UploadHandler{})
-	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{})
-	mux.Handle("/eventuallysucceed", &handlers.EventuallySucceedHandler{})
+	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{FailAfterCount: failAfterCount})
+	mux.Handle("/eventuallysucceed", &handlers.EventuallySucceedHandler{SucceedAfterCount: succeedAfterCount})
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+}
+
+func getEnvVar(key string, defaultValue int, failIfDNE bool) int {
+	var result int
+	var err error
+
+	v, ok := os.LookupEnv(key)
+	if !ok && failIfDNE {
+		log.Fatalf("invalid required env var %s", key)
+	} else if !ok {
+		return defaultValue
+	}
+
+	result, err = strconv.Atoi(v)
+	if err != nil {
+		return defaultValue
+	}
+	return result
 }
