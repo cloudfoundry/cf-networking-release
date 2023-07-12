@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"code.cloudfoundry.org/garden"
+	types040 "github.com/containernetworking/cni/pkg/types/040"
 
 	"code.cloudfoundry.org/garden-external-networker/fakes"
 	"code.cloudfoundry.org/garden-external-networker/manager"
 
 	"github.com/containernetworking/cni/pkg/types"
-	types020 "github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -33,27 +33,45 @@ var _ = Describe("Manager", func() {
 		netOutRules           []garden.NetOutRule
 		logger                *bytes.Buffer
 		containerHandle       string
+		cniUpResult           *types040.Result
 	)
 
 	BeforeEach(func() {
 		logger = &bytes.Buffer{}
 		containerHandle = "some-container-handle"
+		interfaceIndex := 1
 		mounter = &fakes.Mounter{}
 		cniController = &fakes.CNIController{}
 		portAllocator = &fakes.PortAllocator{}
 		proxyRedirect = &fakes.ProxyRedirect{}
-
-		cniController.UpReturns(&types020.Result{
-			IP4: &types020.IPConfig{
-				IP: net.IPNet{
-					IP:   net.ParseIP("169.254.1.2"),
-					Mask: net.IPv4Mask(255, 255, 255, 0),
+		cniUpResult = &types040.Result{
+			Interfaces: []*types040.Interface{
+				{
+					Name: "s-010133166033",
+					Mac:  "aa:aa:0a:85:a6:21",
+				},
+				{
+					Name:    "eth0",
+					Mac:     "aa:aa:0a:85:a6:21",
+					Sandbox: "/var/vcap/data/garden-cni/container-netns/check-341ecc13-9e29-4845-6402-f59e8b13603b",
+				},
+			},
+			IPs: []*types040.IPConfig{
+				{
+					Version:   "4",
+					Interface: &interfaceIndex,
+					Address: net.IPNet{
+						IP:   net.ParseIP("169.254.1.2"),
+						Mask: net.IPv4Mask(255, 255, 255, 0),
+					},
 				},
 			},
 			DNS: types.DNS{
 				Nameservers: []string{"8.8.8.8"},
 			},
-		}, nil)
+		}
+
+		cniController.UpReturns(cniUpResult, nil)
 
 		mgr = &manager.Manager{
 			Logger:        logger,
@@ -148,14 +166,62 @@ var _ = Describe("Manager", func() {
 			Expect(out.Properties.DeprecatedHostIP).To(Equal("255.255.255.255"))
 		})
 
-		It("should return the DNS nameservers info as a separate key in the up ouput", func() {
+		It("should return the interface in the CNI result as a property", func() {
+			out, err := mgr.Up(containerHandle, upInputs)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(out.Properties.Interface).To(Equal("eth0"))
+		})
+
+		Context("when there is no IPv4 address in the CNI result", func() {
+			BeforeEach(func() {
+				cniUpResult.IPs = []*types040.IPConfig{
+					{
+						Version: "6",
+						Address: net.IPNet{
+							IP: net.ParseIP("2001:db8::68"),
+						},
+					},
+				}
+			})
+
+			It("should return an error", func() {
+				_, err := mgr.Up(containerHandle, upInputs)
+				Expect(err).To(MatchError("expected an IPv4 address in the CNI result"))
+			})
+		})
+
+		Context("when there is no pointer to a container interface", func() {
+			BeforeEach(func() {
+				cniUpResult.IPs[0].Interface = nil
+			})
+
+			It("should return an error", func() {
+				_, err := mgr.Up(containerHandle, upInputs)
+				Expect(err).To(MatchError("pointer to container interface is nil"))
+			})
+		})
+
+		Context("when the interface reference is invalid", func() {
+			BeforeEach(func() {
+				interfaceIndexOutOfRange := 2
+				cniUpResult.IPs[0].Interface = &interfaceIndexOutOfRange
+			})
+
+			It("should return an error", func() {
+				_, err := mgr.Up(containerHandle, upInputs)
+				Expect(err).To(MatchError("no corresponding interface found, interface index: 2, number of interfaces: 2"))
+			})
+		})
+
+		It("should return the DNS nameservers info as a separate key in the up output", func() {
 			out, err := mgr.Up(containerHandle, upInputs)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(out.DNSServers).To(Equal([]string{"8.8.8.8"}))
 		})
 
-		It("should return the search domains info as a separate key in the up ouput", func() {
+		It("should return the search domains info as a separate key in the up output", func() {
 			out, err := mgr.Up(containerHandle, upInputs)
 			Expect(err).NotTo(HaveOccurred())
 

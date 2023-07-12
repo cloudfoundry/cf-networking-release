@@ -9,7 +9,7 @@ import (
 
 	"code.cloudfoundry.org/garden"
 	"github.com/containernetworking/cni/pkg/types"
-	"github.com/containernetworking/cni/pkg/types/020"
+	types040 "github.com/containernetworking/cni/pkg/types/040"
 )
 
 //go:generate counterfeiter -o ../fakes/proxyRedirect.go --fake-name ProxyRedirect . proxyRedirect
@@ -56,6 +56,7 @@ type UpOutputs struct {
 		ContainerIP      string `json:"garden.network.container-ip"`
 		DeprecatedHostIP string `json:"garden.network.host-ip"`
 		MappedPorts      string `json:"garden.network.mapped-ports"`
+		Interface        string `json:"garden.network.interface"`
 	} `json:"properties"`
 	DNSServers    []string `json:"dns_servers,omitempty"`
 	SearchDomains []string `json:"search_domains,omitempty"`
@@ -111,7 +112,7 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 		return nil, errors.New("cni up failed: no ip allocated")
 	}
 
-	result020, err := result.GetAsVersion("0.2.0")
+	result040, err := result.GetAsVersion("0.4.0")
 	if err != nil {
 		return nil, fmt.Errorf("cni plugin result version incompatible: %s", err) // not tested
 	}
@@ -121,13 +122,34 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 		return nil, fmt.Errorf("proxy redirect apply: %s", err)
 	}
 
-	containerIP := result020.(*types020.Result).IP4.IP.IP
+	assertedResult := result040.(*types040.Result)
+
+	var containerIP *types040.IPConfig
+	for _, ip := range assertedResult.IPs {
+		if ip.Version == "4" {
+			containerIP = ip
+			break
+		}
+	}
+
+	if containerIP == nil {
+		return nil, errors.New("expected an IPv4 address in the CNI result")
+	}
+
+	if containerIP.Interface == nil {
+		return nil, errors.New("pointer to container interface is nil")
+	}
+
+	if interfacesLen := len(assertedResult.Interfaces); *containerIP.Interface >= interfacesLen {
+		return nil, fmt.Errorf("no corresponding interface found, interface index: %d, number of interfaces: %d", *containerIP.Interface, interfacesLen)
+	}
 
 	outputs := UpOutputs{}
 	outputs.Properties.MappedPorts = toJson(mappedPorts)
-	outputs.Properties.ContainerIP = containerIP.String()
+	outputs.Properties.ContainerIP = containerIP.Address.IP.String()
+	outputs.Properties.Interface = assertedResult.Interfaces[*containerIP.Interface].Name
 	outputs.Properties.DeprecatedHostIP = "255.255.255.255"
-	outputs.DNSServers = result020.(*types020.Result).DNS.Nameservers
+	outputs.DNSServers = assertedResult.DNS.Nameservers
 	outputs.SearchDomains = m.SearchDomains
 	return &outputs, nil
 }
