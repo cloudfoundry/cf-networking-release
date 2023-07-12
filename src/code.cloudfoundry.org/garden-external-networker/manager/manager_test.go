@@ -148,6 +148,13 @@ var _ = Describe("Manager", func() {
 			Expect(out.Properties.DeprecatedHostIP).To(Equal("255.255.255.255"))
 		})
 
+		It("should return the interface in the CNI result as a property", func() {
+			out, err := mgr.Up(containerHandle, upInputs)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(out.Properties.Interface).To(Equal("eth0"))
+		})
+
 		It("should return the DNS nameservers info as a separate key in the up ouput", func() {
 			out, err := mgr.Up(containerHandle, upInputs)
 			Expect(err).NotTo(HaveOccurred())
