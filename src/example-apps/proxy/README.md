@@ -122,7 +122,7 @@ $ curl https://proxy.mydomain.com/proxy/appB.apps.internal/echosourceip
 
 ## `/eventuallyfail`
 
-[Eventually Fail handler)(./handlers/eventually_fail.go) responds to the first
+[Eventually Fail handler](./handlers/eventually_fail.go) responds to the first
 5 requests with a 200 status code. After the 5th request the endpoint responds
 with a 500 status code. You can configure how many times the endpoint should
 succeed before failing by setting the `EVENTUALLY_FAIL_AFTER_COUNT` env var.
@@ -130,11 +130,20 @@ This endpoint was created to test app healthchecks.
 
 ## `/eventuallysucceed`
 
-[Eventually Succeed handler)(./handlers/eventually_succeed.go) responds to the first
+[Eventually Succeed handler](./handlers/eventually_succeed.go) responds to the first
 5 requests with a 500 status code. After the 5th request the endpoint responds
 with a 200 status code. You can configure how many times the endpoint should
 fail before succeeding by setting the `EVENTUALLY_SUCCEED_AFTER_COUNT` env var.
 This endpoint was created to test app healthchecks.
+
+## `/flap`
+
+[Flap handler](./handlers/flap_handler.go) responds to the first 5 requests
+with a 200 status code. It responds to the next 5 requests with a 500 status
+code. It continues to flap back and forth between 200 and 500 status codes
+every 5 requests. You can configure how often the endpoint should flap by
+setting the `FLAP_INTERVAL` env var. This endpoint was created to test app
+healthchecks.
 
 ## `/ping/${destination}`
 
