@@ -5,7 +5,7 @@ development.
 
 1. **Create an issue**
   
-    I can hear you already: "What? I'm trying to do the right thing and creator a PR! Why would I make an issue?"
+    I can hear you already: "What? I'm trying to do the right thing and create a PR! Why would I make an issue?"
     If you create an issue we can help point you in the right direction  or warn you about any gotchas. Just mention in
     the issue that you are planning on writing a PR to fix the issue. 
 
