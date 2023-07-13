@@ -133,23 +133,21 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	}
 
 	if containerIP == nil {
-		return nil, errors.New("expected one IPv4 in the cni result")
+		return nil, errors.New("expected an IPv4 address in the CNI result")
 	}
 
 	if containerIP.Interface == nil {
 		return nil, errors.New("pointer to container interface is nil")
 	}
 
-	if lenInterfaces := len(assertedResult.Interfaces); *containerIP.Interface < lenInterfaces {
-		return nil, fmt.Errorf("no corresponding interface found, interface index: %d, interfaces: %d", *containerIP.Interface, lenInterfaces)
+	if interfacesLen := len(assertedResult.Interfaces); *containerIP.Interface >= interfacesLen {
+		return nil, fmt.Errorf("no corresponding interface found, interface index: %d, number of interfaces: %d", *containerIP.Interface, interfacesLen)
 	}
-
-	containerInterface := assertedResult.Interfaces[*containerIP.Interface]
 
 	outputs := UpOutputs{}
 	outputs.Properties.MappedPorts = toJson(mappedPorts)
 	outputs.Properties.ContainerIP = containerIP.Address.IP.String()
-	outputs.Properties.Interface = containerInterface.Name
+	outputs.Properties.Interface = assertedResult.Interfaces[*containerIP.Interface].Name
 	outputs.Properties.DeprecatedHostIP = "255.255.255.255"
 	outputs.DNSServers = assertedResult.DNS.Nameservers
 	outputs.SearchDomains = m.SearchDomains
