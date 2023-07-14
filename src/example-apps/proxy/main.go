@@ -2,15 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"proxy/handlers"
 	"strconv"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
@@ -53,38 +50,58 @@ func main() {
 	}
 	stats := &handlers.Stats{Latency: []float64{}}
 
-	vcapServices := []byte(os.Getenv("VCAP_SERVICES"))
-	fmt.Println(vcapServices)
+	// vcapServices := []byte(os.Getenv("VCAP_SERVICES"))
 
-	var servicesList Services
-	err = json.Unmarshal(vcapServices, &servicesList)
+	// var servicesList Services
+	// err = json.Unmarshal(vcapServices, &servicesList)
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
-	dbCreds := servicesList["p.mysql"][0].Credentials
+	// dbCreds := servicesList["p.mysql"][0].Credentials
 
-	cfg := mysql.Config{
-		User:   dbCreds.Username,
-		Passwd: dbCreds.Password,
-		Net:    "tcp",
-		Addr:   fmt.Sprint(dbCreds.Hostname, ":", dbCreds.Port),
-		DBName: "amelia-test",
-	}
+	// cfg := mysql.Config{
+	// 	User:   dbCreds.Username,
+	// 	Passwd: dbCreds.Password,
+	// 	Net:    "tcp",
+	// 	Addr:   fmt.Sprint(dbCreds.Hostname, ":", dbCreds.Port),
+	// 	// DBName:               "amelia-test",
+	// 	AllowNativePasswords: true,
+	// }
 
-	// Get a database handle.
-	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
+	// // Get a database handle.
+	// db, err = sql.Open("mysql", cfg.FormatDSN())
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// // defer db.Close()
 
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
-	fmt.Println("Connected!")
+	// pingErr := db.Ping()
+	// if pingErr != nil {
+	// 	log.Fatal(pingErr)
+	// }
+	// fmt.Println("Connected!")
 
+	// dbName := "ameliatest"
+	// _, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + dbName)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("🐈")
+
+	// _, err = db.Exec("USE " + dbName)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("🦇")
+	// dbTableName := "todos"
+	// _, err = db.Exec("CREATE TABLE IF NOT EXISTS " + dbTableName + " ( done bool, note varchar(32) )")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	fmt.Println("🍍")
 	mux := http.NewServeMux()
 	mux.Handle("/", &handlers.InfoHandler{Port: port})
 	mux.Handle("/dig/", &handlers.DigHandler{})
@@ -98,6 +115,8 @@ func main() {
 	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
 	mux.Handle("/upload", &handlers.UploadHandler{})
 	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{})
+	// mux.Handle("/todos", &handlers.TodosHandler{Db: db})
+	fmt.Println("🔮")
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
