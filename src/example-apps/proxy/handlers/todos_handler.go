@@ -23,24 +23,62 @@ type todo struct {
 }
 
 func (h *TodosHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	fmt.Println("👉")
-	var t todo
 	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
+	fmt.Println("👉")
+	switch req.Method {
+	case http.MethodPost:
+		var t todo
 
-	err := json.NewDecoder(req.Body).Decode(&t)
-	if err != nil {
-		logger.Println("Body failed decoding")
-		http.Error(resp, err.Error(), http.StatusBadRequest)
-		return
+		err := json.NewDecoder(req.Body).Decode(&t)
+		fmt.Printf("printf of t: %#v", t)
+		if err != nil {
+			logger.Println("Body failed decoding")
+			http.Error(resp, err.Error(), http.StatusBadRequest)
+			return
+		}
+		fmt.Println("🎉")
+		err = h.insert(t)
+		if err != nil {
+			logger.Println("Failed creating todo")
+			http.Error(resp, err.Error(), http.StatusBadRequest)
+		}
+
+		resp.WriteHeader(http.StatusOK)
+	case http.MethodGet:
+		todos, err := h.listAll()
+		if err != nil {
+			logger.Println("Failed getting todos")
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+		}
+
+		respBytes, err := json.Marshal(todos)
+		if err != nil {
+			logger.Println("Failed marshalling todos")
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+		}
+		resp.WriteHeader(http.StatusOK)
+		resp.Write(respBytes)
 	}
-	fmt.Println("🎉")
-	err = h.insert(t)
+}
+
+func (h *TodosHandler) listAll() ([]todo, error) {
+	rows, err := h.Db.Query("select done, note from todos")
+
 	if err != nil {
-		logger.Println("Failed creating todo")
-		http.Error(resp, err.Error(), http.StatusBadRequest)
+		return []todo{}, err
 	}
 
-	resp.WriteHeader(http.StatusOK)
+	todos := []todo{}
+	for rows.Next() {
+		var done bool
+		var note string
+		rows.Scan(&done, &note)
+		fmt.Println("done: ", done)
+		fmt.Println("note: ", note)
+		todos = append(todos, todo{done: done, note: note})
+	}
+
+	return todos, nil
 }
 
 func (h *TodosHandler) insert(t todo) error {
@@ -56,6 +94,8 @@ func (h *TodosHandler) insert(t todo) error {
 	defer stmt.Close()
 
 	fmt.Println("🔥")
+	fmt.Println("adding done: ", t.done)
+	fmt.Println("adding note: ", t.note)
 	res, err := stmt.ExecContext(ctx, t.done, t.note)
 	if err != nil {
 		log.Printf("Error %s when inserting row into products table", err)
