@@ -11,11 +11,12 @@ import (
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var db *sql.DB
 
-type Service struct {
+type MysqlService struct {
 	BindingGUID string `json:"binding_guid,omitempty"`
 	BindingName any    `json:"binding_name,omitempty"`
 	Credentials struct {
@@ -42,8 +43,50 @@ type Service struct {
 	Tags           []string `json:"tags,omitempty"`
 	VolumeMounts   []any    `json:"volume_mounts,omitempty"`
 }
+type RabbitService struct {
+	BindingGUID string `json:"binding_guid"`
+	BindingName any    `json:"binding_name"`
+	Credentials struct {
+		DashboardURL string   `json:"dashboard_url"`
+		Hostname     string   `json:"hostname"`
+		Hostnames    []string `json:"hostnames"`
+		HTTPAPIURI   string   `json:"http_api_uri"`
+		HTTPAPIUris  []string `json:"http_api_uris"`
+		Password     string   `json:"password"`
+		Protocols    struct {
+			Amqp struct {
+				Host     string   `json:"host"`
+				Hosts    []string `json:"hosts"`
+				Password string   `json:"password"`
+				Port     int      `json:"port"`
+				Ssl      bool     `json:"ssl"`
+				URI      string   `json:"uri"`
+				Uris     []string `json:"uris"`
+				Username string   `json:"username"`
+				Vhost    string   `json:"vhost"`
+			} `json:"amqp"`
+		} `json:"protocols"`
+		Ssl      bool     `json:"ssl"`
+		URI      string   `json:"uri"`
+		Uris     []string `json:"uris"`
+		Username string   `json:"username"`
+		Vhost    string   `json:"vhost"`
+	} `json:"credentials"`
+	InstanceGUID   string   `json:"instance_guid"`
+	InstanceName   string   `json:"instance_name"`
+	Label          string   `json:"label"`
+	Name           string   `json:"name"`
+	Plan           string   `json:"plan"`
+	Provider       any      `json:"provider"`
+	SyslogDrainURL any      `json:"syslog_drain_url"`
+	Tags           []string `json:"tags"`
+	VolumeMounts   []any    `json:"volume_mounts"`
+}
 
-type Services map[string][]Service
+type Services struct {
+	Mysql  []MysqlService  `json:"p.mysql"`
+	Rabbit []RabbitService `json:"p.rabbitmq"`
+}
 
 func main() {
 	systemPortString := os.Getenv("PORT")
@@ -53,16 +96,86 @@ func main() {
 	}
 	stats := &handlers.Stats{Latency: []float64{}}
 
+	servicesList := getServicesList()
+	setupRabbit(servicesList.Rabbit[0])
+
+	mux := http.NewServeMux()
+	mux.Handle("/", &handlers.InfoHandler{Port: port})
+	mux.Handle("/dig/", &handlers.DigHandler{})
+	mux.Handle("/digudp/", &handlers.DigUDPHandler{})
+	mux.Handle("/download/", &handlers.DownloadHandler{})
+	mux.Handle("/dumprequest/", &handlers.DumpRequestHandler{})
+	mux.Handle("/echosourceip", &handlers.EchoSourceIPHandler{})
+	mux.Handle("/ping/", &handlers.PingHandler{})
+	mux.Handle("/proxy/", &handlers.ProxyHandler{Stats: stats})
+	mux.Handle("/stats", &handlers.StatsHandler{Stats: stats})
+	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
+	mux.Handle("/upload", &handlers.UploadHandler{})
+	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{})
+	if containsDBCreds(servicesList) {
+		db := setUpDB(servicesList)
+		mux.Handle("/todos", &handlers.TodosHandler{Db: db})
+	}
+	if containsRabbitCreds(servicesList) {
+		fmt.Println("🐰")
+	}
+
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+}
+
+func getServicesList() Services {
 	vcapServices := []byte(os.Getenv("VCAP_SERVICES"))
 
 	var servicesList Services
-	err = json.Unmarshal(vcapServices, &servicesList)
-
+	err := json.Unmarshal(vcapServices, &servicesList)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal("VCAP_SERVICES failed to unmarshal", err)
 	}
 
-	dbCreds := servicesList["p.mysql"][0].Credentials
+	return servicesList
+}
+
+func containsDBCreds(servicesList Services) bool {
+	return servicesList.Mysql[0].BindingGUID != ""
+}
+
+func containsRabbitCreds(servicesList Services) bool {
+	return servicesList.Rabbit[0].BindingGUID != ""
+}
+
+func setupRabbit(rbt RabbitService) {
+	connectRabbitMQ, err := amqp.Dial(rbt.Credentials.URI)
+	if err != nil {
+		panic(err)
+	}
+	defer connectRabbitMQ.Close()
+
+	// Let's start by opening a channel to our RabbitMQ
+	// instance over the connection we have already
+	// established.
+	channelRabbitMQ, err := connectRabbitMQ.Channel()
+	if err != nil {
+		panic(err)
+	}
+	defer channelRabbitMQ.Close()
+
+	_, err = channelRabbitMQ.QueueDeclare(
+		"hello", // name
+		false,   // durable
+		false,   // delete when unused
+		false,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func setUpDB(servicesList Services) *sql.DB {
+	return nil
+
+	dbCreds := servicesList.Mysql[0].Credentials
 
 	cfg := mysql.Config{
 		User:   dbCreds.Username,
@@ -74,7 +187,7 @@ func main() {
 	}
 
 	// Get a database handle.
-	db, err = sql.Open("mysql", cfg.FormatDSN())
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -104,22 +217,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("🍍")
-	mux := http.NewServeMux()
-	mux.Handle("/", &handlers.InfoHandler{Port: port})
-	mux.Handle("/dig/", &handlers.DigHandler{})
-	mux.Handle("/digudp/", &handlers.DigUDPHandler{})
-	mux.Handle("/download/", &handlers.DownloadHandler{})
-	mux.Handle("/dumprequest/", &handlers.DumpRequestHandler{})
-	mux.Handle("/echosourceip", &handlers.EchoSourceIPHandler{})
-	mux.Handle("/ping/", &handlers.PingHandler{})
-	mux.Handle("/proxy/", &handlers.ProxyHandler{Stats: stats})
-	mux.Handle("/stats", &handlers.StatsHandler{Stats: stats})
-	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
-	mux.Handle("/upload", &handlers.UploadHandler{})
-	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{})
-	mux.Handle("/todos", &handlers.TodosHandler{Db: db})
-	fmt.Println("🔮")
-
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	return db
 }

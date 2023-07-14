@@ -54,6 +54,11 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
+# github.com/rabbitmq/amqp091-go v1.8.1
+## explicit; go 1.16
+github.com/rabbitmq/amqp091-go
+# github.com/streadway/amqp v1.1.0
+## explicit; go 1.10
 # golang.org/x/net v0.12.0
 ## explicit; go 1.17
 golang.org/x/net/context

@@ -18,8 +18,8 @@ type TodosHandler struct {
 }
 
 type todo struct {
-	done bool
-	note string
+	Done bool
+	Note string
 }
 
 func (h *TodosHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
@@ -75,7 +75,7 @@ func (h *TodosHandler) listAll() ([]todo, error) {
 		rows.Scan(&done, &note)
 		fmt.Println("done: ", done)
 		fmt.Println("note: ", note)
-		todos = append(todos, todo{done: done, note: note})
+		todos = append(todos, todo{Done: done, Note: note})
 	}
 
 	return todos, nil
@@ -94,9 +94,9 @@ func (h *TodosHandler) insert(t todo) error {
 	defer stmt.Close()
 
 	fmt.Println("🔥")
-	fmt.Println("adding done: ", t.done)
-	fmt.Println("adding note: ", t.note)
-	res, err := stmt.ExecContext(ctx, t.done, t.note)
+	fmt.Println("adding done: ", t.Done)
+	fmt.Println("adding note: ", t.Note)
+	res, err := stmt.ExecContext(ctx, t.Done, t.Note)
 	if err != nil {
 		log.Printf("Error %s when inserting row into products table", err)
 		return err
