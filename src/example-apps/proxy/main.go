@@ -118,6 +118,8 @@ func main() {
 	}
 	if containsRabbitCreds(servicesList) {
 		fmt.Println("🐰")
+		ch, q := setupRabbit(servicesList.Rabbit[0])
+		mux.Handle("/queue", &handlers.QueueHandler{Ch: ch, Q: q})
 	}
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
@@ -143,12 +145,12 @@ func containsRabbitCreds(servicesList Services) bool {
 	return servicesList.Rabbit[0].BindingGUID != ""
 }
 
-func setupRabbit(rbt RabbitService) {
+func setupRabbit(rbt RabbitService) (*amqp.Channel, amqp.Queue) {
 	connectRabbitMQ, err := amqp.Dial(rbt.Credentials.URI)
 	if err != nil {
 		panic(err)
 	}
-	defer connectRabbitMQ.Close()
+	// defer connectRabbitMQ.Close()
 
 	// Let's start by opening a channel to our RabbitMQ
 	// instance over the connection we have already
@@ -157,9 +159,9 @@ func setupRabbit(rbt RabbitService) {
 	if err != nil {
 		panic(err)
 	}
-	defer channelRabbitMQ.Close()
+	// defer channelRabbitMQ.Close()
 
-	_, err = channelRabbitMQ.QueueDeclare(
+	queue, err := channelRabbitMQ.QueueDeclare(
 		"hello", // name
 		false,   // durable
 		false,   // delete when unused
@@ -170,6 +172,7 @@ func setupRabbit(rbt RabbitService) {
 	if err != nil {
 		panic(err)
 	}
+	return channelRabbitMQ, queue
 }
 
 func setUpDB(servicesList Services) *sql.DB {
