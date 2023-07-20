@@ -295,6 +295,46 @@ var _ = Describe("MetricsWrapper", func() {
 		})
 	})
 
+	Describe("LastUpdated", func() {
+		BeforeEach(func() {
+			fakeStore.LastUpdatedReturns(12345, nil)
+		})
+
+		It("calls LastUpdated on the Store", func() {
+			timestamp, err := metricsWrapper.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(timestamp).To(Equal(12345))
+
+			Expect(fakeStore.LastUpdatedCallCount()).To(Equal(1))
+		})
+
+		It("emits a metric", func() {
+			_, err := metricsWrapper.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreLastUpdatedSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.LastUpdatedReturns(0, errors.New("banana"))
+			})
+			It("emits an error metric", func() {
+				_, err := metricsWrapper.LastUpdated()
+				Expect(err).To(MatchError("banana"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreLastUpdatedError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreLastUpdatedErrorTime"))
+			})
+		})
+	})
+
 	Describe("Tags", func() {
 		BeforeEach(func() {
 			fakeTagStore.TagsReturns(tags, nil)

@@ -55,6 +55,19 @@ func (mw *MetricsWrapper) Delete(policies []Policy) error {
 	return err
 }
 
+func (mw *MetricsWrapper) LastUpdated() (int, error) {
+	startTime := time.Now()
+	timestamp, err := mw.Store.LastUpdated()
+	lastUpdatedTimeDuration := time.Now().Sub(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("StoreLastUpdatedError")
+		mw.MetricsSender.SendDuration("StoreLastUpdatedErrorTime", lastUpdatedTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreLastUpdatedSuccessTime", lastUpdatedTimeDuration)
+	}
+	return timestamp, err
+}
+
 func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 	startTime := time.Now()
 	tags, err := mw.TagStore.Tags()

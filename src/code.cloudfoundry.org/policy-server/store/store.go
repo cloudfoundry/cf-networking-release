@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/policy-server/store/helpers"
@@ -23,6 +24,7 @@ type Store interface {
 	Create([]Policy) error
 	All() ([]Policy, error)
 	Delete([]Policy) error
+	LastUpdated() (int, error)
 	ByGuids([]string, []string, bool) ([]Policy, error)
 	CheckDatabase() error
 }
@@ -64,6 +66,10 @@ func (s *store) Create(policies []Policy) error {
 	if err != nil {
 		return fmt.Errorf("create transaction: %s", err)
 	}
+	err = s.updateLastUpdated(tx)
+	if err != nil {
+		return rollback(tx, err)
+	}
 
 	err = s.createWithTx(tx, policies)
 	if err != nil {
@@ -78,6 +84,10 @@ func (s *store) Delete(policies []Policy) error {
 	if err != nil {
 		return fmt.Errorf("create transaction: %s", err)
 	}
+	err = s.updateLastUpdated(tx)
+	if err != nil {
+		return rollback(tx, err)
+	}
 
 	err = s.deleteWithTx(tx, policies)
 	if err != nil {
@@ -85,6 +95,15 @@ func (s *store) Delete(policies []Policy) error {
 	}
 
 	return commit(tx)
+}
+
+func (s *store) LastUpdated() (int, error) {
+	var timestamp time.Time
+	err := s.conn.QueryRow(`SELECT last_updated FROM policies_info LIMIT 1`).Scan(&timestamp)
+	if err != nil {
+		return 0, fmt.Errorf("getting policies: %s", err)
+	}
+	return int(timestamp.Unix()), err
 }
 
 func (s *store) CheckDatabase() error {
@@ -336,4 +355,9 @@ func (s *store) All() ([]Policy, error) {
 
 func (s *store) tagIntToString(tag int) string {
 	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
+}
+
+func (s *store) updateLastUpdated(tx db.Transaction) error {
+	_, err := tx.Exec(`UPDATE policies_info SET last_updated=CURRENT_TIMESTAMP`)
+	return err
 }
