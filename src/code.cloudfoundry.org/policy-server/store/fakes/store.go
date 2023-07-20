@@ -67,6 +67,18 @@ type Store struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
+	LastUpdatedStub        func() (int, error)
+	lastUpdatedMutex       sync.RWMutex
+	lastUpdatedArgsForCall []struct {
+	}
+	lastUpdatedReturns struct {
+		result1 int
+		result2 error
+	}
+	lastUpdatedReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -388,6 +400,62 @@ func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *Store) LastUpdated() (int, error) {
+	fake.lastUpdatedMutex.Lock()
+	ret, specificReturn := fake.lastUpdatedReturnsOnCall[len(fake.lastUpdatedArgsForCall)]
+	fake.lastUpdatedArgsForCall = append(fake.lastUpdatedArgsForCall, struct {
+	}{})
+	stub := fake.LastUpdatedStub
+	fakeReturns := fake.lastUpdatedReturns
+	fake.recordInvocation("LastUpdated", []interface{}{})
+	fake.lastUpdatedMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *Store) LastUpdatedCallCount() int {
+	fake.lastUpdatedMutex.RLock()
+	defer fake.lastUpdatedMutex.RUnlock()
+	return len(fake.lastUpdatedArgsForCall)
+}
+
+func (fake *Store) LastUpdatedCalls(stub func() (int, error)) {
+	fake.lastUpdatedMutex.Lock()
+	defer fake.lastUpdatedMutex.Unlock()
+	fake.LastUpdatedStub = stub
+}
+
+func (fake *Store) LastUpdatedReturns(result1 int, result2 error) {
+	fake.lastUpdatedMutex.Lock()
+	defer fake.lastUpdatedMutex.Unlock()
+	fake.LastUpdatedStub = nil
+	fake.lastUpdatedReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *Store) LastUpdatedReturnsOnCall(i int, result1 int, result2 error) {
+	fake.lastUpdatedMutex.Lock()
+	defer fake.lastUpdatedMutex.Unlock()
+	fake.LastUpdatedStub = nil
+	if fake.lastUpdatedReturnsOnCall == nil {
+		fake.lastUpdatedReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.lastUpdatedReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Store) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -401,6 +469,8 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.createMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
+	fake.lastUpdatedMutex.RLock()
+	defer fake.lastUpdatedMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -85,6 +85,7 @@ var _ = Describe("Store", func() {
 			}
 			return err
 		}
+
 		It("remains consistent", func() {
 			migrateAndPopulateTags(realDb, 2)
 			dataStore := store.New(realDb, group, destination, policy, 2)
@@ -166,6 +167,32 @@ var _ = Describe("Store", func() {
 			p, err := dataStore.All()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(p)).To(Equal(2))
+		})
+
+		It("updates last updated field", func() {
+			lastUpdatedOriginal, err := dataStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedOriginal).NotTo(BeNil())
+			time.Sleep(1 * time.Second)
+
+			policies := []store.Policy{{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
+					ID:       "some-app-guid",
+					Protocol: "tcp",
+					Ports: store.Ports{
+						Start: 8080,
+						End:   9000,
+					},
+				},
+			},
+			}
+			err = dataStore.Create(policies)
+			Expect(err).NotTo(HaveOccurred())
+
+			lastUpdatedNew, err := dataStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedNew).To(BeNumerically(">", lastUpdatedOriginal))
 		})
 
 		Context("when a transaction begin fails", func() {
@@ -826,6 +853,27 @@ var _ = Describe("Store", func() {
 					Tag:      "04",
 				},
 			}}))
+		})
+
+		It("updates last updated field", func() {
+			lastUpdatedOriginal, err := dataStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedOriginal).NotTo(BeNil())
+			time.Sleep(1 * time.Second)
+
+			err = dataStore.Delete([]store.Policy{{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
+					ID:       "some-other-app-guid",
+					Protocol: "tcp",
+					Port:     8080,
+				},
+			}})
+			Expect(err).NotTo(HaveOccurred())
+
+			lastUpdatedNew, err := dataStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedNew).To(BeNumerically(">", lastUpdatedOriginal))
 		})
 
 		It("deletes the tags if no longer referenced", func() {
