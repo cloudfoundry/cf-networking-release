@@ -16,7 +16,7 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20230622133600-d258b06ce129
+	code.cloudfoundry.org/bbs v0.0.0-20230706231957-02f26c778cf9
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230612154752-c7ca3c7cbadf
 	code.cloudfoundry.org/cf-test-helpers v1.0.0
 	code.cloudfoundry.org/clock v1.1.0
@@ -86,11 +86,11 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.32.3 // indirect
+	go.step.sm/crypto v0.32.4 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/tools v0.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230720185612-659f7aaaa771 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

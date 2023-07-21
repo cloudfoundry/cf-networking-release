@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/bbs v0.0.0-20230622133600-d258b06ce129
+# code.cloudfoundry.org/bbs v0.0.0-20230706231957-02f26c778cf9
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
@@ -316,7 +316,7 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.32.3
+# go.step.sm/crypto v0.32.4
 ## explicit; go 1.18
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
@@ -396,7 +396,7 @@ golang.org/x/text/width
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20230720185612-659f7aaaa771
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.56.2 => google.golang.org/grpc v1.50.1
