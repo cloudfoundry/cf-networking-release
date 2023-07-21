@@ -108,6 +108,8 @@ func main() {
 
 	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore, policyMapperWriter, errorResponse)
 
+	internalPoliciesLastUpdatedHandlerV1 := handlers.NewPoliciesLastUpdatedInternal(logger, wrappedStore, errorResponse)
+
 	createTagsHandlerV1 := &handlers.TagsCreate{
 		Store:         wrappedStore,
 		ErrorResponse: errorResponse,
@@ -144,13 +146,15 @@ func main() {
 	internalRoutes := rata.Routes{
 		{Name: "create_tags", Method: "PUT", Path: "/networking/v1/internal/tags"},
 		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
+		{Name: "internal_policies_last_updated", Method: "GET", Path: "/networking/:version/internal/policies_last_updated"},
 		{Name: "internal_security_groups", Method: "GET", Path: "/networking/:version/internal/security_groups"},
 	}
 
 	internalHandlers := rata.Handlers{
-		"create_tags":              metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
-		"internal_policies":        metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
-		"internal_security_groups": metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
+		"create_tags":                    metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"internal_policies":              metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
+		"internal_policies_last_updated": metricsWrap("InternalPoliciesLastUpdated", logWrap(internalPoliciesLastUpdatedHandlerV1)),
+		"internal_security_groups":       metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
 	}
 
 	for key, handler := range internalHandlers {
