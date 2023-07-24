@@ -29,9 +29,9 @@ type fakePluginLogData struct {
 func expectedStdin_CNI_ADD(index int) string {
 	return fmt.Sprintf(`
 	{
-		"cniVersion": "0.1.0",
-		"name": "some-net-%d",
-		"type": "plugin-%d",
+		"cniVersion": "0.4.0",
+		"name": "some-net-%[1]d",
+		"type": "plugin-%[1]d",
 		"runtimeConfig": {
 			"portMappings": [
 				{"host_port": 12345, "container_port": 7000},
@@ -52,21 +52,47 @@ func expectedStdin_CNI_ADD(index int) string {
 				"some-key": "some-value",
 				"policy_group_id": "some-group-id"
 		}
-	}`, index, index)
+	}`, index)
 }
 func expectedStdin_CNI_DEL(index int) string {
 	return fmt.Sprintf(`
 	{
-		"cniVersion": "0.1.0",
-		"name": "some-net-%d",
-		"type": "plugin-%d"
-	}`, index, index)
+		"cniVersion": "0.4.0",
+		"name": "some-net-%[1]d",
+		"prevResult": {
+			"cniVersion": "0.4.0",
+			"interfaces": [
+				{
+					"name": "s-010133166033",
+					"mac": "aa:aa:0a:85:a6:21"
+				},
+				{
+					"name": "eth0",
+					"mac": "aa:aa:0a:85:a6:21",
+					"sandbox": "/var/vcap/data/garden-cni/container-netns/check-341ecc13-9e29-4845-6402-f59e8b13603b"
+				}
+			],
+			"ips": [
+				{
+					"version": "4",
+					"interface": 1,
+					"address": "169.254.1.2/24"
+				}
+			],
+			"dns": {
+				"nameservers": [
+					"1.2.3.4"
+				]
+			}
+		},
+		"type": "plugin-%[1]d"
+	}`, index)
 }
 
 func writeConfig(index int, outDir string) error {
 	config := fmt.Sprintf(`
 	{
-		"cniVersion": "0.1.0",
+		"cniVersion": "0.4.0",
 		"name": "some-net-%d",
 		"type": "plugin-%d"
 	}`, index, index)
@@ -307,7 +333,8 @@ var _ = Describe("Garden External Networker", func() {
 			"properties": {
 				"garden.network.container-ip": "169.254.1.2",
 				"garden.network.host-ip": "255.255.255.255",
-				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]",
+				"garden.network.interface": "eth0"
 			},
 			"dns_servers": [
 				"1.2.3.4"
@@ -385,7 +412,8 @@ var _ = Describe("Garden External Networker", func() {
 			"properties": {
 				"garden.network.container-ip": "169.254.1.2",
 				"garden.network.host-ip": "255.255.255.255",
-				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]",
+				"garden.network.interface": "eth0"
 			},
 			"search_domains": [
 				"pivotal.io",
@@ -414,7 +442,8 @@ var _ = Describe("Garden External Networker", func() {
 			"properties": {
 				"garden.network.container-ip": "169.254.1.2",
 				"garden.network.host-ip": "255.255.255.255",
-				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]",
+				"garden.network.interface": "eth0"
 			},
 			"dns_servers": [
 				"1.2.3.4"

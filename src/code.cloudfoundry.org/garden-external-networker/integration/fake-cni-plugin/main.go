@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/containernetworking/cni/pkg/types"
-	"github.com/containernetworking/cni/pkg/types/020"
+	types040 "github.com/containernetworking/cni/pkg/types/040"
 )
 
 func parseEnviron(pairs []string) (map[string]string, error) {
@@ -73,11 +73,27 @@ func main() {
 		nameservers = []string{}
 	}
 
-	result := &types020.Result{
-		IP4: &types020.IPConfig{
-			IP: net.IPNet{
-				IP:   net.ParseIP("169.254.1.2"),
-				Mask: net.IPv4Mask(255, 255, 255, 0),
+	interfaceIndex := 1
+	result := &types040.Result{
+		Interfaces: []*types040.Interface{
+			{
+				Name: "s-010133166033",
+				Mac:  "aa:aa:0a:85:a6:21",
+			},
+			{
+				Name:    "eth0",
+				Mac:     "aa:aa:0a:85:a6:21",
+				Sandbox: "/var/vcap/data/garden-cni/container-netns/check-341ecc13-9e29-4845-6402-f59e8b13603b",
+			},
+		},
+		IPs: []*types040.IPConfig{
+			{
+				Version:   "4",
+				Interface: &interfaceIndex,
+				Address: net.IPNet{
+					IP:   net.ParseIP("169.254.1.2"),
+					Mask: net.IPv4Mask(255, 255, 255, 0),
+				},
 			},
 		},
 		DNS: types.DNS{
