@@ -61,6 +61,7 @@ var _ = Describe("PoliciesLastUpdatedInternal", func() {
 			Expect(err).NotTo(HaveOccurred())
 			handler.ServeHTTP(resp, request)
 
+			Expect(fakeStore.LastUpdatedCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 		})
