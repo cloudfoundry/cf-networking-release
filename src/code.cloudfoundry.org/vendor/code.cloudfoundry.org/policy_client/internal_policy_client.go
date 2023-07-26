@@ -56,6 +56,15 @@ func (c *InternalClient) GetPolicies() ([]*Policy, error) {
 	return policies.Policies, nil
 }
 
+func (c *InternalClient) GetPoliciesLastUpdated() (int, error) {
+	var lastUpdatedTimestamp int
+	err := c.JsonClient.Do("GET", "/networking/v1/internal/policies_last_updated", nil, &lastUpdatedTimestamp, "")
+	if err != nil {
+		return 0, err
+	}
+	return lastUpdatedTimestamp, nil
+}
+
 func (c *InternalClient) GetPoliciesByID(ids ...string) ([]Policy, error) {
 	var policies struct {
 		Policies []Policy `json:"policies"`
