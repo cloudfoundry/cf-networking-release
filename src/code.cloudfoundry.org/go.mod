@@ -54,7 +54,7 @@ require (
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.12.0
 	golang.org/x/sys v0.10.0
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
