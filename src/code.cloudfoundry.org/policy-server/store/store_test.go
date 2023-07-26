@@ -195,16 +195,30 @@ var _ = Describe("Store", func() {
 			Expect(lastUpdatedNew).To(BeNumerically(">", lastUpdatedOriginal))
 		})
 
-		Context("when a transaction begin fails", func() {
-			var err error
+		Context("when 0 policies passed in", func() {
+			It("does not update last updated", func() {
+				lastUpdatedOriginal, err := dataStore.LastUpdated()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lastUpdatedOriginal).NotTo(BeNil())
+				time.Sleep(1 * time.Second)
 
+				err = dataStore.Create([]store.Policy{})
+				Expect(err).NotTo(HaveOccurred())
+
+				lastUpdatedNew, err := dataStore.LastUpdated()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lastUpdatedNew).To(Equal(lastUpdatedOriginal))
+			})
+		})
+
+		Context("when a transaction begin fails", func() {
 			BeforeEach(func() {
 				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
 				dataStore = store.New(mockDb, group, destination, policy, 2)
 			})
 
 			It("returns an error", func() {
-				err = dataStore.Create(nil)
+				err := dataStore.Create([]store.Policy{{}})
 				Expect(err).To(MatchError("create transaction: some-db-error"))
 			})
 		})
@@ -876,6 +890,22 @@ var _ = Describe("Store", func() {
 			Expect(lastUpdatedNew).To(BeNumerically(">", lastUpdatedOriginal))
 		})
 
+		Context("when 0 policies passed in", func() {
+			It("does not update last updated", func() {
+				lastUpdatedOriginal, err := dataStore.LastUpdated()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lastUpdatedOriginal).NotTo(BeNil())
+				time.Sleep(1 * time.Second)
+
+				err = dataStore.Delete([]store.Policy{})
+				Expect(err).NotTo(HaveOccurred())
+
+				lastUpdatedNew, err := dataStore.LastUpdated()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lastUpdatedNew).To(Equal(lastUpdatedOriginal))
+			})
+		})
+
 		It("deletes the tags if no longer referenced", func() {
 			err := dataStore.Delete([]store.Policy{{
 				Source: store.Source{ID: "some-app-guid"},
@@ -915,15 +945,13 @@ var _ = Describe("Store", func() {
 			})
 
 			Context("when a transaction begin fails", func() {
-				var err error
-
 				BeforeEach(func() {
 					mockDb.BeginxReturns(nil, errors.New("some-db-error"))
 					dataStore = store.New(mockDb, group, destination, policy, 2)
 				})
 
 				It("returns an error", func() {
-					err = dataStore.Delete(nil)
+					err := dataStore.Delete([]store.Policy{{}})
 					Expect(err).To(MatchError("create transaction: some-db-error"))
 				})
 			})
