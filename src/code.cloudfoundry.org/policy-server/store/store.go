@@ -62,6 +62,9 @@ func New(dbConnectionPool Database, g GroupRepo, d DestinationRepo, p PolicyRepo
 }
 
 func (s *store) Create(policies []Policy) error {
+	if len(policies) == 0 {
+		return nil
+	}
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("create transaction: %s", err)
@@ -80,6 +83,9 @@ func (s *store) Create(policies []Policy) error {
 }
 
 func (s *store) Delete(policies []Policy) error {
+	if len(policies) == 0 {
+		return nil
+	}
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("create transaction: %s", err)
