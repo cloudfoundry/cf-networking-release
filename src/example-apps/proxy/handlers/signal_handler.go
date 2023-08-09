@@ -28,6 +28,8 @@ func (h *SignalHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	go func() {
+		// delay to give enough time for the app to respond to the request, so that gorouter doesn't
+		// sense the http connection as failed + attempt to retry it as an idempotent request
 		time.Sleep(1 * time.Second)
 		self.Signal(syscall.Signal(signal))
 	}()
