@@ -56,7 +56,7 @@ type UpOutputs struct {
 		ContainerIP      string `json:"garden.network.container-ip"`
 		DeprecatedHostIP string `json:"garden.network.host-ip"`
 		MappedPorts      string `json:"garden.network.mapped-ports"`
-		Interface        string `json:"garden.network.interface"`
+		Interface        string `json:"garden.network.interface,omitempty"`
 	} `json:"properties"`
 	DNSServers    []string `json:"dns_servers,omitempty"`
 	SearchDomains []string `json:"search_domains,omitempty"`
@@ -136,18 +136,19 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 		return nil, errors.New("expected an IPv4 address in the CNI result")
 	}
 
-	if containerIP.Interface == nil {
-		return nil, errors.New("pointer to container interface is nil")
-	}
-
-	if interfacesLen := len(assertedResult.Interfaces); *containerIP.Interface >= interfacesLen {
-		return nil, fmt.Errorf("no corresponding interface found, interface index: %d, number of interfaces: %d", *containerIP.Interface, interfacesLen)
+	// support CNI version lower than 0.4.0 which don't carry the Interface name in the result
+	interfaceName := ""
+	if containerIP.Interface != nil {
+		if interfacesLen := len(assertedResult.Interfaces); *containerIP.Interface >= interfacesLen {
+			return nil, fmt.Errorf("no corresponding interface found, interface index: %d, number of interfaces: %d", *containerIP.Interface, interfacesLen)
+		}
+		interfaceName = assertedResult.Interfaces[*containerIP.Interface].Name
 	}
 
 	outputs := UpOutputs{}
 	outputs.Properties.MappedPorts = toJson(mappedPorts)
 	outputs.Properties.ContainerIP = containerIP.Address.IP.String()
-	outputs.Properties.Interface = assertedResult.Interfaces[*containerIP.Interface].Name
+	outputs.Properties.Interface = interfaceName
 	outputs.Properties.DeprecatedHostIP = "255.255.255.255"
 	outputs.DNSServers = assertedResult.DNS.Nameservers
 	outputs.SearchDomains = m.SearchDomains
