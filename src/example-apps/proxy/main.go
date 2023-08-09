@@ -35,6 +35,7 @@ func main() {
 	mux.Handle("/eventuallyfail", &handlers.EventuallyFailHandler{FailAfterCount: failAfterCount})
 	mux.Handle("/eventuallysucceed", &handlers.EventuallySucceedHandler{SucceedAfterCount: succeedAfterCount})
 	mux.Handle("/flap", &handlers.FlapHandler{FlapInterval: flapInterval})
+	mux.Handle("/signal/", &handlers.SignalHandler{})
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
