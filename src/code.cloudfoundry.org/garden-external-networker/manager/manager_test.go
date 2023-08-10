@@ -2,6 +2,7 @@ package manager_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -196,9 +197,15 @@ var _ = Describe("Manager", func() {
 				cniUpResult.IPs[0].Interface = nil
 			})
 
-			It("should return an error", func() {
-				_, err := mgr.Up(containerHandle, upInputs)
-				Expect(err).To(MatchError("pointer to container interface is nil"))
+			It("should return empty interface in the CNI result which must be omitted after marshalling", func() {
+				out, err := mgr.Up(containerHandle, upInputs)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(out.Properties.Interface).To(BeEmpty())
+
+				outMarshalled, err := json.Marshal(out)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(outMarshalled)).NotTo(ContainSubstring("garden.network.interface"))
 			})
 		})
 
