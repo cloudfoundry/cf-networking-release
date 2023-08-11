@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/bbs v0.0.0-20230706231957-02f26c778cf9
+# code.cloudfoundry.org/bbs v0.0.0-20230808235806-d58365d71e0d
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
@@ -39,7 +39,7 @@ code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20230801180547-a97205a2bf54
+# code.cloudfoundry.org/garden v0.0.0-20230810185310-50dbb20744dc
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20230731230506-667604960bc5
@@ -100,7 +100,7 @@ github.com/cf-container-networking/sql-migrate
 github.com/cf-container-networking/sql-migrate/sqlparse
 # github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
 ## explicit
-# github.com/cloudfoundry/cf-test-helpers/v2 v2.5.0
+# github.com/cloudfoundry/cf-test-helpers/v2 v2.6.0
 ## explicit; go 1.18
 github.com/cloudfoundry/cf-test-helpers/v2/cf
 github.com/cloudfoundry/cf-test-helpers/v2/commandreporter
@@ -183,7 +183,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20230728192033-2ba5b33183c6
+# github.com/google/pprof v0.0.0-20230808223545-4887780b67fb
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
@@ -271,7 +271,7 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/openzipkin/zipkin-go v0.4.1
+# github.com/openzipkin/zipkin-go v0.4.2
 ## explicit; go 1.18
 github.com/openzipkin/zipkin-go/idgenerator
 github.com/openzipkin/zipkin-go/model
@@ -326,7 +326,7 @@ go.step.sm/crypto/keyutil
 go.step.sm/crypto/pemutil
 go.step.sm/crypto/randutil
 go.step.sm/crypto/x25519
-# golang.org/x/crypto v0.11.0
+# golang.org/x/crypto v0.12.0
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -342,7 +342,7 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.13.0
+# golang.org/x/net v0.14.0
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/dns/dnsmessage
@@ -392,11 +392,11 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.11.1
+# golang.org/x/tools v0.12.0
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20230803162519-f966b187b2e5
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.57.0 => google.golang.org/grpc v1.50.1

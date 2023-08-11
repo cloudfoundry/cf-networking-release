@@ -16,13 +16,13 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20230706231957-02f26c778cf9
+	code.cloudfoundry.org/bbs v0.0.0-20230808235806-d58365d71e0d
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230612154752-c7ca3c7cbadf
 	code.cloudfoundry.org/cf-test-helpers v1.0.0
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20230612151301-d597b20f28ce
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
-	code.cloudfoundry.org/garden v0.0.0-20230801180547-a97205a2bf54
+	code.cloudfoundry.org/garden v0.0.0-20230810185310-50dbb20744dc
 	code.cloudfoundry.org/lager/v3 v3.0.2
 	code.cloudfoundry.org/locket v0.0.0-20230612151453-08e003863044
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
@@ -30,7 +30,7 @@ require (
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
-	github.com/cloudfoundry/cf-test-helpers/v2 v2.5.0
+	github.com/cloudfoundry/cf-test-helpers/v2 v2.6.0
 	github.com/cloudfoundry/dropsonde v1.1.0
 	github.com/containernetworking/cni v1.1.2
 	github.com/containernetworking/plugins v1.3.0
@@ -52,7 +52,7 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.13.0
+	golang.org/x/net v0.14.0
 	golang.org/x/sys v0.11.0
 	google.golang.org/grpc v1.57.0
 	gopkg.in/validator.v2 v2.0.1
@@ -78,19 +78,19 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/pprof v0.0.0-20230728192033-2ba5b33183c6 // indirect
+	github.com/google/pprof v0.0.0-20230808223545-4887780b67fb // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/openzipkin/zipkin-go v0.4.1 // indirect
+	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.34.0 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
-	golang.org/x/tools v0.11.1 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230803162519-f966b187b2e5 // indirect
+	golang.org/x/tools v0.12.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
