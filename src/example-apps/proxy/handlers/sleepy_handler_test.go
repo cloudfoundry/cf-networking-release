@@ -32,7 +32,7 @@ var _ = Describe("SleepyHandler", func() {
 	})
 
 	Context("when the client timeout is less than the sleepy timeout", func() {
-		FIt("fails", func() {
+		It("fails", func() {
 			h = &handlers.SleepyHandler{SleepyInterval: 5}
 
 			ts := httptest.NewServer(h)
