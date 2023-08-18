@@ -39,7 +39,7 @@ code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20230810185310-50dbb20744dc
+# code.cloudfoundry.org/garden v0.0.0-20230815180424-064b8daa7e12
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20230731230506-667604960bc5
@@ -100,7 +100,7 @@ github.com/cf-container-networking/sql-migrate
 github.com/cf-container-networking/sql-migrate/sqlparse
 # github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
 ## explicit
-# github.com/cloudfoundry/cf-test-helpers/v2 v2.6.0
+# github.com/cloudfoundry/cf-test-helpers/v2 v2.7.0
 ## explicit; go 1.18
 github.com/cloudfoundry/cf-test-helpers/v2/cf
 github.com/cloudfoundry/cf-test-helpers/v2/commandreporter
@@ -183,7 +183,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20230808223545-4887780b67fb
+# github.com/google/pprof v0.0.0-20230817174616-7a8ec2ada47b
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
@@ -316,8 +316,8 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.34.0
-## explicit; go 1.18
+# go.step.sm/crypto v0.35.0
+## explicit; go 1.20
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
 go.step.sm/crypto/internal/emoji
@@ -396,7 +396,7 @@ golang.org/x/text/width
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.57.0 => google.golang.org/grpc v1.50.1
