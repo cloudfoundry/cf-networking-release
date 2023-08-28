@@ -98,6 +98,10 @@ github.com/bmizerany/pat
 ## explicit
 github.com/cf-container-networking/sql-migrate
 github.com/cf-container-networking/sql-migrate/sqlparse
+# github.com/cloudfoundry-community/go-uaa v0.3.1
+## explicit; go 1.12
+github.com/cloudfoundry-community/go-uaa
+github.com/cloudfoundry-community/go-uaa/passwordcredentials
 # github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
 ## explicit
 # github.com/cloudfoundry/cf-test-helpers/v2 v2.7.0
@@ -165,9 +169,6 @@ github.com/go-task/slim-sprig
 # github.com/gogo/protobuf v1.3.2
 ## explicit; go 1.15
 github.com/gogo/protobuf/proto
-# github.com/golang-jwt/jwt v3.2.2+incompatible
-## explicit
-github.com/golang-jwt/jwt
 # github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
 github.com/golang/protobuf/jsonpb
@@ -186,6 +187,10 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f
 ## explicit; go 1.19
 github.com/google/pprof/profile
+# github.com/gorilla/context v1.1.1
+## explicit
+# github.com/gorilla/mux v1.6.2
+## explicit
 # github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
 ## explicit
 # github.com/jackc/pgx v3.6.2+incompatible
@@ -286,11 +291,6 @@ github.com/pivotal-cf-experimental/gomegamatchers/internal/prettyprint
 github.com/pivotal-cf-experimental/rainmaker
 github.com/pivotal-cf-experimental/rainmaker/internal/documents
 github.com/pivotal-cf-experimental/rainmaker/internal/network
-# github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
-## explicit; go 1.12
-github.com/pivotal-cf-experimental/warrant
-github.com/pivotal-cf-experimental/warrant/internal/documents
-github.com/pivotal-cf-experimental/warrant/internal/network
 # github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
 ## explicit
 github.com/pivotal-cf/paraphernalia/secure/tlsconfig
@@ -355,6 +355,11 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
+# golang.org/x/oauth2 v0.10.0
+## explicit; go 1.17
+golang.org/x/oauth2
+golang.org/x/oauth2/clientcredentials
+golang.org/x/oauth2/internal
 # golang.org/x/sys v0.11.0
 ## explicit; go 1.17
 golang.org/x/sys/cpu
@@ -396,6 +401,15 @@ golang.org/x/text/width
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
+# google.golang.org/appengine v1.6.7
+## explicit; go 1.11
+google.golang.org/appengine/internal
+google.golang.org/appengine/internal/base
+google.golang.org/appengine/internal/datastore
+google.golang.org/appengine/internal/log
+google.golang.org/appengine/internal/remote_api
+google.golang.org/appengine/internal/urlfetch
+google.golang.org/appengine/urlfetch
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
