@@ -6,15 +6,14 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-	"time"
 
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/policy_client"
+	uaa "github.com/cloudfoundry-community/go-uaa"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/warrant"
 )
 
 var _ = Describe("space developer policy configuration", func() {
@@ -28,10 +27,14 @@ var _ = Describe("space developer policy configuration", func() {
 
 		policyClient *policy_client.ExternalClient
 
-		warrantClient warrant.Warrant
+		uaaAPI *uaa.API
 	)
 
 	BeforeEach(func() {
+		var err error
+		uaaAPI, err = uaa.New(getUAABaseURL(), uaa.WithClientCredentials("admin", testConfig.AdminSecret, uaa.OpaqueToken), uaa.WithSkipSSLValidation(true))
+		Expect(err).ToNot(HaveOccurred())
+
 		policyClient = policy_client.NewExternal(lagertest.NewTestLogger("test"),
 			&http.Client{
 				Transport: &http.Transport{
@@ -42,11 +45,6 @@ var _ = Describe("space developer policy configuration", func() {
 			},
 			fmt.Sprintf("https://%s", config.ApiEndpoint),
 		)
-
-		warrantClient = warrant.New(warrant.Config{
-			Host:          getUAABaseURL(),
-			SkipVerifySSL: true,
-		})
 
 		prefix = testConfig.Prefix
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
@@ -70,25 +68,26 @@ var _ = Describe("space developer policy configuration", func() {
 
 		pushProxy(appB)
 
-		uaaAdminClientToken, err := warrantClient.Clients.GetToken("admin", testConfig.AdminSecret)
-		Expect(err).NotTo(HaveOccurred())
+		user := ensureUserExists("space-developer", "password", uaaAPI)
+		group := ensureGroupExists("network.write", uaaAPI)
 
-		user := ensureUserExists(warrantClient, "space-developer", "password", uaaAdminClientToken)
-		group := ensureGroupExists(warrantClient, "network.write", uaaAdminClientToken)
-
-		_, err = warrantClient.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
-		Expect(err).To(Or(BeNil(), BeAssignableToTypeOf(warrant.DuplicateResourceError{})))
+		err = uaaAPI.AddGroupMember(group.ID, user.ID, "", "")
+		if err != nil {
+			Expect(err).To(BeAssignableToTypeOf(uaa.RequestError{}))
+			Expect(err.(uaa.RequestError).ErrorResponse).To(ContainSubstring("already_exists"))
+		}
 
 		Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		err = warrantClient.Clients.Create(warrant.Client{
-			ID:                   "space-client",
-			Name:                 "space-client",
+		_, err = uaaAPI.CreateClient(uaa.Client{
+			ClientID:             "space-client",
+			ClientSecret:         "password",
+			DisplayName:          "space-client",
 			Authorities:          []string{"network.write", "cloud_controller.read"},
 			AuthorizedGrantTypes: []string{"client_credentials"},
-			AccessTokenValidity:  600 * time.Second,
-		}, "password", uaaAdminClientToken)
+			AccessTokenValidity:  600,
+		})
 		Expect(err).NotTo(HaveOccurred())
 
 		orgGuid, err := cfCLI.OrgGuid(orgName)
@@ -111,9 +110,7 @@ var _ = Describe("space developer policy configuration", func() {
 			Expect(cf.Cf("logout").Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("auth", config.AdminUser, config.AdminPassword).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-			uaaAdminClientToken, err := warrantClient.Clients.GetToken("admin", testConfig.AdminSecret)
-			Expect(err).NotTo(HaveOccurred())
-			warrantClient.Clients.Delete("space-client", uaaAdminClientToken)
+			uaaAPI.DeleteClient("space-client")
 
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
@@ -199,22 +196,27 @@ var _ = Describe("space developer policy configuration", func() {
 	})
 })
 
-func ensureGroupExists(client warrant.Warrant, name, token string) warrant.Group {
-	_, err := client.Groups.Create(name, token)
-	Expect(err).To(Or(BeNil(), BeAssignableToTypeOf(warrant.DuplicateResourceError{})))
+func ensureGroupExists(name string, uaaAPI *uaa.API) uaa.Group {
+	_, err := uaaAPI.CreateGroup(uaa.Group{DisplayName: name})
+	if err != nil {
+		Expect(err).To(BeAssignableToTypeOf(uaa.RequestError{}))
+		Expect(err.(uaa.RequestError).ErrorResponse).To(ContainSubstring("already_exists"))
+	}
 
-	groups, err := client.Groups.List(warrant.Query{Filter: fmt.Sprintf(`displayName eq %q`, name)}, token)
+	groups, _, err := uaaAPI.ListGroups(fmt.Sprintf(`displayName eq %q`, name), "", "", "", 0, 0)
 	Expect(err).NotTo(HaveOccurred())
+	Expect(groups).To(HaveLen(1))
 
 	return groups[0]
 }
 
-func ensureUserExists(warrantClient warrant.Warrant, username, password, token string) warrant.User {
+func ensureUserExists(username string, password string, uaaAPI *uaa.API) uaa.User {
 	createUserSession := cf.Cf("create-user", username, password)
 	Expect(createUserSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 
-	users, err := warrantClient.Users.List(warrant.Query{Filter: fmt.Sprintf(`userName eq %q`, username)}, token)
+	users, _, err := uaaAPI.ListUsers(fmt.Sprintf(`userName eq %q`, username), "", "", "", 0, 0)
 	Expect(err).NotTo(HaveOccurred())
+	Expect(users).To(HaveLen(1))
 
 	return users[0]
 }
