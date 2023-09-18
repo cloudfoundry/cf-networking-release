@@ -67,6 +67,10 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		})
 
 		AfterEach(func() {
+			appsProxy = nil
+			appsTest = nil
+			ports = []int{8080}
+
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 			_, err := cfCLI.CleanupStaleNetworkPolicies()
 			Expect(err).NotTo(HaveOccurred())
