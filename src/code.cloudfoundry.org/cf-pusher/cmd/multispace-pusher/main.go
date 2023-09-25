@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -145,7 +144,7 @@ func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpa
 			SkipIfPresent:           true,
 			DesiredRunningInstances: 1,
 
-			PushAttempts: 3,
+			PushAttempts:  3,
 			RetryWaitTime: 10 * time.Second,
 		},
 	}
@@ -305,7 +304,7 @@ func parseConfig() Config {
 		log.Fatal("must include config file with --config")
 	}
 
-	configBytes, err := ioutil.ReadFile(*configPath)
+	configBytes, err := os.ReadFile(*configPath)
 	if err != nil {
 		log.Fatalf("error reading config: %s", err)
 	}
