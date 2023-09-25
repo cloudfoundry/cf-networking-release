@@ -51,4 +51,3 @@ func RebindForSQLDialectAndMark(query, dialect, mark string) string {
 	}
 	return strings.Join(strParts, "")
 }
-
