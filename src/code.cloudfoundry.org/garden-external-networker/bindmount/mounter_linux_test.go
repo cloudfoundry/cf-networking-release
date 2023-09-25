@@ -79,18 +79,6 @@ var _ = Describe("Mounter", func() {
 
 				Expect(ioutil.ReadFile(targetFile)).To(Equal([]byte("some data")))
 			})
-
-			XIt("should not impact the identity of the target mount point", func() {
-				// TODO: figure out why this test fails
-				sourceInode := getInode(sourceFile)
-
-				Expect(mounter.IdempotentlyMount(sourceFile, targetFile)).To(Succeed())
-
-				Expect(os.RemoveAll(sourceDir)).To(Succeed())
-
-				targetInode := getInode(targetFile)
-				Expect(targetInode).To(Equal(sourceInode))
-			})
 		})
 
 		Context("when things don't work the way you expect", func() {
