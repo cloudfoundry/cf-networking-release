@@ -1,4 +1,0 @@
-[submodule "src/gosub"]
-	path = src/gosub
-	url = https://github.com/vito/gosub
-	branch = master
