@@ -1,5 +1,0 @@
-#!/bin/bash
-set -e -u
-
-SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
-"${SCRIPT_PATH}/docker-shell" /cf-networking-release/scripts/start-db-in-docker.sh
