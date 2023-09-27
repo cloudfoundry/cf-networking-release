@@ -11,7 +11,7 @@ if [[ ${DB:-empty} == "empty" ]]; then
   DB=mysql
 fi
 
-"${THIS_FILE_DIR}/docker/container.bash" "${DB}" -d
+DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" -d
 
 docker exec $REPO_NAME-docker-container '/repo/scripts/docker/tests-templates.bash'
 docker exec $REPO_NAME-docker-container '/repo/scripts/docker/test.bash' "$@"

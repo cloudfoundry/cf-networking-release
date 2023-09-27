@@ -3,9 +3,7 @@
 set -eu
 set -o pipefail
 
-THIS_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 . "/ci/shared/helpers/git-helpers.bash"
-unset THIS_FILE_DIR
 
 function test() {
   local package="${1:?Provide a package}"
@@ -20,7 +18,9 @@ function test() {
 }
 
 pushd /repo > /dev/null
+git_configure_safe_directory
 REPO_NAME=$(git_get_remote_name)
+export DEFAULT_PARAMS="/ci/$REPO_NAME/default-params/run-bin-test/linux.yml"
 popd > /dev/null
 
 pushd / > /dev/null
