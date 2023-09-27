@@ -18,7 +18,6 @@ replace (
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20230808235806-d58365d71e0d
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230919144331-48a6d414f23f
-	code.cloudfoundry.org/cf-test-helpers v1.0.0
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20230612151301-d597b20f28ce
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
@@ -67,7 +66,6 @@ require (
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
-	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0 // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20230911203642-fa89d986ae20 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
