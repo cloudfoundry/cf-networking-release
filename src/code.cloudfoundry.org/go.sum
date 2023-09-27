@@ -594,8 +594,6 @@ code.cloudfoundry.org/bbs v0.0.0-20230808235806-d58365d71e0d h1:DmGBUgg77y2mt09T
 code.cloudfoundry.org/bbs v0.0.0-20230808235806-d58365d71e0d/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
 code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230919144331-48a6d414f23f h1:cM/j94qPZc4On2xvjTbe2rxy93ZqAb5pd5vHiVJRd0M=
 code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230919144331-48a6d414f23f/go.mod h1:YRaucJclfESqnW2xCzpW70G+COj+LATrlviEqsU0MHk=
-code.cloudfoundry.org/cf-test-helpers v1.0.0 h1:PSPXBwalNQL4FPS3wcXuvektq+0nEx+EiJYkypPiAmY=
-code.cloudfoundry.org/cf-test-helpers v1.0.0/go.mod h1:lOSpauhLmzEa+ZuYJTkCUelg4IJxf72Sr8oVGswH69s=
 code.cloudfoundry.org/clock v1.1.0 h1:XLzC6W3Ah/Y7ht1rmZ6+QfPdt1iGWEAAtIZXgiaj57c=
 code.cloudfoundry.org/clock v1.1.0/go.mod h1:yA3fxddT9RINQL2XHS7PS+OXxKCGhfrZmlNUCIM6AKo=
 code.cloudfoundry.org/debugserver v0.0.0-20230612151301-d597b20f28ce h1:zVyFerLQUMC+M4Na/39sb548EVldzWlVwoKFondYr04=
@@ -661,8 +659,6 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/cloudfoundry-community/go-uaa v0.3.2 h1:tZOyzrWuTRo02IwcUbIiNy9+ghgjHhLhe3/B04Wfg1w=
 github.com/cloudfoundry-community/go-uaa v0.3.2/go.mod h1:G2QAAVe4I+AZf4yF2EGGUFb/X98nTLWrqscILUznX88=
-github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0 h1:vk4gthT4ime81HI16e8MLctmjZE4U5EMuM90vs1dO4E=
-github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0/go.mod h1:I21tkmFwW9F06eYcQm5GTUzNV+pc1Q5NVZ1qhWOGGx0=
 github.com/cloudfoundry/cf-test-helpers/v2 v2.7.0 h1:QYPAI6JCL62F8ht6Tz9sDWKwTdoWTV5tKKvDDCZwoJ0=
 github.com/cloudfoundry/cf-test-helpers/v2 v2.7.0/go.mod h1:F9lO5YQLrrF7xf5liS/pRTE9uuyZ8TQ8N2ft/mR5hv8=
 github.com/cloudfoundry/dropsonde v1.0.0/go.mod h1:6zwvrWK5TpxBVYi1cdkE5WDsIO8E0n7qAJg3wR9B67c=
