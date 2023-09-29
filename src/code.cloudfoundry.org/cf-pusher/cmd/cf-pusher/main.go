@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -41,7 +40,7 @@ func main() {
 		log.Fatal("must include config file with --config")
 	}
 
-	configBytes, err := ioutil.ReadFile(*configPath)
+	configBytes, err := os.ReadFile(*configPath)
 	if err != nil {
 		log.Fatalf("error reading config: %s", err)
 	}
@@ -78,6 +77,13 @@ func main() {
 		Registry:       prefix + "registry",
 		ProxyApps:      proxyAppNames,
 		ProxyInstances: config.ProxyInstances,
+	}
+
+	if config.OrgName != "" {
+		scaleGroup.Org = config.OrgName
+	}
+	if config.SpaceName != "" {
+		scaleGroup.Space = config.SpaceName
 	}
 
 	adapter := cf_cli_adapter.NewAdapter()

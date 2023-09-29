@@ -2,7 +2,7 @@ package acceptance_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -11,6 +11,7 @@ import (
 
 	"code.cloudfoundry.org/lib/testsupport"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	"github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -31,13 +32,14 @@ var _ = Describe("external connectivity", func() {
 
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 
-		orgName = testConfig.Prefix + "external-connectivity-org"
-		spaceName = testConfig.Prefix + "space"
-		setupOrgAndSpace(orgName, spaceName)
+		orgName = TestSetup.TestSpace.OrganizationName()
+		spaceName = TestSetup.TestSpace.SpaceName()
 
 		By("unbinding all running ASGs")
 		for _, sg := range testConfig.DefaultSecurityGroups {
-			Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+			workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+				Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+			})
 		}
 
 		By("creating test-generated ASGs")
@@ -53,11 +55,10 @@ var _ = Describe("external connectivity", func() {
 	AfterEach(func() {
 		By("adding back all the original running ASGs")
 		for _, sg := range testConfig.DefaultSecurityGroups {
-			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+			workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+			})
 		}
-
-		By("deleting the test org")
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		By("removing test-generated ASGs")
 		for asgName, _ := range testASGs {
@@ -73,7 +74,7 @@ var _ = Describe("external connectivity", func() {
 		}
 		defer resp.Body.Close()
 
-		respBytes, err := ioutil.ReadAll(resp.Body)
+		respBytes, err := io.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		respBody := string(respBytes)
 
@@ -116,8 +117,10 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding a tcp and udp security group")
-			Expect(cfCLI.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
-			Expect(cfCLI.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
+			workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+				Expect(cfCLI.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
+				Expect(cfCLI.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
+			})
 
 			if !testConfig.DynamicASGsEnabled {
 				By("if dynamic asgs are not enabled, restarting the app is required")
@@ -138,7 +141,7 @@ var _ = Describe("external connectivity", func() {
 				By("restarting the app")
 				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 			} else {
-				time.Sleep(30 * time.Second)
+				time.Sleep(1 * time.Minute)
 			}
 			By("checking that the app cannot use http to reach the internet")
 			Consistently(cannotProxy, "180s", "0.5s").Should(Succeed())
@@ -153,7 +156,9 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding an icmp security group")
-			Expect(cfCLI.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
+			workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+				Expect(cfCLI.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
+			})
 
 			if !testConfig.DynamicASGsEnabled {
 				By("restarting the app")
@@ -174,20 +179,16 @@ var _ = Describe("external connectivity", func() {
 func createASG(name string, asgDefinition string) {
 	asgFile, err := testsupport.CreateTempFile(asgDefinition)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(cfCLI.CreateSecurityGroup(name, asgFile)).To(Succeed())
+	workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+		Expect(cfCLI.CreateSecurityGroup(name, asgFile)).To(Succeed())
+	})
 	Expect(os.Remove(asgFile)).To(Succeed())
 }
 
 func removeASG(name string) {
-	Expect(cfCLI.DeleteSecurityGroup(name)).To(Succeed())
-}
-
-func setupOrgAndSpace(orgName, spaceName string) {
-	Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-	Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-	Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-	Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+	workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+		Expect(cfCLI.DeleteSecurityGroup(name)).To(Succeed())
+	})
 }
 
 var testASGs = map[string]string{

@@ -4,39 +4,19 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	"github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("policy cleanup", func() {
 	var (
-		appA      string
-		orgName   string
-		spaceName string
+		appA string
 	)
 
 	BeforeEach(func() {
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
-
-		AuthAsAdmin()
-
-		orgName = "cleanup-org"
-		Expect(cfCLI.CreateOrg(orgName)).To(Succeed())
-		Expect(cfCLI.TargetOrg(orgName)).To(Succeed())
-
-		spaceName = "cleanup-space"
-		Expect(cfCLI.CreateSpace(spaceName, orgName)).To(Succeed())
-		Expect(cfCLI.TargetSpace(spaceName)).To(Succeed())
-
 		pushProxy(appA)
-	})
-
-	AfterEach(func() {
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-		_, err := cfCLI.CleanupStaleNetworkPolicies()
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("policies/cleanup endpoint", func() {
@@ -54,6 +34,7 @@ var _ = Describe("policy cleanup", func() {
 
 			By("cleaning up stale policies")
 			stalePolicies, err := cfCLI.CleanupStaleNetworkPolicies()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(string(stalePolicies)).ShouldNot(ContainSubstring(appAGuid))
 
 			By("checking that policy was not deleted")
@@ -65,9 +46,12 @@ var _ = Describe("policy cleanup", func() {
 			Expect(cfCLI.Delete(appA)).To(Succeed())
 
 			By("cleaning up stale policies")
-			stalePolicies, err = cfCLI.CleanupStaleNetworkPolicies()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(stalePolicies)).Should(ContainSubstring(appAGuid))
+			workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+				stalePolicies, err = cfCLI.CleanupStaleNetworkPolicies()
+				Expect(err).NotTo(HaveOccurred())
+				fmt.Println("StalePolicy After: ", string(stalePolicies))
+				Expect(string(stalePolicies)).Should(ContainSubstring(appAGuid))
+			})
 
 			By("checking that stale policy was deleted")
 			allPolicies, err = cfCLI.Curl("GET", "/networking/v0/external/policies", "")

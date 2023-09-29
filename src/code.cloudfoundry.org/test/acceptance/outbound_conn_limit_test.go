@@ -3,6 +3,7 @@ package acceptance_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 
 	spamAPI "example-apps/spammer/api"
@@ -14,9 +15,6 @@ import (
 )
 
 const (
-	orgName   = "outbound-conn-limit-test-org"
-	spaceName = "outbound-conn-limit-test-space"
-
 	setEnvTimeoutInSec = 10
 	burst              = 60
 	burstVariance      = 1
@@ -29,23 +27,12 @@ var (
 
 var _ = Describe("Outbound connection limit", func() {
 	BeforeEach(func() {
-		proxyName = testConfig.Prefix + "-proxy"
-		spammerName = testConfig.Prefix + "-spammer"
+		testConfig.Prefix = fmt.Sprintf("%s%d-", testConfig.Prefix, rand.Int31())
+		proxyName = testConfig.Prefix + "proxy"
+		spammerName = testConfig.Prefix + "spammer"
 		if !testConfig.RunExperimentalOutboundConnLimitTest {
 			Skip("Skipping outbound connection limit test")
 		}
-
-		AuthAsAdmin()
-
-		Expect(cfCLI.CreateOrg(orgName)).To(Succeed())
-		Expect(cfCLI.TargetOrg(orgName)).To(Succeed())
-
-		Expect(cfCLI.CreateSpace(spaceName, orgName)).To(Succeed())
-		Expect(cfCLI.TargetSpace(spaceName)).To(Succeed())
-	})
-
-	AfterEach(func() {
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
 	Describe("when an app opens multiple connections to one host", func() {

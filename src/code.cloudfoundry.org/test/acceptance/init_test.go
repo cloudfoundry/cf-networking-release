@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -18,6 +16,7 @@ import (
 	pusherConfig "code.cloudfoundry.org/cf-pusher/config"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	helpers "github.com/cloudfoundry/cf-test-helpers/v2/config"
+	"github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -30,22 +29,26 @@ var (
 	config     *helpers.Config
 	testConfig pusherConfig.Config
 	cfCLI      *cf_cli_adapter.Adapter
+	TestSetup  *workflowhelpers.ReproducibleTestSuiteSetup
 )
 
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
+	config = helpers.LoadConfig()
 
-	BeforeSuite(func() {
-		cfCLI = cf_cli_adapter.NewAdapter()
-		config = helpers.LoadConfig()
+	configPath := helpers.ConfigPath()
+	configBytes, err := os.ReadFile(configPath)
+	Expect(err).NotTo(HaveOccurred())
 
-		configPath := helpers.ConfigPath()
-		configBytes, err := ioutil.ReadFile(configPath)
-		Expect(err).NotTo(HaveOccurred())
+	err = json.Unmarshal(configBytes, &testConfig)
+	Expect(err).NotTo(HaveOccurred())
 
-		err = json.Unmarshal(configBytes, &testConfig)
-		Expect(err).NotTo(HaveOccurred())
+	appsDir = os.Getenv("APPS_DIR")
+	Expect(appsDir).NotTo(BeEmpty(), "Must set APPS_DIR")
 
+	cfCLI = cf_cli_adapter.NewAdapter()
+
+	SynchronizedBeforeSuite(func() {
 		if testConfig.Applications <= 0 {
 			Fail("Applications count needs to be greater than 0")
 		}
@@ -63,23 +66,21 @@ func TestAcceptance(t *testing.T) {
 		}
 
 		Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Short)).To(gexec.Exit(0))
-		AuthAsAdmin()
-
-		appsDir = os.Getenv("APPS_DIR")
-		Expect(appsDir).NotTo(BeEmpty())
 
 		rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
+	}, func() {
+		TestSetup = workflowhelpers.NewTestSuiteSetup(config)
+		TestSetup.Setup()
+	})
+
+	SynchronizedAfterSuite(func() {}, func() {
+		// Expect(cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies/cleanup").Wait(Timeout_Short)).To(gexec.Exit(0))
+		// if TestSetup != nil {
+		// 	TestSetup.Teardown()
+		// }
 	})
 
 	RunSpecs(t, "Acceptance Suite")
-}
-
-func Auth(username, password string) {
-	By("authenticating as " + username)
-	cmd := exec.Command("cf", "auth", username, password)
-	sess, err := gexec.Start(cmd, nil, nil)
-	Expect(err).NotTo(HaveOccurred())
-	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
 }
 
 func getUAABaseURL() string {
@@ -96,16 +97,12 @@ func getUAABaseURL() string {
 	return uaaBaseURL
 }
 
-func AuthAsAdmin() {
-	Auth(config.AdminUser, config.AdminPassword)
-}
-
 func appDir(appType string) string {
 	return filepath.Join(appsDir, appType)
 }
 
 func pushProxy(appName string) {
-	Expect(cf.Cf(
+	ExpectWithOffset(1, cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),
 		"-f", defaultManifest("proxy"),
@@ -126,14 +123,14 @@ func scaleApps(apps []string, instances int) {
 }
 
 func scaleApp(appName string, instances int) {
-	Expect(cf.Cf(
+	ExpectWithOffset(1, cf.Cf(
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
 	).Wait(Timeout_Short)).To(gexec.Exit(0))
 }
 
 func pushAppWithInstanceCount(appName string, appCount int) {
-	Expect(cf.Cf(
+	ExpectWithOffset(1, cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),
 		"-i", fmt.Sprintf("%d", appCount),
@@ -145,7 +142,7 @@ func pushAppWithInstanceCount(appName string, appCount int) {
 
 func waitForAllInstancesToBeRunning(appName string) {
 	appGuidSession := cf.Cf("app", appName, "--guid")
-	Expect(appGuidSession.Wait(Timeout_Short)).To(gexec.Exit(0))
+	ExpectWithOffset(1, appGuidSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 	capiURL := fmt.Sprintf("v2/apps/%s/instances", strings.TrimSpace(string(appGuidSession.Out.Contents())))
 
@@ -157,10 +154,10 @@ func waitForAllInstancesToBeRunning(appName string) {
 
 	allInstancesRunning := func() bool {
 		session := cf.Cf("curl", capiURL)
-		Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+		ExpectWithOffset(1, session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 		json.Unmarshal(session.Out.Contents(), &instances)
-		Expect(instances).To(Not(BeEmpty()))
+		ExpectWithOffset(1, instances).To(Not(BeEmpty()))
 
 		for _, instance := range instances {
 			if instance.State != "RUNNING" {
@@ -174,7 +171,7 @@ func waitForAllInstancesToBeRunning(appName string) {
 }
 
 func restage(appName string) {
-	Expect(cf.Cf(
+	ExpectWithOffset(1, cf.Cf(
 		"restage", appName,
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
 

@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"time"
 
-	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
-	helpers "github.com/cloudfoundry/cf-test-helpers/v2/config"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 )
 
 const Timeout_Short = 10 * time.Second
@@ -32,20 +30,26 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			applications      int
 			proxyApplications int
 			proxyInstances    int
-			prefix            string
 			orgName           string
+			configFile        string
 		)
 
 		BeforeEach(func() {
-			prefix = testConfig.Prefix
+			orgName = TestSetup.GetOrganizationName()
 
-			orgName = prefix + "org" // cf-pusher expects this name
-			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			testConfig.OrgName = orgName
+			testConfig.SpaceName = TestSetup.TestSpace.SpaceName()
+			testConfig.Prefix = fmt.Sprintf("%s%d-", testConfig.Prefix, rand.Int31())
+			testConfig.Concurrency = 10
 
-			spaceName := prefix + "space" // cf-pusher expects this name
-			Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			file, err := os.CreateTemp("", "cf-pusher-config-file-")
+			Expect(err).NotTo(HaveOccurred())
+			content, err := json.Marshal(testConfig)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = file.Write(content)
+			Expect(err).NotTo(HaveOccurred())
+			configFile = file.Name()
+			file.Close()
 
 			appInstances = testConfig.AppInstances
 			applications = testConfig.Applications
@@ -53,11 +57,11 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			proxyInstances = testConfig.ProxyInstances
 
 			for i := 0; i < proxyApplications; i++ {
-				appsProxy = append(appsProxy, fmt.Sprintf(prefix+"proxy-%d", i))
+				appsProxy = append(appsProxy, fmt.Sprintf(testConfig.Prefix+"proxy-%d", i))
 			}
-			appRegistry = prefix + "registry"
+			appRegistry = testConfig.Prefix + "registry"
 			for i := 0; i < applications; i++ {
-				appsTest = append(appsTest, fmt.Sprintf(prefix+"tick-%d", i))
+				appsTest = append(appsTest, fmt.Sprintf(testConfig.Prefix+"tick-%d", i))
 			}
 
 			ports = []int{8080}
@@ -71,13 +75,11 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appsTest = nil
 			ports = []int{8080}
 
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-			_, err := cfCLI.CleanupStaleNetworkPolicies()
-			Expect(err).NotTo(HaveOccurred())
+			Expect(os.RemoveAll(configFile)).To(Succeed())
 		})
 
 		It("allows policies to whitelist traffic between applications", func(ctx SpecContext) {
-			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
+			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", configFile)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			fmt.Println("\n----- cf-pusher start ------")
@@ -168,7 +170,7 @@ func getInstancesFromA8(registry string) (*RegistryInstancesResponse, error) {
 		return nil, err
 	}
 
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+	ExpectWithOffset(1, resp.StatusCode).To(Equal(http.StatusOK))
 
 	var instancesResponse RegistryInstancesResponse
 	err = json.Unmarshal(resp.Body, &instancesResponse)
@@ -237,7 +239,7 @@ func assertResponseContains(destIP string, port int, sourceAppName string, desir
 		}
 		return string(resp.Body), nil
 	}
-	Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
+	EventuallyWithOffset(1, proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
 }
 
 var httpClient = &http.Client{

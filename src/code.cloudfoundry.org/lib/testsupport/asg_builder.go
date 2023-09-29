@@ -2,7 +2,6 @@ package testsupport
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -18,13 +17,13 @@ func BuildASG(n int) string {
 }
 
 func CreateTempFile(content string) (string, error) {
-	tmpFile, err := ioutil.TempFile("", "")
+	tmpFile, err := os.CreateTemp("", "asg-")
 	if err != nil {
 		return "", err
 	}
 
 	path := tmpFile.Name()
-	err = ioutil.WriteFile(path, []byte(content), os.ModePerm)
+	err = os.WriteFile(path, []byte(content), os.ModePerm)
 	if err != nil {
 		return "", err
 	}

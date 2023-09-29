@@ -14,9 +14,7 @@ import (
 
 var _ = Describe("Custom iptables compatibility", func() {
 	var (
-		appName   string
-		orgName   string
-		spaceName string
+		appName string
 	)
 
 	BeforeEach(func() {
@@ -26,17 +24,8 @@ var _ = Describe("Custom iptables compatibility", func() {
 
 		appName = fmt.Sprintf("appA-%d", rand.Int31())
 
-		orgName = testConfig.Prefix + "custom-iptables-org"
-		spaceName = testConfig.Prefix + "space"
-		setupOrgAndSpace(orgName, spaceName)
-
 		By("pushing the test app")
 		pushProxy(appName)
-	})
-
-	AfterEach(func() {
-		By("deleting the test org")
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
 	Describe("when a custom iptables rule is added and a new app is pushed", func() {

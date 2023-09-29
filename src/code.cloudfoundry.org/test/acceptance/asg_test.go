@@ -3,12 +3,12 @@ package acceptance_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	"github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -20,17 +20,20 @@ var _ = Describe("Application Security Groups", func() {
 		asgName string
 	)
 
+	BeforeEach(func() {
+		asgName = fmt.Sprintf("ccAllow-%d", rand.Int31())
+	})
+
 	AfterEach(func() {
 		By("deleting the asg")
 		removeASG(asgName)
 
 		By("adding back all the original running ASGs")
-		for _, sg := range testConfig.DefaultSecurityGroups {
-			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
-		}
-
-		By("deleting the org")
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+			for _, sg := range testConfig.DefaultSecurityGroups {
+				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+			}
+		})
 	})
 
 	var (
@@ -39,15 +42,16 @@ var _ = Describe("Application Security Groups", func() {
 	)
 
 	BeforeEach(func() {
-		By("unbinding all running ASGs")
-		for _, sg := range testConfig.DefaultSecurityGroups {
-			Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
-		}
+		workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+			By("unbinding all running ASGs")
+			for _, sg := range testConfig.DefaultSecurityGroups {
+				Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+			}
+		})
 
 		By("creating the org and space")
-		orgName = testConfig.Prefix + "dynamic-asg-org"
-		spaceName = testConfig.Prefix + "dyanmic-asg-space"
-		setupOrgAndSpace(orgName, spaceName)
+		orgName = TestSetup.TestSpace.OrganizationName()
+		spaceName = TestSetup.TestSpace.SpaceName()
 
 		By("Pushing an app")
 		appName = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", rand.Int31())
@@ -62,15 +66,16 @@ var _ = Describe("Application Security Groups", func() {
 		resp, err := http.Get(proxyRequestURL)
 		Expect(err).NotTo(HaveOccurred())
 
-		respBytes, err := ioutil.ReadAll(resp.Body)
+		respBytes, err := io.ReadAll(resp.Body)
 		Expect(err).ToNot(HaveOccurred())
 		resp.Body.Close()
 		Expect(respBytes).To(MatchRegexp("refused"))
 
 		By("creating and binding a security group that allows access to bosh vms for the cc port")
-		asgName = "ccAllow"
 		createASG(asgName, fmt.Sprintf(`[{"destination":"10.0.0.0/0","protocol":"tcp","ports": "%d"}]`, internalCCPort))
-		Expect(cfCLI.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
+		workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+			Expect(cfCLI.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
+		})
 
 		if !testConfig.DynamicASGsEnabled {
 			By("if dynamic asgs are not enabled, validating an app restart is required")
@@ -78,7 +83,7 @@ var _ = Describe("Application Security Groups", func() {
 				resp, err = http.Get(proxyRequestURL)
 				Expect(err).NotTo(HaveOccurred())
 
-				respBytes, err = ioutil.ReadAll(resp.Body)
+				respBytes, err = io.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				resp.Body.Close()
 				return string(respBytes)
@@ -92,7 +97,7 @@ var _ = Describe("Application Security Groups", func() {
 			resp, err = http.Get(proxyRequestURL)
 			Expect(err).NotTo(HaveOccurred())
 
-			respBytes, err = ioutil.ReadAll(resp.Body)
+			respBytes, err = io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return string(respBytes)
@@ -121,11 +126,10 @@ var _ = Describe("Application Security Groups", func() {
 			resp, err = http.Get(proxyRequestURL)
 			Expect(err).NotTo(HaveOccurred())
 
-			respBytes, err = ioutil.ReadAll(resp.Body)
+			respBytes, err = io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return string(respBytes)
 		}).WithTimeout(180 * time.Second).Should(MatchRegexp("refused"))
 	})
-
 })

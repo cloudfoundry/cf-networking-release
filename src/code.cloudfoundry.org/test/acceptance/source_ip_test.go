@@ -13,18 +13,12 @@ import (
 
 var _ = Describe("c2c traffic source ip", func() {
 	var (
-		appName   string
-		orgName   string
-		spaceName string
-		apps      []AppInstance
+		appName string
+		apps    []AppInstance
 	)
 
 	BeforeEach(func() {
 		appName = fmt.Sprintf("appA-%d", rand.Int31())
-
-		orgName = testConfig.Prefix + "source-traffic-org"
-		spaceName = testConfig.Prefix + "space"
-		setupOrgAndSpace(orgName, spaceName)
 
 		appCount := 5
 		By("pushing the test app")
@@ -36,13 +30,6 @@ var _ = Describe("c2c traffic source ip", func() {
 
 		By(fmt.Sprintf("waiting %s for policies to be created on cells", time.Duration(PolicyWaitTime)))
 		time.Sleep(PolicyWaitTime)
-	})
-
-	AfterEach(func() {
-		By("deleting the test org")
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-		_, err := cfCLI.CleanupStaleNetworkPolicies()
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should be the container's ip", func() {

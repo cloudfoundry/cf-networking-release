@@ -24,24 +24,13 @@ type ProxyResponse struct {
 var _ = Describe("task connectivity on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
-			prefix  string
-			domain  string
-			orgName string
-			proxy1  string
-			proxy2  string
+			domain string
+			proxy1 string
+			proxy2 string
 		)
 
 		BeforeEach(func() {
-			prefix = testConfig.Prefix
 			domain = config.AppsDomain
-
-			orgName = prefix + "task-org"
-			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			spaceName := prefix + "space"
-			Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			proxy1 = "proxy-task-connectivity-1"
 			proxy2 = "proxy-task-connectivity-2"
@@ -50,12 +39,6 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			pushProxy(proxy2)
 
 			cfCLI.AddNetworkPolicy(proxy1, proxy2, 8080, "tcp")
-		})
-
-		AfterEach(func() {
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-			_, err := cfCLI.CleanupStaleNetworkPolicies()
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("allows tasks to talk to app instances", func(ctx SpecContext) {

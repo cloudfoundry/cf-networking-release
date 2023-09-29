@@ -7,34 +7,20 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lib/testsupport"
-	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	"github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("Container startup time with a big ASG", func() {
 	var (
-		orgName     string
-		spaceName   string
 		ASGFilepath string
 	)
 
-	BeforeEach(func() {
-		AuthAsAdmin()
-
-		orgName = "asg-org"
-		Expect(cfCLI.CreateOrg(orgName)).To(Succeed())
-		Expect(cfCLI.TargetOrg(orgName)).To(Succeed())
-
-		spaceName = "asg-space"
-		Expect(cfCLI.CreateSpace(spaceName, orgName)).To(Succeed())
-		Expect(cfCLI.TargetSpace(spaceName)).To(Succeed())
-	})
-
 	AfterEach(func() {
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cfCLI.DeleteSecurityGroup("big-asg")).To(Succeed())
+		workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+			Expect(cfCLI.DeleteSecurityGroup("big-asg")).To(Succeed())
+		})
 		os.Remove(ASGFilepath)
 	})
 
@@ -57,8 +43,10 @@ var _ = Describe("Container startup time with a big ASG", func() {
 				var err error
 				ASGFilepath, err = testsupport.CreateTempFile(asg)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cfCLI.CreateSecurityGroup("big-asg", ASGFilepath)).To(Succeed())
-				Expect(cfCLI.BindSecurityGroup("big-asg", orgName, spaceName)).To(Succeed())
+				workflowhelpers.AsUser(TestSetup.AdminUserContext(), Timeout_Push, func() {
+					Expect(cfCLI.CreateSecurityGroup("big-asg", ASGFilepath)).To(Succeed())
+					Expect(cfCLI.BindSecurityGroup("big-asg", TestSetup.TestSpace.OrganizationName(), TestSetup.TestSpace.SpaceName())).To(Succeed())
+				})
 			})
 
 			By("pushing another app", func() {
