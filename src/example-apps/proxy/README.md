@@ -145,6 +145,14 @@ every 5 requests. You can configure how often the endpoint should flap by
 setting the `FLAP_INTERVAL` env var. This endpoint was created to test app
 healthchecks.
 
+## `/sleepy`
+
+[Sleep handler](./handlers/sleep_handler.go) waits to respond to a request after
+it's default sleep interval of 5 seconds. You can configure how many seconds the
+endpoints sleeps for by setting the `SLEEPY_INTERVAL` environment variable.
+succeed before failing by setting the `EVENTUALLY_FAIL_AFTER_COUNT` env variable.
+This endpoint was created to test app healthchecks timeouts.
+
 ## `/ping/${destination}`
 
 [Ping handler](./handlers/ping_handler.go) shells out to `ping` to ping the
