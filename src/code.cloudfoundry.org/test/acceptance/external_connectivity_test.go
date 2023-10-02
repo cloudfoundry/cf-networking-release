@@ -138,6 +138,7 @@ var _ = Describe("external connectivity", func() {
 				By("restarting the app")
 				Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 			} else {
+				time.Sleep(time.Minute)
 				time.Sleep(30 * time.Second)
 			}
 			By("checking that the app cannot use http to reach the internet")
