@@ -20,9 +20,6 @@ code.cloudfoundry.org/cf-networking-helpers/mutualtls
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/cf-test-helpers v1.0.0
-## explicit
-code.cloudfoundry.org/cf-test-helpers/config
 # code.cloudfoundry.org/clock v1.1.0
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
@@ -102,8 +99,6 @@ github.com/cf-container-networking/sql-migrate/sqlparse
 ## explicit; go 1.12
 github.com/cloudfoundry-community/go-uaa
 github.com/cloudfoundry-community/go-uaa/passwordcredentials
-# github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
-## explicit
 # github.com/cloudfoundry/cf-test-helpers/v2 v2.7.0
 ## explicit; go 1.18
 github.com/cloudfoundry/cf-test-helpers/v2/cf

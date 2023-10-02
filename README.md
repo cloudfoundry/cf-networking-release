@@ -97,6 +97,20 @@ contains information on how app developers can create internal routes for c2c ne
 - The [Contributing Guide](docs/contributing.md) describes the steps you should take to contribute. Thanks in advance! We love our community :D 
 - [Adding Libraries or Packages](docs/adding-libraries-or-packages.md) describes how to add external golang libraries or new bosh packages to this release.
 
+### <a name="developer-workflow"></a> Developer Workflow
+
+- Clone [CI repository](https://github.com/cloudfoundry/wg-app-platform-runtime-ci) (next to where this code is cloned), and make sure latest
+is pulled by running `git pull`
+
+  ```bash
+  mkdir -p ~/workspace
+  cd ~/workspace
+  git clone https://github.com/cloudfoundry/wg-app-platform-runtime-ci.git
+  ```
+- [Git](https://git-scm.com/) - Distributed version control system
+- [Go](https://golang.org/doc/install#install) - The Go programming
+  language
+
 ### <a name="running-tests"></a>Running Tests
 
 ##### With Docker
