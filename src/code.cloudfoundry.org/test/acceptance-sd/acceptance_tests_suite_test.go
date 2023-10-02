@@ -115,7 +115,7 @@ func appDir(appType string) string {
 }
 
 func pushApp(appName string, instances int) {
-	Expect(cf.Cf(
+	ExpectWithOffset(1, cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),
 		"-f", defaultManifest("proxy"),
