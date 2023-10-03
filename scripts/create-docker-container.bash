@@ -43,7 +43,8 @@ docker run -it \
   --env "DB=${DB}" \
   --env "REPO_NAME=$REPO_NAME" \
   --env "REPO_PATH=/repo" \
-  --name "$REPO_NAME-docker-container" \
+  --rm \
+  --name "$REPO_NAME-docker-container-$(date +%s)" \
   -v "${REPO_PATH}:/repo" \
   -v "${CI}:/ci" \
   --privileged \
