@@ -38,7 +38,6 @@ if [[ -z ${DOCKER_ARGS+""} ]]; then
 fi
 
 docker pull "${IMAGE}"
-docker rm -f "$REPO_NAME-docker-container"
 docker run -it \
   --env "DB=${DB}" \
   --env "REPO_NAME=$REPO_NAME" \
