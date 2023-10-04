@@ -106,6 +106,65 @@ X-Request-Start: 1600296938338
 X-Vcap-Request-Id: 2249e92a-fbc0-42e3-4d33-e341cd3969c8
 ```
 
+#### Optional param `returnHeaders`
+The Dump requests handler also takes an optional boolean query param
+`returnHeaders` that will, when `true`:
+- clone the headers sent to the proxy and add them to
+  the response headers
+- return two additional debug headers: `X-Proxy-Settable-Debug-Header` and
+  `X-Proxy-Immutable-Debug-Header`
+
+The value returned by proxy in the `X-Proxy-Settable-Debug-Header` will be
+copied from the original request's `X-Proxy-Settable-Debug-Header` header, if
+present. As it's name implies, `X-Proxy-Immutable-Debug-Header` cannot be
+configured and will *always* return the header with the same value.
+
+```bash
+$ curl -v -H 'X-Proxy-Settable-Debug-Header: potato' https://proxy.mydomain.com/dumprequest/?returnHeaders=true
+...
+> GET /dumprequest/?returnHeaders=true HTTP/1.1
+> Host: proxy.mydomain.com
+> User-Agent: curl/7.81.0
+> Accept: */*
+> X-Proxy-Settable-Debug-Header: potato 👈 Setting the debug header, sending to the proxy
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Accept: */*
+< B3: 6f098b875f6e433564f0077c97e0a08c-64f0077c97e0a08c
+< Content-Length: 572
+< Content-Type: text/plain; charset=utf-8
+< Date: Tue, 15 Aug 2023 23:36:52 GMT
+< User-Agent: curl/7.81.0
+< X-B3-Spanid: 64f0077c97e0a08c
+< X-B3-Traceid: 6f098b875f6e433564f0077c97e0a08c
+< X-Cf-Applicationid: 0b5e54c7-c9ad-4d3a-a0d3-0c351a77c3b2
+< X-Cf-Instanceid: 2ace08d0-1160-4159-7e8e-b8ec
+< X-Cf-Instanceindex: 0
+< X-Forwarded-For: 127.0.0.1
+< X-Forwarded-Proto: http
+< X-Proxy-Immutable-Debug-Header: default-immutable-value-from-within-proxy-src-code 👈 our immutable header is sent in the response
+< X-Proxy-Settable-Debug-Header: potato 👈 proxy is happy to send our debug header back, along with everything else
+< X-Request-Start: 1692142612239
+< X-Vcap-Request-Id: 6f098b87-5f6e-4335-64f0-077c97e0a08c
+<
+GET /dumprequest/?returnHeaders=true HTTP/1.1
+Host: proxy.mydomain.com
+Accept: */*
+B3: 6f098b875f6e433564f0077c97e0a08c-64f0077c97e0a08c
+User-Agent: curl/7.81.0
+X-B3-Spanid: 64f0077c97e0a08c
+X-B3-Traceid: 6f098b875f6e433564f0077c97e0a08c
+X-Cf-Applicationid: 0b5e54c7-c9ad-4d3a-a0d3-0c351a77c3b2
+X-Cf-Instanceid: 2ace08d0-1160-4159-7e8e-b8ec
+X-Cf-Instanceindex: 0
+X-Forwarded-For: 127.0.0.1
+X-Forwarded-Proto: http
+X-Proxy-Settable-Debug-Header: potato 👈 the proxy instance received our configued debug header
+X-Request-Start: 1692142612239
+X-Vcap-Request-Id: 6f098b87-5f6e-4335-64f0-077c97e0a08c
+```
+
 ## `/echosourceip`
 
 [Echo source IP handler](./handlers/echo_source_ip_handler.go) responds with the
