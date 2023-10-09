@@ -33,7 +33,6 @@ files:
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/version/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/plugins/pkg/ns/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
-  - code.cloudfoundry.org/vendor/golang.org/x/sys/internal/unsafeheader/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/unix/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/unix/*.s # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/*.go # gosub
