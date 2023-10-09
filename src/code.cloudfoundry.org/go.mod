@@ -16,16 +16,16 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20230808235806-d58365d71e0d
+	code.cloudfoundry.org/bbs v0.0.0-20231003170049-9c7c357ce565
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20230919144331-48a6d414f23f
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20230612151301-d597b20f28ce
+	code.cloudfoundry.org/debugserver v0.0.0-20230929175251-e53a35122640
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
-	code.cloudfoundry.org/garden v0.0.0-20230926181103-e7edbb59045e
+	code.cloudfoundry.org/garden v0.0.0-20231003181205-2b0c633b6c60
 	code.cloudfoundry.org/lager/v3 v3.0.2
 	code.cloudfoundry.org/locket v0.0.0-20230612151453-08e003863044
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
-	code.cloudfoundry.org/tlsconfig v0.0.0-20230612153104-23c0622de227
+	code.cloudfoundry.org/tlsconfig v0.0.0-20230929201433-6cd2b78aba25
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -51,8 +51,8 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.15.0
-	golang.org/x/sys v0.12.0
+	golang.org/x/net v0.16.0
+	golang.org/x/sys v0.13.0
 	google.golang.org/grpc v1.58.2
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -60,8 +60,8 @@ require (
 
 require (
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20230823164527-31a09b08e0af // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20230612152544-cdd056aaf83d // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20230925214244-7bdb41469dfb // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20230929204104-1b58a12de975 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20231002233754-2971bfc4fd5a // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
@@ -86,12 +86,12 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.35.1 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
-	golang.org/x/oauth2 v0.12.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/oauth2 v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
