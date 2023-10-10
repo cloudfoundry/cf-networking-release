@@ -14,6 +14,7 @@ if [[ ${DB:-empty} == "empty" ]]; then
   DB=mysql
 fi
 
+CONTAINER_NAME="$REPO_NAME-$DB-docker-container"
 if [[ "${DB}" == "mysql" ]] || [[ "${DB}" == "mysql-8.0" ]]; then
   IMAGE="cloudfoundry/tas-runtime-mysql-8.0"
   DB="mysql"
@@ -28,27 +29,24 @@ else
 fi
 
 if [[ -z "${*}" ]]; then
-  CMD_ARGS="/bin/bash"
+  ARGS="-it"
 else
-  CMD_ARGS="${*}"
-fi
-
-if [[ -z ${DOCKER_ARGS+""} ]]; then
-  DOCKER_ARGS=""
+  ARGS="${*}"
 fi
 
 docker pull "${IMAGE}"
+docker rm -f $CONTAINER_NAME
 docker run -it \
   --env "DB=${DB}" \
   --env "REPO_NAME=$REPO_NAME" \
   --env "REPO_PATH=/repo" \
   --rm \
-  --name "$REPO_NAME-docker-container-$(date +%s)" \
+  --name "$CONTAINER_NAME" \
   -v "${REPO_PATH}:/repo" \
   -v "${CI}:/ci" \
   --privileged \
   --cap-add ALL \
-  ${DOCKER_ARGS} \
+  ${ARGS} \
   "${IMAGE}" \
-  ${CMD_ARGS}
+  /bin/bash
   
