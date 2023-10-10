@@ -1,0 +1,4 @@
+name: silk-healthchecker
+fingerprint: d068ff82ccb74befbb2c38b215a8fb56b765c15cd2a5bdefb2057339b6b1c01c
+dependencies:
+- silk-golang-1.21-linux
