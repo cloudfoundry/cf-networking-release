@@ -10,7 +10,10 @@ REPO_NAME=$(git_get_remote_name)
 if [[ ${DB:-empty} == "empty" ]]; then
   DB=mysql
 fi
+CONTAINER_NAME="$REPO_NAME-$DB-docker-container"
 
-DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" '/repo/scripts/docker/tests-templates.bash'
-DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" '/repo/scripts/docker/test.bash' "$@"
-DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" '/repo/scripts/docker/lint.bash'
+DB="${DB}" "${THIS_FILE_DIR}/create-docker-container.bash" -d
+
+docker exec $CONTAINER_NAME '/repo/scripts/docker/tests-templates.bash'
+docker exec $CONTAINER_NAME '/repo/scripts/docker/test.bash' "$@"
+docker exec $CONTAINER_NAME '/repo/scripts/docker/lint.bash'
