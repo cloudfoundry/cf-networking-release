@@ -163,6 +163,8 @@ builds:
     version: 3.25.1
   bb2e9f6b-9c01-4f50-4e2b-4d1ce91e28f2:
     version: 2.24.0
+  bcb7f2a5-4b0a-4c65-4827-9078367ba9ee:
+    version: 3.34.0
   bd78b10a-b2f2-491d-5029-87b5ff612915:
     version: 2.3.0
   bf0a4944-5b6e-45ab-403b-06db7e6c4478:
