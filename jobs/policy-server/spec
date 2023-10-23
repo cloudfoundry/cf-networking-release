@@ -58,7 +58,7 @@ properties:
 
   max_policies_per_app_source:
     description: "Maximum policies a space developer may configure for an application source. Does not affect admin users."
-    default: 50
+    default: 150
 
   enable_space_developer_self_service:
     description: "Allows space developers to always be able to configure policies for the apps they own."

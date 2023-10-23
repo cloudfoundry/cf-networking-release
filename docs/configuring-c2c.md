@@ -20,7 +20,7 @@ network policy.  In this permission model a user may configure policies between
 apps that are in spaces in which this user has the `SpaceDeveloper` role in
 CloudController.  An application may be the source of only a limited number of
 policies created this way (the limit is configurable via the BOSH property
-`cf_networking.max_policies_per_app_source`, defaults to 50).
+`cf_networking.max_policies_per_app_source`, defaults to 150).
 
 - To grant an individual user this access, give them the `network.write` scope
   in UAA
