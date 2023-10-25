@@ -80,32 +80,6 @@ $ curl https://proxy.mydomain.com/download/1024 > foo && wc -c foo
     1024 foo
 ```
 
-## `/dumprequest/`
-
-[Dump request handler](./handlers/dump_request_handler.go) dumps the request
-headers received and responds with them in the response body.
-
-```bash
-$ curl https://proxy.mydomain.com/dumprequest -H "X-MyHeader: foo"
-GET /dumprequest/ HTTP/1.1
-Host: proxy.mydomain.com
-Accept: */*
-B3: d154a35fda473f91-d154a35fda473f91
-User-Agent: curl/7.64.1
-Via: 1.1 google
-X-B3-Spanid: d154a35fda473f91
-X-B3-Traceid: d154a35fda473f91
-X-Cf-Applicationid: cf11aec9-2d64-4af4-99e6-40374ded9146
-X-Cf-Instanceid: c8c2d611-7517-4150-7a13-90ee
-X-Cf-Instanceindex: 0
-X-Cloud-Trace-Context: f6d833aeb67e61ea7526e690d4b34df7/14789025218083271155
-X-Forwarded-For: 76.175.68.86, 34.96.66.201, 35.191.8.81
-X-Forwarded-Proto: https
-X-Myheader: foo
-X-Request-Start: 1600296938338
-X-Vcap-Request-Id: 2249e92a-fbc0-42e3-4d33-e341cd3969c8
-```
-
 #### Optional param `returnHeaders`
 The Dump requests handler also takes an optional boolean query param
 `returnHeaders` that will, when `true`:

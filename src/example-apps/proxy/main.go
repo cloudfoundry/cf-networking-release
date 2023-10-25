@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"proxy/handlers"
 	"strconv"
@@ -13,6 +14,16 @@ const succeedAfterDefault = 5
 const failAfterDefault = 5
 const flapIntervalDefault = 5
 const sleepyIntervalDefault = 5
+
+type LoggingMux struct {
+	next http.Handler
+}
+
+func (lm LoggingMux) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	bytes, _ := httputil.DumpRequest(req, true)
+	fmt.Printf("INBOUND REQUEST:\n%s", string(bytes))
+	lm.next.ServeHTTP(res, req)
+}
 
 func main() {
 	port := getEnvVar("PORT", 0, true)
@@ -27,7 +38,7 @@ func main() {
 	mux.Handle("/dig/", &handlers.DigHandler{})
 	mux.Handle("/digudp/", &handlers.DigUDPHandler{})
 	mux.Handle("/download/", &handlers.DownloadHandler{})
-	mux.Handle("/dumprequest/", &handlers.DumpRequestHandler{})
+	// mux.Handle("/dumprequest/", &handlers.DumpRequestHandler{})
 	mux.Handle("/echosourceip", &handlers.EchoSourceIPHandler{})
 	mux.Handle("/ping/", &handlers.PingHandler{})
 	mux.Handle("/proxy/", &handlers.ProxyHandler{Stats: stats})
@@ -40,7 +51,8 @@ func main() {
 	mux.Handle("/signal/", &handlers.SignalHandler{})
 	mux.Handle("/sleepy/", &handlers.SleepyHandler{SleepyInterval: sleepyInterval})
 
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	lm := LoggingMux{next: mux}
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), lm)
 }
 
 func getEnvVar(key string, defaultValue int, failIfDNE bool) int {
