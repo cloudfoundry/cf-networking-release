@@ -815,6 +815,32 @@ var _ = Describe("Store", func() {
 		})
 	})
 
+	Describe("LastUpdated()", func() {
+		var currentTime int64
+		BeforeEach(func() {
+
+			migrateAndPopulateTags(realDb, 1)
+			currentTime = time.Now().UnixNano()
+
+			dataStore = store.New(realDb, group, destination, policy, 1)
+			dataStore.Create([]store.Policy{
+				{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				},
+			})
+		})
+		It("returns a timestamp in UnixNano format", func() {
+			updatedTime, err := dataStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedTime).To(BeNumerically(">", currentTime))
+		})
+	})
+
 	Describe("Delete", func() {
 		BeforeEach(func() {
 			tagLength = 1
