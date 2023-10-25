@@ -109,7 +109,7 @@ func (s *store) LastUpdated() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("getting policies: %s", err)
 	}
-	return int(timestamp.Unix()), err
+	return int(timestamp.UnixNano()), err
 }
 
 func (s *store) CheckDatabase() error {
@@ -364,6 +364,6 @@ func (s *store) tagIntToString(tag int) string {
 }
 
 func (s *store) updateLastUpdated(tx db.Transaction) error {
-	_, err := tx.Exec(`UPDATE policies_info SET last_updated=CURRENT_TIMESTAMP`)
+	_, err := tx.Exec(`UPDATE policies_info SET last_updated=CURRENT_TIMESTAMP(6)`)
 	return err
 }
