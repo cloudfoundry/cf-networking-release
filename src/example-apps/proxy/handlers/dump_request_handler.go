@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"net/http/httputil"
 )
 
 type DumpRequestHandler struct {
