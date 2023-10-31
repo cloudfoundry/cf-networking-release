@@ -1,11 +1,11 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231017144728-583bfb3f8b2c
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231025144627-414cbe44463b
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.0.0-20231017144440-ef7ea823eb34
+# code.cloudfoundry.org/localip v0.0.0-20231025145031-77dc93c89492
 ## explicit; go 1.20
 code.cloudfoundry.org/localip
-# github.com/go-logr/logr v1.2.4
-## explicit; go 1.16
+# github.com/go-logr/logr v1.3.0
+## explicit; go 1.18
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
 # github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572
@@ -43,7 +43,7 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.28.1
+# github.com/onsi/gomega v1.29.0
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
