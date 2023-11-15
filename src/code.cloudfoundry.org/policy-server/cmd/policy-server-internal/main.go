@@ -185,7 +185,7 @@ func main() {
 		"health": metricsWrap("Health", logWrap(healthHandler)),
 	}
 
-	healthCheckServer := common.InitServer(logger, nil, conf.ListenHost,
+	healthCheckServer := common.InitServer(logger, nil, "127.0.0.1",
 		conf.HealthCheckPort, healthHandlers, healthRoutes)
 
 	members := grouper.Members{
