@@ -36,7 +36,7 @@ code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20231114181656-4c2a4ae2aad0
+# code.cloudfoundry.org/garden v0.0.0-20231127190424-731659c65ee0
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20231113191959-85adc333ee36
@@ -179,7 +179,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20231101202521-4ca4178f5c7a
+# github.com/google/pprof v0.0.0-20231127191134-f3a68a39ae15
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
@@ -321,7 +321,7 @@ go.step.sm/crypto/keyutil
 go.step.sm/crypto/pemutil
 go.step.sm/crypto/randutil
 go.step.sm/crypto/x25519
-# golang.org/x/crypto v0.15.0
+# golang.org/x/crypto v0.16.0
 ## explicit; go 1.18
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -336,7 +336,7 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.18.0
+# golang.org/x/net v0.19.0
 ## explicit; go 1.18
 golang.org/x/net/context
 golang.org/x/net/dns/dnsmessage
@@ -349,12 +349,12 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.14.0
+# golang.org/x/oauth2 v0.15.0
 ## explicit; go 1.18
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# golang.org/x/sys v0.14.0
+# golang.org/x/sys v0.15.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
@@ -390,7 +390,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.15.0
+# golang.org/x/tools v0.16.0
 ## explicit; go 1.18
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/typeparams
@@ -403,7 +403,7 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20231127180814-3a041ad873d4
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.59.0 => google.golang.org/grpc v1.50.1
