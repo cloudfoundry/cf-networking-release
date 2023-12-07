@@ -9,4 +9,4 @@ configure_db "${DB}"
 args=${@} 
 go run github.com/onsi/ginkgo/v2/ginkgo  --skip-package integration,store $args
 # run integration and store package in serial
-go run github.com/onsi/ginkgo/v2/ginkgo $(echo $args | sed 's/-p //g') ./integration ./store
+go run github.com/onsi/ginkgo/v2/ginkgo $args --nodes=1 ./integration ./store
