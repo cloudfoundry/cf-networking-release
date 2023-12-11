@@ -22,7 +22,7 @@ require (
 	code.cloudfoundry.org/debugserver v0.0.0-20231114142234-a442cc402287
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
 	code.cloudfoundry.org/garden v0.0.0-20231204161601-f90ef3a9fc32
-	code.cloudfoundry.org/lager/v3 v3.0.2
+	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20231114154242-23339499a62f
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
 	code.cloudfoundry.org/tlsconfig v0.0.0-20231017135636-f0e44068c22f
