@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231114144941-d3aabe53ed7b
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231206170627-0692a8edc6e9
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.0.0-20231114145404-41b8c8e318cb
+# code.cloudfoundry.org/localip v0.0.0-20231206170541-8d74d8ef21ec
 ## explicit; go 1.20
 code.cloudfoundry.org/localip
 # github.com/go-logr/logr v1.3.0
@@ -18,7 +18,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20231205033806-a5a03c77bf08
+# github.com/google/pprof v0.0.0-20231212022811-ec68065c825e
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/onsi/ginkgo/v2 v2.13.2
