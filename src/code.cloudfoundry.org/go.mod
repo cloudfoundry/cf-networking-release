@@ -16,14 +16,14 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20231204223625-b4a8e8d97ad9
+	code.cloudfoundry.org/bbs v0.0.0-20231220211331-0fff34f76794
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231206170627-0692a8edc6e9
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20231206170715-fd2d2aa39d90
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
 	code.cloudfoundry.org/garden v0.0.0-20231218185547-7c85e0f7a6c6
 	code.cloudfoundry.org/lager/v3 v3.0.3
-	code.cloudfoundry.org/locket v0.0.0-20231114154242-23339499a62f
+	code.cloudfoundry.org/locket v0.0.0-20231220192941-f252282ff31f
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
 	code.cloudfoundry.org/tlsconfig v0.0.0-20231017135636-f0e44068c22f
 	example-apps/spammer v0.0.0-00010101000000-000000000000
@@ -68,7 +68,7 @@ require (
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20231211170018-44d78969daf7 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
@@ -92,7 +92,7 @@ require (
 	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
