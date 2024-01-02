@@ -16,12 +16,12 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20231220211331-0fff34f76794
+	code.cloudfoundry.org/bbs v0.0.0-20231227180056-b45866dbb5e3
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231206170627-0692a8edc6e9
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20231206170715-fd2d2aa39d90
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
-	code.cloudfoundry.org/garden v0.0.0-20231218185547-7c85e0f7a6c6
+	code.cloudfoundry.org/garden v0.0.0-20231226182342-f6a5ba9c581c
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20231220192941-f252282ff31f
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
@@ -66,7 +66,7 @@ require (
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20231211170018-44d78969daf7 // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20231227232801-b682ba3cb37d // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
@@ -75,7 +75,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20231212022811-ec68065c825e // indirect
+	github.com/google/pprof v0.0.0-20231229205709-960ae82b1e42 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect

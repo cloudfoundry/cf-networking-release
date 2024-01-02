@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/bbs v0.0.0-20231220211331-0fff34f76794
+# code.cloudfoundry.org/bbs v0.0.0-20231227180056-b45866dbb5e3
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
@@ -36,7 +36,7 @@ code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20231218185547-7c85e0f7a6c6
+# code.cloudfoundry.org/garden v0.0.0-20231226182342-f6a5ba9c581c
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20231218170342-258647f3c6ec
@@ -122,7 +122,7 @@ github.com/cloudfoundry/dropsonde/metric_sender
 github.com/cloudfoundry/dropsonde/metricbatcher
 github.com/cloudfoundry/dropsonde/metrics
 github.com/cloudfoundry/dropsonde/runtime_stats
-# github.com/cloudfoundry/sonde-go v0.0.0-20231211170018-44d78969daf7
+# github.com/cloudfoundry/sonde-go v0.0.0-20231227232801-b682ba3cb37d
 ## explicit; go 1.17
 github.com/cloudfoundry/sonde-go/events
 # github.com/cockroachdb/apd v1.1.0
@@ -179,7 +179,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20231212022811-ec68065c825e
+# github.com/google/pprof v0.0.0-20231229205709-960ae82b1e42
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
