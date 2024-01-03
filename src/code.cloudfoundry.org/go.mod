@@ -16,12 +16,12 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20231227180056-b45866dbb5e3
+	code.cloudfoundry.org/bbs v0.0.0-20240103213858-0007fcda7335
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231206170627-0692a8edc6e9
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20231206170715-fd2d2aa39d90
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
-	code.cloudfoundry.org/garden v0.0.0-20231226182342-f6a5ba9c581c
+	code.cloudfoundry.org/garden v0.0.0-20240102182338-a0cd1ff97764
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20231220192941-f252282ff31f
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
@@ -91,7 +91,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240102182953-50ed04b92917 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
