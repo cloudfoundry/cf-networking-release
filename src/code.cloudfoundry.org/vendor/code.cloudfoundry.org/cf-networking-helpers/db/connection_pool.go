@@ -22,8 +22,9 @@ func NewConnectionPool(conf Config,
 	}
 
 	logger.Info("getting db connection", lager.Data{})
-	timeoutCtx, _ := context.WithTimeout(context.Background(), time.Duration(conf.Timeout)*time.Second)
+	timeoutCtx, timeoutCancelFunc := context.WithTimeout(context.Background(), time.Duration(conf.Timeout)*time.Second)
 	connectionPool, err := retriableConnector.GetConnectionPool(conf, timeoutCtx)
+	defer timeoutCancelFunc()
 	if err != nil {
 		return nil, fmt.Errorf("%s.%s: db connect: %s", logPrefix, jobPrefix, err)
 	}

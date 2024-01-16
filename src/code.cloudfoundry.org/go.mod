@@ -1,6 +1,8 @@
 module code.cloudfoundry.org
 
-go 1.20
+go 1.21
+
+toolchain go1.21.6
 
 replace (
 	example-apps/spammer => ../example-apps/spammer
@@ -17,11 +19,11 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240103213858-0007fcda7335
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20231206170627-0692a8edc6e9
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240112142017-1c9a9308311a
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20231206170715-fd2d2aa39d90
 	code.cloudfoundry.org/filelock v0.0.0-20230612152934-de193be258e4
-	code.cloudfoundry.org/garden v0.0.0-20240102182338-a0cd1ff97764
+	code.cloudfoundry.org/garden v0.0.0-20240109143915-5f67362569bd
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20231220192941-f252282ff31f
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
@@ -30,7 +32,7 @@ require (
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
 	github.com/cloudfoundry-community/go-uaa v0.3.2
-	github.com/cloudfoundry/cf-test-helpers/v2 v2.8.0
+	github.com/cloudfoundry/cf-test-helpers/v2 v2.9.0
 	github.com/cloudfoundry/dropsonde v1.1.0
 	github.com/containernetworking/cni v1.1.2
 	github.com/containernetworking/plugins v1.4.0
@@ -42,7 +44,7 @@ require (
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.6.1
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/ginkgo/v2 v2.14.0
 	github.com/onsi/gomega v1.30.0
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -85,11 +87,11 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.40.0 // indirect
+	go.step.sm/crypto v0.41.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.16.1 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
