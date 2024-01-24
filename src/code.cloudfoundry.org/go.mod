@@ -23,7 +23,7 @@ require (
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20231206170715-fd2d2aa39d90
 	code.cloudfoundry.org/filelock v0.0.0-20240116200225-91558a7180a4
-	code.cloudfoundry.org/garden v0.0.0-20240117130100-ee732fa59395
+	code.cloudfoundry.org/garden v0.0.0-20240124130052-f08d3288e394
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20231220192941-f252282ff31f
 	code.cloudfoundry.org/policy_client v0.0.0-20230726190751-c4580e1b1f80
@@ -55,7 +55,7 @@ require (
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.20.0
 	golang.org/x/sys v0.16.0
-	google.golang.org/grpc v1.60.1
+	google.golang.org/grpc v1.61.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )

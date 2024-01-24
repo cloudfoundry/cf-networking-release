@@ -36,7 +36,7 @@ code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20240116200225-91558a7180a4
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240117130100-ee732fa59395
+# code.cloudfoundry.org/garden v0.0.0-20240124130052-f08d3288e394
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240116173152-f35e14ad152d
@@ -405,7 +405,7 @@ google.golang.org/appengine/urlfetch
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.60.1 => google.golang.org/grpc v1.50.1
+# google.golang.org/grpc v1.61.0 => google.golang.org/grpc v1.50.1
 ## explicit; go 1.17
 google.golang.org/grpc
 google.golang.org/grpc/attributes
