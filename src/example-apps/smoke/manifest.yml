@@ -6,4 +6,5 @@ applications:
     buildpacks: [go_buildpack]
     env:
       GOPACKAGENAME: smoke
+      GOVERSION: go1.21
       PROXY_APP_URL: http://proxy.some-cf-deployment.example.com
