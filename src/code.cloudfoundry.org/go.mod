@@ -61,7 +61,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240129164815-4a8e1f658c90 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240201154054-e8fcffadab66 // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20231206170547-9040c1b5941e // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240124183017-31ac915ce912 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
@@ -87,13 +87,13 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.42.1 // indirect
+	go.step.sm/crypto v0.43.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240125205218-1f4bbc51befe // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240205150955-31a09d347014 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
