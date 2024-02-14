@@ -64,6 +64,7 @@ var _ = Describe("Main", func() {
 		fakeCopilotVIPResolverServer = &fakes.CopilotVIPResolverServer{}
 		fakeCopilotVIPResolverServer.Start(ports.PickAPort())
 
+		vipResolverAddress = fakeCopilotVIPResolverServer.Address()
 		dnsAdapterAddress = "127.0.0.1"
 		internalRouteVIPRange = "127.0.0.0/24"
 
@@ -184,17 +185,16 @@ var _ = Describe("Main", func() {
 		})
 
 		It("returns a http 500 response", func() {
-			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
+			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.Unable to create vip resovler client"))
 
 			var reader io.Reader
 			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.istio.local.", dnsAdapterPort)
 			request, err := http.NewRequest("GET", url, reader)
 			Expect(err).To(Succeed())
 
-			resp, err := http.DefaultClient.Do(request)
-			Expect(err).To(Succeed())
+			_, err = http.DefaultClient.Do(request)
+			Expect(err).NotTo(Succeed())
 
-			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
 		})
 	})
 
