@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 //go:generate counterfeiter -o fakes/vip_resolver_copilot_client.go --fake-name VIPResolverCopilotClient api VIPResolverCopilotClient
-
 type Client struct {
 	VIPResolverCopilotClient api.VIPResolverCopilotClient
 	conn                     *grpc.ClientConn
@@ -35,7 +35,7 @@ func NewConnectedClient(serverAddr string, dialOpts ...DialOption) (*Client, err
 	}
 
 	if opts.withInsecure {
-		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	conn, err := grpc.Dial(serverAddr, grpcOpts...)
