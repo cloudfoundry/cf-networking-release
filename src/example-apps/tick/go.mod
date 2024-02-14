@@ -3,8 +3,8 @@ module tick
 go 1.20
 
 require (
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240112142017-1c9a9308311a
-	code.cloudfoundry.org/localip v0.0.0-20231206170541-8d74d8ef21ec
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240209161148-7a6d04db6b8c
+	code.cloudfoundry.org/localip v0.0.0-20240209144003-33100c303cbc
 	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.31.1
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
@@ -19,6 +19,6 @@ require (
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.17.0 // indirect
+	golang.org/x/tools v0.18.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
