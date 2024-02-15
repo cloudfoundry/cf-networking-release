@@ -15,13 +15,6 @@ def internal_route_vip_range
   end
 end
 
-def vip_resolver_address 
-  if_link('vip_resolver_conn') do |link|
-    return "#{link.address}:#{link.p('listen_port_for_vip_resolver')}"
-  end
-  ''
-end
-
 def parse_ip (ip, var_name)
   unless ip.empty?
       begin
@@ -49,7 +42,6 @@ config = {
     'log_level_port' => p('log_level_port'),
     'internal_service_mesh_domains' => internal_service_mesh_domains,
     'internal_route_vip_range' => internal_route_vip_range,
-    'vip_resolver_address' => vip_resolver_address,
 }
 
 require 'json'

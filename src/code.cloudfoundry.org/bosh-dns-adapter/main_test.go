@@ -4,14 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/bosh-dns-adapter/fakes"
 	testhelpers "code.cloudfoundry.org/test-helpers"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
@@ -31,13 +29,11 @@ var _ = Describe("Main", func() {
 		configFileContents                     string
 		fakeServiceDiscoveryControllerServer   *ghttp.Server
 		fakeServiceDiscoveryControllerResponse []http.HandlerFunc
-		fakeCopilotVIPResolverServer           *fakes.CopilotVIPResolverServer
 		dnsAdapterAddress                      string
 		dnsAdapterPort                         string
 		fakeMetron                             metrics.FakeMetron
 		logLevelPort                           int
 		internalRouteVIPRange                  string
-		vipResolverAddress                     string
 	)
 
 	BeforeEach(func() {
@@ -61,10 +57,6 @@ var _ = Describe("Main", func() {
 				}`),
 		)}
 
-		fakeCopilotVIPResolverServer = &fakes.CopilotVIPResolverServer{}
-		fakeCopilotVIPResolverServer.Start(ports.PickAPort())
-
-		vipResolverAddress = fakeCopilotVIPResolverServer.Address()
 		dnsAdapterAddress = "127.0.0.1"
 		internalRouteVIPRange = "127.0.0.0/24"
 
@@ -103,8 +95,7 @@ var _ = Describe("Main", func() {
 			"log_level_port": %d,
 			"log_level_address": "127.0.0.1",
 			"internal_service_mesh_domains" : ["istio.local."],
-			"internal_route_vip_range": "%s",
-			"vip_resolver_address": "%s"
+			"internal_route_vip_range": "%s"
 		}`, dnsAdapterAddress,
 			dnsAdapterPort,
 			strings.TrimPrefix(urlParts[1], "//"),
@@ -115,10 +106,9 @@ var _ = Describe("Main", func() {
 			fakeMetron.Port(),
 			logLevelPort,
 			internalRouteVIPRange,
-			vipResolverAddress,
 		)
 
-		tempConfigFile, err = ioutil.TempFile(os.TempDir(), "sd")
+		tempConfigFile, err = os.CreateTemp(os.TempDir(), "sd")
 		Expect(err).ToNot(HaveOccurred())
 		_, err = tempConfigFile.Write([]byte(configFileContents))
 		Expect(err).ToNot(HaveOccurred())
@@ -148,7 +138,7 @@ var _ = Describe("Main", func() {
 
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-		all, err := ioutil.ReadAll(resp.Body)
+		all, err := io.ReadAll(resp.Body)
 		Expect(err).To(Succeed())
 		Expect(string(all)).To(MatchJSON(`{
 					"Status": 0,
@@ -177,77 +167,6 @@ var _ = Describe("Main", func() {
 					"edns_client_subnet": "0.0.0.0/0"
 				}
 		`))
-	})
-
-	Context("when the vip resolver link is not present", func() {
-		BeforeEach(func() {
-			vipResolverAddress = ""
-		})
-
-		It("returns a http 500 response", func() {
-			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.Unable to create vip resovler client"))
-
-			var reader io.Reader
-			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.istio.local.", dnsAdapterPort)
-			request, err := http.NewRequest("GET", url, reader)
-			Expect(err).To(Succeed())
-
-			_, err = http.DefaultClient.Do(request)
-			Expect(err).NotTo(Succeed())
-
-		})
-	})
-
-	Context("when internal service mesh domain", func() {
-		BeforeEach(func() {
-			vipResolverAddress = fakeCopilotVIPResolverServer.Address()
-			fakeCopilotVIPResolverServer.AddHostVIPMapping("app-id.istio.local.", "127.1.2.3")
-		})
-
-		It("should return a http 200 status", func() {
-			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
-
-			var reader io.Reader
-			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.istio.local.", dnsAdapterPort)
-			request, err := http.NewRequest("GET", url, reader)
-			Expect(err).To(Succeed())
-
-			resp, err := http.DefaultClient.Do(request)
-			Expect(err).To(Succeed())
-
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-			all, err := ioutil.ReadAll(resp.Body)
-			Expect(err).To(Succeed())
-			Expect(string(all)).To(MatchJSON(`{
-					"Status": 0,
-					"TC": false,
-					"RD": false,
-					"RA": false,
-					"AD": false,
-					"CD": false,
-					"Question":
-					[
-						{
-							"name": "app-id.istio.local.",
-							"type": 1
-						}
-					],
-					"Answer":
-					[
-						{
-							"name": "app-id.istio.local.",
-							"type": 1,
-							"TTL":  0,
-							"data": "127.1.2.3"
-						}
-					],
-					"Additional": [ ],
-					"edns_client_subnet": "0.0.0.0/0"
-				}
-		`))
-		})
-
 	})
 
 	It("accepts interrupt signals and shuts down", func() {
@@ -339,7 +258,7 @@ var _ = Describe("Main", func() {
 			resp, err := http.DefaultClient.Do(request)
 			Expect(err).To(Succeed())
 
-			all, err := ioutil.ReadAll(resp.Body)
+			all, err := io.ReadAll(resp.Body)
 			Expect(err).To(Succeed())
 			Expect(string(all)).To(MatchJSON(`{
 					"Status": 0,
@@ -384,7 +303,7 @@ var _ = Describe("Main", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 
-			all, err := ioutil.ReadAll(resp.Body)
+			all, err := io.ReadAll(resp.Body)
 			Expect(err).To(Succeed())
 
 			Expect(string(all)).To(MatchJSON(`{
@@ -480,7 +399,7 @@ var _ = Describe("Main", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-			all, err := ioutil.ReadAll(resp.Body)
+			all, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(string(all)).To(MatchJSON(`{

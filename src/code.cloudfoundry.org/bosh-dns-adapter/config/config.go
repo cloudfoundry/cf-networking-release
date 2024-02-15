@@ -23,7 +23,6 @@ type Config struct {
 	LogLevelPort                      int      `json:"log_level_port" validate:"min=1"`
 	InternalServiceMeshDomains        []string `json:"internal_service_mesh_domains"`
 	InternalRouteVIPRange             string   `json:"internal_route_vip_range" validate:"cidr"`
-	VIPResolverAddress                string   `json:"vip_resolver_address"`
 }
 
 func init() {

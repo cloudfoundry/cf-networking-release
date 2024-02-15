@@ -16,11 +16,6 @@ type sdcClient interface {
 	IPs(hostname string) ([]string, error)
 }
 
-//go:generate counterfeiter -o fakes/copilot_client.go --fake-name CopilotClient . CopilotClient
-type CopilotClient interface {
-	IP(string) (string, error)
-}
-
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
 	IncrementCounter(name string)
@@ -29,7 +24,6 @@ type metricsSender interface {
 
 type GetIP struct {
 	SDCClient                  sdcClient
-	CopilotClient              CopilotClient
 	InternalServiceMeshDomains []string
 	Logger                     lager.Logger
 	MetricsSender              metricsSender
@@ -68,15 +62,8 @@ func (g GetIP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var err error
 	var componentErrorMsg string
 	start := time.Now()
-	if g.hasInternalServiceMeshDomain(name) {
-		var ip string
-		ip, err = g.CopilotClient.IP(name)
-		ips = []string{ip}
-		componentErrorMsg = "could not connect to copilot"
-	} else {
-		ips, err = g.SDCClient.IPs(name)
-		componentErrorMsg = "could not connect to service discovery controller"
-	}
+	ips, err = g.SDCClient.IPs(name)
+	componentErrorMsg = "could not connect to service discovery controller"
 	duration := time.Now().Sub(start).Nanoseconds()
 
 	if err != nil {
@@ -98,15 +85,6 @@ func (g GetIP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		"service-name": name,
 		"duration-ns":  duration,
 	})
-}
-
-func (g GetIP) hasInternalServiceMeshDomain(name string) bool {
-	for _, domain := range g.InternalServiceMeshDomains {
-		if strings.HasSuffix(name, domain) {
-			return true
-		}
-	}
-	return false
 }
 
 func (g GetIP) writeErrorResponse(resp http.ResponseWriter, err error) {
