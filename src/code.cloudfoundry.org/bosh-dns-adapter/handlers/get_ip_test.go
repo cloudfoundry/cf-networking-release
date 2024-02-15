@@ -18,7 +18,6 @@ var _ = Describe("GetIP", func() {
 		getIP handlers.GetIP
 
 		fakeSDCClient     *fakes.SDCClient
-		fakeCopilotClient *fakes.CopilotClient
 		fakeMetricsSender *fakes.MetricsSender
 
 		resp    *httptest.ResponseRecorder
@@ -30,19 +29,14 @@ var _ = Describe("GetIP", func() {
 		fakeSDCClient = &fakes.SDCClient{}
 		fakeSDCClient.IPsReturns([]string{"192.168.0.1"}, nil)
 
-		fakeCopilotClient = &fakes.CopilotClient{}
-		fakeCopilotClient.IPReturns("", errors.New("fake not initialized"))
-
 		fakeMetricsSender = &fakes.MetricsSender{}
 
 		logger = lagertest.NewTestLogger("get ip handler test logger")
 
 		getIP = handlers.GetIP{
-			SDCClient:                  fakeSDCClient,
-			CopilotClient:              fakeCopilotClient,
-			MetricsSender:              fakeMetricsSender,
-			InternalServiceMeshDomains: []string{"app-id.istio.internal.local."},
-			Logger:                     logger,
+			SDCClient:     fakeSDCClient,
+			MetricsSender: fakeMetricsSender,
+			Logger:        logger,
 		}
 
 		resp = httptest.NewRecorder()
@@ -216,94 +210,5 @@ var _ = Describe("GetIP", func() {
 			getIP.ServeHTTP(resp, request)
 			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("DNSRequestFailures"))
 		})
-	})
-
-	Context("when internal service mesh domain", func() {
-		It("should return a http 200 status", func() {
-			fakeCopilotClient.IPReturns("127.1.2.3", nil)
-			request, err := http.NewRequest("GET", "?type=1&name=app-id.istio.internal.local.", nil)
-			Expect(err).ToNot(HaveOccurred())
-
-			getIP.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body.String()).To(MatchJSON(`{
-					"Status": 0,
-					"TC": false,
-					"RD": false,
-					"RA": false,
-					"AD": false,
-					"CD": false,
-					"Question":
-					[
-						{
-							"name": "app-id.istio.internal.local.",
-							"type": 1
-						}
-					],
-					"Answer":
-					[
-						{
-							"name": "app-id.istio.internal.local.",
-							"type": 1,
-							"TTL":  0,
-							"data": "127.1.2.3"
-						}
-					],
-					"Additional": [ ],
-					"edns_client_subnet": "0.0.0.0/0"
-				}`))
-
-			Expect(fakeCopilotClient.IPCallCount()).To(Equal(1))
-			Expect(fakeCopilotClient.IPArgsForCall(0)).To(Equal("app-id.istio.internal.local."))
-		})
-
-		Context("when the copilot client returns an error", func() {
-			var request *http.Request
-			BeforeEach(func() {
-				fakeCopilotClient.IPReturns("", errors.New("copilot issues"))
-
-				var err error
-				request, err = http.NewRequest("GET", "?type=1&name=app-id.istio.internal.local.", nil)
-				Expect(err).To(Succeed())
-			})
-
-			It("returns an error response", func() {
-				getIP.ServeHTTP(resp, request)
-
-				Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			})
-
-			It("returns a http 500 status", func() {
-				getIP.ServeHTTP(resp, request)
-				Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			})
-
-			It("logs an error", func() {
-				getIP.ServeHTTP(resp, request)
-				Expect(logger.LogMessages()).To(ContainElement(ContainSubstring("could not connect to copilot")))
-				Expect(logger.Logs()[0].Data["error"]).To(Equal("copilot issues"))
-			})
-
-			It("increments the DNSRequestFailures metric counter", func() {
-				getIP.ServeHTTP(resp, request)
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("DNSRequestFailures"))
-			})
-		})
-	})
-
-	It("logs on success", func() {
-		fakeCopilotClient.IPReturns("127.1.2.3", nil)
-
-		request, err := http.NewRequest("GET", "?type=1&name=app-id.istio.internal.local.", nil)
-		Expect(err).ToNot(HaveOccurred())
-
-		getIP.ServeHTTP(resp, request)
-		Expect(resp.Code).To(Equal(http.StatusOK))
-
-		Expect(logger.LogMessages()).To(ContainElement(ContainSubstring("success")))
-		Expect(logger.Logs()[1].Data["ips"]).To(Equal("127.1.2.3"))
-		Expect(logger.Logs()[1].Data["service-name"]).To(Equal("app-id.istio.internal.local."))
-		Expect(logger.Logs()[1].Data["duration-ns"]).To(BeNumerically(">", 0))
 	})
 })

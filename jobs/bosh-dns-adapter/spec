@@ -21,9 +21,6 @@ consumes:
   - name: cloud_controller_container_networking_info
     type: cloud_controller_container_networking_info
     optional: true
-  - name: vip_resolver_conn
-    type: vip_resolver_conn
-    optional: true
 
 properties:
   cf_app_sd_disable:

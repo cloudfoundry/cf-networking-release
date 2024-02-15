@@ -31,7 +31,7 @@ module Bosh::Template::Test
       it 'sets the open file descriptor limit' do
         expect(config['processes'][0]['limits']['open_files']).to eq(65_535)
       end
-      
+
       it 'adds a healthcheck process' do
         expect(config['processes'][1]).to eq({
           "name" => "bosh-dns-adapter-healthchecker",
@@ -77,7 +77,6 @@ module Bosh::Template::Test
           'service_discovery_controller_port' => '1234',
           'internal_service_mesh_domains' => [],
           'internal_route_vip_range' => '192.168.0.1/24',
-          'vip_resolver_address' => '',
         })
       end
 
@@ -122,29 +121,9 @@ module Bosh::Template::Test
             'service_discovery_controller_port' => '1234',
             'internal_route_vip_range' => '127.128.0.0/8',
             'internal_service_mesh_domains' => ['myistio.internal.app.domain.'],
-            'vip_resolver_address' => '',
           })
         end
       end
-
-      describe 'when the optional vip_resolver_conn link is provided' do
-        let(:links_with_vip_resolver_conn) do
-          links << Link.new(
-            name: 'vip_resolver_conn',
-            properties: {
-              'listen_port_for_vip_resolver' => 1234,
-            },
-            address: 'copilot.bosh',
-          )
-        end
-
-        it 'renders the copilot address:port in the json' do
-          template_str = template.render(merged_manifest_properties, consumes: links_with_vip_resolver_conn)
-          config = JSON.parse(template_str)
-          expect(config['vip_resolver_address']).to eq('copilot.bosh:1234')
-        end
-      end
-    end
 
     describe 'handlers.json' do
       let(:template) {job.template('dns/handlers.json')}
@@ -221,4 +200,5 @@ module Bosh::Template::Test
       end
     end
   end
+end
 end
