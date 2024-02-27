@@ -112,7 +112,7 @@ func buildCCASGLatestUpdateResponse(timestamp time.Time) string {
 func buildCCGuidsResponse(guids map[string]struct{}) string {
 	var resources []interface{}
 
-	for guid, _ := range guids {
+	for guid := range guids {
 		resources = append(resources, resource{Guid: guid})
 	}
 

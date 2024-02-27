@@ -398,7 +398,7 @@ var _ = Describe("Client", func() {
 
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(ContainSubstring("/v3/apps?guids="))
-			for appGuid, _ := range expectedAppSpaces {
+			for appGuid_ := range expectedAppSpaces {
 				Expect(route).To(ContainSubstring(appGuid))
 			}
 			Expect(route).To(ContainSubstring("per_page=5"))
