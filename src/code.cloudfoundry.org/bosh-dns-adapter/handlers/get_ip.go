@@ -64,7 +64,7 @@ func (g GetIP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	start := time.Now()
 	ips, err = g.SDCClient.IPs(name)
 	componentErrorMsg = "could not connect to service discovery controller"
-	duration := time.Now().Sub(start).Nanoseconds()
+	duration := time.Since(start).Nanoseconds()
 
 	if err != nil {
 		g.writeErrorResponse(w, err)

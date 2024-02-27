@@ -244,7 +244,7 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 
 				Expect(actualIPs).To(ConsistOf("192.168.0.1", "192.168.0.2"))
 
-				timeTaken := time.Now().Sub(startTime).Seconds()
+				timeTaken := time.Since(startTime).Seconds()
 				Expect(timeTaken).To(
 					BeNumerically("~", 2, 1),
 					"Retries should not be immediate",
@@ -277,7 +277,7 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("Received non successful response from server:"))
 
-				timeTaken := time.Now().Sub(startTime).Seconds()
+				timeTaken := time.Since(startTime).Seconds()
 				Expect(timeTaken).To(
 					BeNumerically("~", 2, 1),
 					"Retries should not be immediate",
