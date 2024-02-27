@@ -32,7 +32,7 @@ func NewServiceDiscoveryClient(serverURL, caPath, clientCertPath, clientKeyPath 
 		return nil, fmt.Errorf("read CA file: %s", err)
 	}
 	caCertPool := x509.NewCertPool()
-	if caCertPool.AppendCertsFromPEM(caPemBytes) != true {
+	if !caCertPool.AppendCertsFromPEM(caPemBytes) {
 		return nil, fmt.Errorf("load CA file into cert pool")
 	}
 
