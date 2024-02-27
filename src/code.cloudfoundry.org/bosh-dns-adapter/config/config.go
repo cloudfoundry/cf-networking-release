@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 
@@ -29,7 +28,7 @@ func init() {
 	validator.SetValidationFunc("cidr", func(v interface{}, param string) error {
 		cidr, ok := v.(string)
 		if !ok {
-			return errors.New(fmt.Sprintf("Unable to cast expected cidr to string: %v", v))
+			return fmt.Errorf("Unable to cast expected cidr to string: %v", v)
 		}
 
 		_, _, err := net.ParseCIDR(cidr)

@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -101,7 +100,7 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 	}
 
 	if httpResp.StatusCode != http.StatusOK {
-		return []string{}, errors.New(fmt.Sprintf("Received non successful response from server: %+v", httpResp))
+		return []string{}, fmt.Errorf("Received non successful response from server: %+v", httpResp)
 	}
 
 	bytes, err := ioutil.ReadAll(httpResp.Body)
