@@ -107,11 +107,9 @@ func (s *Subscriber) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 	close(ready)
 
 	for {
-		select {
-		case <-signals:
-			s.Close()
-			return nil
-		}
+		<-signals
+		s.Close()
+		return nil
 	}
 }
 
