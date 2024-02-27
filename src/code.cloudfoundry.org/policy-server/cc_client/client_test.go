@@ -13,7 +13,8 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/policy-server/cc_client"
-	. "code.cloudfoundry.org/policy-server/cc_client"
+
+	//	. "code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/cc_client/fixtures"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -21,7 +22,7 @@ import (
 
 var _ = Describe("Client", func() {
 	var (
-		client                 *Client
+		client                 *cc_client.Client
 		fakeExternalJSONClient *fakes.JSONClient
 		fakeInternalJSONClient *fakes.JSONClient
 		logger                 *lagertest.TestLogger
@@ -31,7 +32,7 @@ var _ = Describe("Client", func() {
 		logger = lagertest.NewTestLogger("test")
 		fakeExternalJSONClient = &fakes.JSONClient{}
 		fakeInternalJSONClient = &fakes.JSONClient{}
-		client = &Client{
+		client = &cc_client.Client{
 			ExternalJSONClient: fakeExternalJSONClient,
 			InternalJSONClient: fakeInternalJSONClient,
 			Logger:             logger,
@@ -298,8 +299,8 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the space with the matching GUID", func() {
-			space := SpaceResponse{
-				Entity: SpaceEntity{
+			space := cc_client.SpaceResponse{
+				Entity: cc_client.SpaceEntity{
 					Name:             "name-2064",
 					OrganizationGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
 				},
@@ -511,8 +512,8 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetSubjectSpace", func() {
-		space := SpaceResponse{
-			Entity: SpaceEntity{
+		space := cc_client.SpaceResponse{
+			Entity: cc_client.SpaceEntity{
 				Name:             "some-space-name",
 				OrganizationGUID: "some-org-guid",
 			},
@@ -1094,7 +1095,7 @@ func stubSecurityGroupRequestWith(fakeExternalJSONClient *fakes.JSONClient, secu
 }
 
 func loadLastUpdateResponseIntoObject(timestamp time.Time, response interface{}) {
-	lastUpdateResponse := SecurityGroupLatestUpdateResponse{
+	lastUpdateResponse := cc_client.SecurityGroupLatestUpdateResponse{
 		LastUpdate: timestamp.Format(time.RFC3339),
 	}
 

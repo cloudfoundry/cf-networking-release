@@ -13,7 +13,6 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
-	"code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	lockettestrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/cc_client"
@@ -118,7 +117,7 @@ var _ = Describe("Internal API Listing security groups", func() {
 		var defaultInternalConf config.InternalConfig
 		defaultExternalConf, defaultInternalConf, asgSyncerConfig = helpers.DefaultTestConfigWithCCServer(dbConf, fakeMetron.Address(), "fixtures", mockCCServer.URL())
 		asgSyncerConfig.LocketAddress = locketAddress
-		locketClientConfig := testrunner.ClientLocketConfig()
+		locketClientConfig := lockettestrunner.ClientLocketConfig()
 		asgSyncerConfig.LocketCACertFile = locketClientConfig.LocketCACertFile
 		asgSyncerConfig.LocketClientCertFile = locketClientConfig.LocketClientCertFile
 		asgSyncerConfig.LocketClientKeyFile = locketClientConfig.LocketClientKeyFile
