@@ -121,11 +121,9 @@ func main() {
 	}()
 
 	logger.Info("server-started")
-	select {
-	case sig := <-signalChannel:
-		monitor.Signal(sig)
-		l.Close()
-		logger.Info("server-stopped")
-		return
-	}
+	sig := <-signalChannel
+	monitor.Signal(sig)
+	l.Close()
+	logger.Info("server-stopped")
+	return
 }
