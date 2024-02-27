@@ -178,7 +178,7 @@ func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) st
 		}
 		return strings.Join(clauses, " OR ")
 	case helpers.Postgres:
-		filterList := fmt.Sprintf("%s", helpers.MarksWithSeparator(len(filterValues), "%", ", "))
+		filterList := helpers.MarksWithSeparator(len(filterValues), "%", ", ")
 		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
 	default:
 		return ""
