@@ -175,7 +175,7 @@ func (s *Server) handleRegistrationRequest(resp http.ResponseWriter, req *http.R
 
 	lookupStartTime := time.Now()
 	ips := s.addressTable.Lookup(serviceKey)
-	lookupDuration := time.Now().Sub(lookupStartTime)
+	lookupDuration := time.Since(lookupStartTime)
 	s.metricsSender.SendDuration("addressTableLookupTime", lookupDuration)
 	hosts := make([]host, cap(ips))
 	for index, ip := range ips {

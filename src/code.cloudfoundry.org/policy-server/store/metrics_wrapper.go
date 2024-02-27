@@ -19,7 +19,7 @@ type MetricsWrapper struct {
 func (mw *MetricsWrapper) Create(policies []Policy) error {
 	startTime := time.Now()
 	err := mw.Store.Create(policies)
-	createTimeDuration := time.Now().Sub(startTime)
+	createTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreCreateError")
 		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
@@ -32,7 +32,7 @@ func (mw *MetricsWrapper) Create(policies []Policy) error {
 func (mw *MetricsWrapper) All() ([]Policy, error) {
 	startTime := time.Now()
 	policies, err := mw.Store.All()
-	allTimeDuration := time.Now().Sub(startTime)
+	allTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreAllError")
 		mw.MetricsSender.SendDuration("StoreAllErrorTime", allTimeDuration)
@@ -45,7 +45,7 @@ func (mw *MetricsWrapper) All() ([]Policy, error) {
 func (mw *MetricsWrapper) Delete(policies []Policy) error {
 	startTime := time.Now()
 	err := mw.Store.Delete(policies)
-	deleteTimeDuration := time.Now().Sub(startTime)
+	deleteTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreDeleteError")
 		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
@@ -58,7 +58,7 @@ func (mw *MetricsWrapper) Delete(policies []Policy) error {
 func (mw *MetricsWrapper) LastUpdated() (int, error) {
 	startTime := time.Now()
 	timestamp, err := mw.Store.LastUpdated()
-	lastUpdatedTimeDuration := time.Now().Sub(startTime)
+	lastUpdatedTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreLastUpdatedError")
 		mw.MetricsSender.SendDuration("StoreLastUpdatedErrorTime", lastUpdatedTimeDuration)
@@ -71,7 +71,7 @@ func (mw *MetricsWrapper) LastUpdated() (int, error) {
 func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 	startTime := time.Now()
 	tags, err := mw.TagStore.Tags()
-	tagsTimeDuration := time.Now().Sub(startTime)
+	tagsTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreTagsError")
 		mw.MetricsSender.SendDuration("StoreTagsErrorTime", tagsTimeDuration)
@@ -84,7 +84,7 @@ func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 func (mw *MetricsWrapper) CreateTag(groupGuid, groupType string) (Tag, error) {
 	startTime := time.Now()
 	tag, err := mw.TagStore.CreateTag(groupGuid, groupType)
-	tagsTimeDuration := time.Now().Sub(startTime)
+	tagsTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreCreateTagError")
 		mw.MetricsSender.SendDuration("StoreCreateTagErrorTime", tagsTimeDuration)
@@ -97,7 +97,7 @@ func (mw *MetricsWrapper) CreateTag(groupGuid, groupType string) (Tag, error) {
 func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string, inSourceAndDest bool) ([]Policy, error) {
 	startTime := time.Now()
 	policies, err := mw.Store.ByGuids(srcGuids, dstGuids, inSourceAndDest)
-	byGuidsTimeDuration := time.Now().Sub(startTime)
+	byGuidsTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreByGuidsError")
 		mw.MetricsSender.SendDuration("StoreByGuidsErrorTime", byGuidsTimeDuration)
@@ -110,7 +110,7 @@ func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string, inSourceAndDest b
 func (mw *MetricsWrapper) CheckDatabase() error {
 	startTime := time.Now()
 	err := mw.Store.CheckDatabase()
-	duration := time.Now().Sub(startTime)
+	duration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreCheckDatabaseError")
 		mw.MetricsSender.SendDuration("StoreCheckDatabaseErrorTime", duration)

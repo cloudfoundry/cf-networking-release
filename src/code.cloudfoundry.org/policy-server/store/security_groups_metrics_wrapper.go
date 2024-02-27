@@ -17,7 +17,7 @@ type SecurityGroupsMetricsWrapper struct {
 func (sw *SecurityGroupsMetricsWrapper) Replace(newSecurityGroups []SecurityGroup) error {
 	startTime := time.Now()
 	err := sw.Store.Replace(newSecurityGroups)
-	createTimeDuration := time.Now().Sub(startTime)
+	createTimeDuration := time.Since(startTime)
 	if err != nil {
 		sw.MetricsSender.IncrementCounter("SecurityGroupsStoreReplaceError")
 		sw.MetricsSender.SendDuration("SecurityGroupsStoreReplaceErrorTime", createTimeDuration)
@@ -30,7 +30,7 @@ func (sw *SecurityGroupsMetricsWrapper) Replace(newSecurityGroups []SecurityGrou
 func (mw *SecurityGroupsMetricsWrapper) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
 	startTime := time.Now()
 	securityGroups, pagination, err := mw.Store.BySpaceGuids(spaceGuids, page)
-	allTimeDuration := time.Now().Sub(startTime)
+	allTimeDuration := time.Since(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("SecurityGroupsStoreBySpaceGuidsError")
 		mw.MetricsSender.SendDuration("SecurityGroupsStoreBySpaceGuidsErrorTime", allTimeDuration)
