@@ -2,7 +2,6 @@ package cf_command
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -41,7 +40,7 @@ func (a *AppChecker) CheckApps(appSpec map[string]int) error {
 	}
 
 	if appCount != len(a.Applications) {
-		return errors.New(fmt.Sprintf("app count %d does not match %d", appCount, len(a.Applications)))
+		return fmt.Errorf("app count %d does not match %d", appCount, len(a.Applications))
 	}
 
 	sem := make(chan bool, a.Concurrency)

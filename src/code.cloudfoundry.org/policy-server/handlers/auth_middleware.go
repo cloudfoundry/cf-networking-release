@@ -77,7 +77,7 @@ func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
 		}
 
 		if a.ScopeChecking && !isAuthorized(tokenData.Scope, a.Scopes) {
-			err := errors.New(fmt.Sprintf("provided scopes %s do not include allowed scopes %s", tokenData.Scope, a.Scopes))
+			err := fmt.Errorf("provided scopes %s do not include allowed scopes %s", tokenData.Scope, a.Scopes)
 			a.ErrorResponse.Forbidden(logger, w, err, err.Error())
 			return
 		}
