@@ -69,7 +69,7 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 
 	procNsPath := fmt.Sprintf("/proc/%d/ns/net", inputs.Pid)
 	if inputs.Pid == 0 {
-		procNsPath = fmt.Sprintf("/proc/self/fd/3")
+		procNsPath = "/proc/self/fd/3"
 	}
 
 	bindMountPath := filepath.Join(m.BindMountRoot, containerHandle)
