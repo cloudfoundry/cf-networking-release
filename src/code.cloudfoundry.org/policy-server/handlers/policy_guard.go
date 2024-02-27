@@ -72,7 +72,7 @@ func uniqueAppGUIDs(policies []store.Policy) []string {
 		set[policy.Destination.ID] = struct{}{}
 	}
 	var appGUIDs = make([]string, 0, len(set))
-	for guid, _ := range set {
+	for guid := range set {
 		appGUIDs = append(appGUIDs, guid)
 	}
 	return appGUIDs

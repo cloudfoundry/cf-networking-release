@@ -156,7 +156,7 @@ func entriesToIPs(entries []entry) []string {
 func (at *AddressTable) pruneStaleEntriesOnInterval(pruningInterval time.Duration) {
 	go func() {
 		defer at.ticker.Stop()
-		for _ = range at.ticker.C() {
+		for range at.ticker.C() {
 			at.mutex.RLock()
 			if at.pausedPruning || (at.clock.Since(at.lastResume) < at.resumePruningDelay) {
 				at.mutex.RUnlock()

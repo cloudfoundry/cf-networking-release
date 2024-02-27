@@ -123,7 +123,7 @@ func policyAppGUIDs(policyList []store.Policy) []string {
 		appGUIDset[p.Destination.ID] = struct{}{}
 	}
 	var appGUIDs []string
-	for guid, _ := range appGUIDset {
+	for guid := range appGUIDset {
 		appGUIDs = append(appGUIDs, guid)
 	}
 	return appGUIDs

@@ -60,7 +60,7 @@ var _ = Describe("external connectivity", func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		By("removing test-generated ASGs")
-		for asgName, _ := range testASGs {
+		for asgName := range testASGs {
 			removeASG(asgName)
 		}
 	})

@@ -267,7 +267,7 @@ func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error
 	}
 
 	ret := []string{}
-	for spaceID, _ := range deduplicated {
+	for spaceID := range deduplicated {
 		ret = append(ret, spaceID)
 	}
 
