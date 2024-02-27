@@ -96,10 +96,7 @@ func (g GetIP) writeErrorResponse(resp http.ResponseWriter, err error) {
 }
 
 func isHealthCheck(req *http.Request) bool {
-	if req.URL.Path == "/health" {
-		return true
-	}
-	return false
+	return req.URL.Path == "/health"
 }
 
 func getQueryParam(req *http.Request, key, defaultValue string) string {
