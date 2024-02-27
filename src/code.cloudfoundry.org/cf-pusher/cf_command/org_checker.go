@@ -12,9 +12,5 @@ type OrgChecker struct {
 
 func (c *OrgChecker) CheckOrgExists() bool {
 	err := c.Adapter.TargetOrg(c.Org)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
