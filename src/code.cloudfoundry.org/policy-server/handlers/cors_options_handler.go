@@ -44,8 +44,8 @@ func (c CORSOptionsWrapper) Wrap(handler http.Handler) http.Handler {
 }
 
 func (c CORSOptionsWrapper) matchRoute(rataPath, requestPath string) (bool, error) {
-	pathReplacer := regexp.MustCompile("\\:\\w+")
-	pathPattern := pathReplacer.ReplaceAll([]byte(rataPath), []byte("\\w+"))
+	pathReplacer := regexp.MustCompile(`\:\w+`)
+	pathPattern := pathReplacer.ReplaceAll([]byte(rataPath), []byte(`\w+`))
 	return regexp.Match(fmt.Sprintf("^%s$", pathPattern), []byte(requestPath))
 }
 
