@@ -54,10 +54,10 @@ var _ = Describe("Tick app", func() {
 			fmt.Sprintf("PORT=%d", tickPort),
 			fmt.Sprintf("REGISTRY_BASE_URL=http://127.0.0.1:%d", registryPort),
 			fmt.Sprintf("REGISTRY_TTL_SECONDS=%d", tickTTLSeconds),
-			fmt.Sprintf(`VCAP_APPLICATION={
+			`VCAP_APPLICATION={
 				"instance_index": 13,
 				"application_name": "my-tick-app"
-			}`),
+			}`,
 		}
 		var err error
 		tickSession, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
