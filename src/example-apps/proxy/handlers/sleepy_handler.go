@@ -15,5 +15,4 @@ func (h *SleepyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	respBytes := []byte("😴")
 	resp.Write(respBytes)
-	return
 }

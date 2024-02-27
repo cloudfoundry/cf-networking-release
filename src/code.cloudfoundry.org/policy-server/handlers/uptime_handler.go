@@ -15,5 +15,4 @@ func (h *UptimeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	currentTime := time.Now()
 	uptime := currentTime.Sub(h.StartTime)
 	w.Write([]byte(fmt.Sprintf("Network policy server, up for %v\n", uptime)))
-	return
 }

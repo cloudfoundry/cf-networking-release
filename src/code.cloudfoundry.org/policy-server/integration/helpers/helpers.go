@@ -96,7 +96,6 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	}
 
 	w.WriteHeader(http.StatusTeapot)
-	return
 }))
 
 var MockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
