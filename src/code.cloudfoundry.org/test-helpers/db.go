@@ -53,7 +53,7 @@ func RemoveDatabase(config db.Config) {
 	defer connectionPool.Close()
 	_, err = connectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
 	if err != nil {
-		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%+v", err))
+		fmt.Fprintf(ginkgo.GinkgoWriter, "%+v\n", err)
 	}
 }
 
