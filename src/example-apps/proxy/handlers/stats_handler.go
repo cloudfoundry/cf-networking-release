@@ -45,5 +45,4 @@ func (h *StatsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	resp.Write(respBytes)
-	return
 }

@@ -103,7 +103,6 @@ func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusTeapot)
-	return
 }
 
 func buildCCASGLatestUpdateResponse(timestamp time.Time) string {

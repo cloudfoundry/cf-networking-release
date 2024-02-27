@@ -64,5 +64,4 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger.Info("deleted-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{}`))
-	return
 }
