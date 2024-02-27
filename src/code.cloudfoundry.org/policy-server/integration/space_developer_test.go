@@ -152,7 +152,7 @@ var _ = Describe("External API Space Developer", func() {
 
 			It("fails for requests with bodies larger than 10 MB", func() {
 				elevenMB := 11 << 20
-				bytes := make([]byte, elevenMB, elevenMB)
+				bytes := make([]byte, elevenMB)
 
 				req := makeNewRequest("POST", "networking/v1/external/policies", string(bytes))
 				resp, err := http.DefaultClient.Do(req)

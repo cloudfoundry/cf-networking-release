@@ -117,7 +117,7 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 	}
 
 	numHosts := len(serverResponse.Hosts)
-	ips := make([]string, numHosts, numHosts)
+	ips := make([]string, numHosts)
 	for i, host := range serverResponse.Hosts {
 		ips[i] = host.IPAddress
 	}
