@@ -131,7 +131,7 @@ func (g GetIP) writeResponse(resp http.ResponseWriter, dnsResponseStatus dnsmess
 }
 
 func buildResponseBody(dnsResponseStatus dnsmessage.RCode, requestedInfraName string, dnsType string, ips []string) (string, error) {
-	answers := make([]Answer, len(ips), len(ips))
+	answers := make([]Answer, len(ips))
 	for i, ip := range ips {
 		answers[i] = Answer{
 			Name:   requestedInfraName,
