@@ -25,7 +25,7 @@ func ipv4Address(ips []net.IP) (net.Addr, error) {
 
 func handleError(err error, destination string, resp http.ResponseWriter) {
 	msg := fmt.Sprintf("Ping failed to destination: %s: %s", destination, err)
-	fmt.Fprintf(os.Stderr, msg)
+	fmt.Fprint(os.Stderr, msg)
 	resp.WriteHeader(http.StatusInternalServerError)
 	resp.Write([]byte(msg))
 }
