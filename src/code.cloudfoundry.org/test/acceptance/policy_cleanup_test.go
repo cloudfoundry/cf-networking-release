@@ -54,6 +54,7 @@ var _ = Describe("policy cleanup", func() {
 
 			By("cleaning up stale policies")
 			stalePolicies, err := cfCLI.CleanupStaleNetworkPolicies()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(string(stalePolicies)).ShouldNot(ContainSubstring(appAGuid))
 
 			By("checking that policy was not deleted")

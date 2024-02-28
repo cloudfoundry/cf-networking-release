@@ -1659,6 +1659,7 @@ var _ = Describe("migrations", func() {
 
 				By("inserting a friendly ip range")
 				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
+				Expect(err).NotTo(HaveOccurred())
 
 				By("seeing that we create a ip_range with a description")
 				_, err = realDb.Exec(`

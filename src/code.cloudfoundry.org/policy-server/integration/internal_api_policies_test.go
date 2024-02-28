@@ -132,6 +132,7 @@ var _ = Describe("Internal Policies API", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 		})
 

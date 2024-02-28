@@ -52,6 +52,9 @@ func (c *Client) GetToken() (string, error) {
 	reqURL := fmt.Sprintf("%s/oauth/token", c.BaseURL)
 	bodyString := fmt.Sprintf("client_id=%s&grant_type=client_credentials", c.Name)
 	request, err := http.NewRequest("POST", reqURL, strings.NewReader(bodyString))
+	if err != nil {
+		return "", err
+	}
 	request.SetBasicAuth(c.Name, c.Secret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -72,6 +75,9 @@ func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 	reqURL := fmt.Sprintf("%s/check_token", c.BaseURL)
 	bodyString := "token=" + token
 	request, err := http.NewRequest("POST", reqURL, strings.NewReader(bodyString))
+	if err != nil {
+		return CheckTokenResponse{}, err
+	}
 	request.SetBasicAuth(c.Name, c.Secret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 

@@ -90,6 +90,7 @@ var _ = Describe("External API Deleting Policies", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseString, err = ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON(expectedResponse))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(

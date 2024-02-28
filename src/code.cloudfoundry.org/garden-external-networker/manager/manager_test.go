@@ -327,6 +327,7 @@ var _ = Describe("Manager", func() {
 					NetOut:     netOutRules,
 					NetIn:      netInRules,
 				})
+				Expect(err).To(MatchError("up missing container handle"))
 
 				_, err = mgr.Up("", upInputs)
 				Expect(err).To(MatchError("up missing container handle"))

@@ -108,6 +108,7 @@ var _ = Describe("External API Tags", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseString, err = ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON(`{ "tags": [
 				{ "id": "some-app-guid", "tag": "01", "type": "app" },
 				{ "id": "yet-another-app-guid", "tag": "02", "type": "app" },
