@@ -132,12 +132,12 @@ func mainWithError() error {
 
 	logger.Info("server-started")
 
-	stopSignal := <-signalChannel:
-		subscriber.Close()
-		addressTable.Shutdown()
-		monitor.Signal(stopSignal)
-		logger.Info("server-stopped")
-		return nil
+	stopSignal := <-signalChannel
+	subscriber.Close()
+	addressTable.Shutdown()
+	monitor.Signal(stopSignal)
+	logger.Info("server-stopped")
+	return nil
 }
 
 func buildAddressTable(conf *config.Config, logger lager.Logger) *addresstable.AddressTable {
