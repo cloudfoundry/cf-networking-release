@@ -125,5 +125,4 @@ func main() {
 	monitor.Signal(sig)
 	l.Close()
 	logger.Info("server-stopped")
-	return
 }
