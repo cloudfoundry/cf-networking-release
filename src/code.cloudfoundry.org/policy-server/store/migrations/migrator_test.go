@@ -2147,8 +2147,8 @@ func migrateDown(realDb *db.ConnWrapper, adapter migrations.MigrateAdapter, migr
 
 func expectMigrations(realDb *db.ConnWrapper, expectedMigrations []string) {
 	rows, err := realDb.Query(`select ID from gorp_migrations`)
-	defer rows.Close()
 	Expect(err).NotTo(HaveOccurred())
+	defer rows.Close()
 	var actual []string
 	for rows.Next() {
 		var id string
