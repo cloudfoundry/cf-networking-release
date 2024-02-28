@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,15 +11,6 @@ import (
 )
 
 type PingHandler struct {
-}
-
-func ipv4Address(ips []net.IP) (net.Addr, error) {
-	for _, ip := range ips {
-		if ip.To4() != nil {
-			return &net.UDPAddr{IP: ip}, nil
-		}
-	}
-	return nil, errors.New("No IPv4 found")
 }
 
 func handleError(err error, destination string, resp http.ResponseWriter) {
