@@ -39,7 +39,7 @@ func (h *DigHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 func handleDigError(err error, destination string, resp http.ResponseWriter) {
 	msg := fmt.Sprintf("Failed to dig: %s: %s", destination, err)
-	fmt.Fprintf(os.Stderr, msg)
+	fmt.Fprint(os.Stderr, msg)
 	resp.WriteHeader(http.StatusInternalServerError)
 	resp.Write([]byte(msg))
 }
