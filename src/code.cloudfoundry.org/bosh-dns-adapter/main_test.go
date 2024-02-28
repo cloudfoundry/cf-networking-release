@@ -565,6 +565,7 @@ var _ = Describe("Main", func() {
 		It("logs at info level by default", func() {
 			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.internal.local.", dnsAdapterPort)
 			request, err := http.NewRequest("GET", url, nil)
+			Expect(err).ToNot(HaveOccurred())
 			resp, err := http.DefaultClient.Do(request)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
@@ -577,6 +578,7 @@ var _ = Describe("Main", func() {
 
 			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.internal.local.", dnsAdapterPort)
 			request, err := http.NewRequest("GET", url, nil)
+			Expect(err).ToNot(HaveOccurred())
 			resp, err := http.DefaultClient.Do(request)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
@@ -597,6 +599,7 @@ func requestLogChange(logLevel string, port int) *http.Response {
 
 func makeDNSRequest(url string, expectedResponseCode int) {
 	request, err := http.NewRequest("GET", url, nil)
+	Expect(err).ToNot(HaveOccurred())
 	resp, err := http.DefaultClient.Do(request)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(expectedResponseCode))
