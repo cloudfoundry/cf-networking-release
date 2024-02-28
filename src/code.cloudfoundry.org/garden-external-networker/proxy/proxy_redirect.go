@@ -24,6 +24,9 @@ type Redirect struct {
 
 func (r *Redirect) Apply(containerNetNamespace string) error {
 	netNS, err := r.NamespaceAdapter.GetNS(containerNetNamespace)
+	if err != nil {
+		return err
+	}
 	err = netNS.Do(func(_ ns.NetNS) error {
 		if r.RedirectCIDR != "" {
 			err := r.IPTables.BulkAppend("nat", "OUTPUT", rules.IPTablesRule{

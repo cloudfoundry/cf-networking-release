@@ -90,6 +90,7 @@ var _ = Describe("External API Space Developer", func() {
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 						responseString, err := ioutil.ReadAll(resp.Body)
+						Expect(err).NotTo(HaveOccurred())
 						Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 					})
 				})
@@ -105,6 +106,7 @@ var _ = Describe("External API Space Developer", func() {
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 						responseString, err := ioutil.ReadAll(resp.Body)
+						Expect(err).NotTo(HaveOccurred())
 						Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 					})
 				})
@@ -145,6 +147,7 @@ var _ = Describe("External API Space Developer", func() {
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 						responseString, err := ioutil.ReadAll(resp.Body)
+						Expect(err).NotTo(HaveOccurred())
 						Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 					})
 				})
@@ -239,6 +242,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
@@ -253,6 +257,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 				})
 			})
@@ -271,6 +276,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{
 					"total_policies": 0,
 					"policies": []
@@ -323,6 +329,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
 					expectedResp := `{
 						"total_policies": 1,
 						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 }}} ]
@@ -341,6 +348,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})

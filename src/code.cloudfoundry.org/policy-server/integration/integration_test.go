@@ -73,6 +73,7 @@ var _ = Describe("Integration", func() {
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 			})
 
@@ -85,6 +86,7 @@ var _ = Describe("Integration", func() {
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
