@@ -2,11 +2,6 @@ package store
 
 import uuid "github.com/nu7hatch/gouuid"
 
-//counterfeiter:generate -o fakes/guid_generator.go --fake-name GUIDGenerator . guidGenerator
-type guidGenerator interface {
-	New() string
-}
-
 type GuidGenerator struct{}
 
 func (g *GuidGenerator) New() string {

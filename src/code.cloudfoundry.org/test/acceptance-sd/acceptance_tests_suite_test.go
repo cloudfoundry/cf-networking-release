@@ -31,9 +31,8 @@ const Timeout_Cf = 2 * time.Minute
 const internalDomain = "apps.internal"
 
 var (
-	allDeployedInstances []instanceInfo
-	config               *helpers_config.Config
-	appsDir              string
+	config  *helpers_config.Config
+	appsDir string
 )
 
 var _ = BeforeSuite(func() {
@@ -45,13 +44,6 @@ var _ = BeforeSuite(func() {
 	appsDir = os.Getenv("APPS_DIR")
 	Expect(appsDir).NotTo(BeEmpty(), "APPS_DIR is not set")
 })
-
-type instanceInfo struct {
-	IP            string
-	InstanceID    string
-	InstanceGroup string
-	Index         string
-}
 
 func AuthAsAdmin() {
 	Auth(config.AdminUser, config.AdminPassword)
@@ -71,11 +63,6 @@ func createAndTargetOrgAndSpace(orgName, spaceName string) {
 
 	Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Cf)).To(gexec.Exit(0))
 	Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Cf)).To(gexec.Exit(0))
-}
-
-func getAppGUID(appName string) string {
-	session := cf.Cf("app", appName, "--guid").Wait(10 * time.Second)
-	return string(session.Out.Contents())
 }
 
 func getInternalIP(appName string, index int) string {
