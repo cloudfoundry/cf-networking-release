@@ -9,7 +9,6 @@ import (
 
 type FlapHandler struct {
 	FlapInterval       int
-	callCount          int
 	countUntilNextFlap int
 	shouldFail         bool
 	sync.RWMutex
