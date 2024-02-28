@@ -84,7 +84,7 @@ var _ = Describe("External API Tags", func() {
 
 			By("reusing tags that are no longer in use")
 			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
-			resp = helpers.MakeAndDoRequest(
+			helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v1/external/policies/delete", conf.ListenHost, conf.ListenPort),
 				nil,
@@ -92,7 +92,7 @@ var _ = Describe("External API Tags", func() {
 			)
 
 			body = strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-app-guid", "protocol": "udp", "ports": { "start": 4567, "end": 4567 } } } ] }`)
-			resp = helpers.MakeAndDoRequest(
+			helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
 				nil,
