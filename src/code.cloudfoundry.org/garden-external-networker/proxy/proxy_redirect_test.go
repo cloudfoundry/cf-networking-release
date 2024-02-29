@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+//lint:ignore U1000 used in fakes
 //go:generate counterfeiter -o ../fakes/netNS.go --fake-name NetNS . netNS
 type netNS interface {
 	ns.NetNS
