@@ -3,7 +3,7 @@ package smoke_test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -114,7 +114,7 @@ func digFromApp(queryAppRoute string) (int, []string, error) {
 		return resp.StatusCode, []string{}, nil
 	}
 
-	ipsJson, err := ioutil.ReadAll(resp.Body)
+	ipsJson, err := io.ReadAll(resp.Body)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = json.Unmarshal(bytes.TrimSpace(ipsJson), &proxyIPs)

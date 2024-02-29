@@ -3,7 +3,6 @@ package timeouts_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -72,7 +71,7 @@ var _ = Describe("Timeout", func() {
 		resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", policyServerURL, "networking/v1/external/policies"), headers, nil)
 		defer resp.Body.Close()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "total_policies": 0, "policies": [] }`))
+		Expect(io.ReadAll(resp.Body)).To(MatchJSON(`{ "total_policies": 0, "policies": [] }`))
 	})
 
 	AfterEach(func() {
@@ -110,7 +109,7 @@ var _ = Describe("Timeout", func() {
 					)
 					defer resp.Body.Close()
 					Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
-					Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(failureJSON))
+					Expect(io.ReadAll(resp.Body)).To(MatchJSON(failureJSON))
 
 					close(done)
 				}()

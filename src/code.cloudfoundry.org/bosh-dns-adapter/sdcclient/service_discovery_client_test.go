@@ -8,7 +8,6 @@ import (
 	testhelpers "code.cloudfoundry.org/test-helpers"
 
 	"crypto/tls"
-	"io/ioutil"
 	"os"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -48,7 +47,7 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 
 		Context("when the client has a CA file that is malformed", func() {
 			BeforeEach(func() {
-				ioutil.WriteFile(caFileName, []byte("not a cert"), os.ModePerm)
+				os.WriteFile(caFileName, []byte("not a cert"), os.ModePerm)
 			})
 
 			It("returns an error", func() {

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
@@ -151,7 +150,7 @@ func buildAddressTable(conf *config.Config, logger lager.Logger) *addresstable.A
 
 func readConfig(configPath *string, logger lager.Logger) (*config.Config, error) {
 	var err error
-	bytes, err := ioutil.ReadFile(*configPath)
+	bytes, err := os.ReadFile(*configPath)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Could not read config file at path '%s'", *configPath), err)
 		return nil, err

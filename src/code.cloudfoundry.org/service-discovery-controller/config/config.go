@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 
 	"gopkg.in/validator.v2"
 )
@@ -59,7 +59,7 @@ func NewConfig(configJSON []byte) (*Config, error) {
 
 	if sdcConfig.Nats.TLSEnabled {
 		certPool := x509.NewCertPool()
-		caCerts, err := ioutil.ReadFile(sdcConfig.Nats.CACerts)
+		caCerts, err := os.ReadFile(sdcConfig.Nats.CACerts)
 		if err != nil {
 			return nil, fmt.Errorf("error reading NATS CA certs: %w", err)
 		}

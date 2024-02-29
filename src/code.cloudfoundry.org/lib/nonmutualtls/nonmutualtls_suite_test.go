@@ -2,7 +2,6 @@ package nonmutualtls_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
@@ -28,14 +27,14 @@ type testPaths struct {
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
-	certDir, err = ioutil.TempDir("", "netman-certs")
+	certDir, err = os.MkdirTemp("", "netman-certs")
 	Expect(err).NotTo(HaveOccurred())
 
-	file, err := ioutil.TempFile("", "empty")
+	file, err := os.CreateTemp("", "empty")
 	Expect(err).NotTo(HaveOccurred())
 	paths.EmptyFilePath = file.Name()
 
-	err = ioutil.WriteFile(paths.EmptyFilePath, []byte("  \n\r\t"), 0600)
+	err = os.WriteFile(paths.EmptyFilePath, []byte("  \n\r\t"), 0600)
 	Expect(err).NotTo(HaveOccurred())
 
 	certWriter, err := testsupport.NewCertWriter(certDir)

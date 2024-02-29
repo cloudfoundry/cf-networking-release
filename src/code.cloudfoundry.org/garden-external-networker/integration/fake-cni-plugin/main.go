@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -39,7 +39,7 @@ func main() {
 		log.Fatalf("missing required arg %q", logDirEnvVar)
 	}
 
-	stdin, err := ioutil.ReadAll(os.Stdin)
+	stdin, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatalf("error reading stdin bytes: %s", err)
 	}
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	logFilePath := filepath.Join(logDir, filepath.Base(strings.TrimSuffix(args[0], filepath.Ext(args[0])))+".log")
-	err = ioutil.WriteFile(logFilePath, logBytes, 0600)
+	err = os.WriteFile(logFilePath, logBytes, 0600)
 	if err != nil {
 		log.Fatalf("unable to write log file: %s", err)
 	}

@@ -3,7 +3,6 @@ package acceptance_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"time"
@@ -62,7 +61,7 @@ var _ = Describe("Application Security Groups", func() {
 		resp, err := http.Get(proxyRequestURL)
 		Expect(err).NotTo(HaveOccurred())
 
-		respBytes, err := ioutil.ReadAll(resp.Body)
+		respBytes, err := io.ReadAll(resp.Body)
 		Expect(err).ToNot(HaveOccurred())
 		resp.Body.Close()
 		Expect(respBytes).To(MatchRegexp("refused"))
@@ -78,7 +77,7 @@ var _ = Describe("Application Security Groups", func() {
 				resp, err = http.Get(proxyRequestURL)
 				Expect(err).NotTo(HaveOccurred())
 
-				respBytes, err = ioutil.ReadAll(resp.Body)
+				respBytes, err = io.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				resp.Body.Close()
 				return string(respBytes)
@@ -92,7 +91,7 @@ var _ = Describe("Application Security Groups", func() {
 			resp, err = http.Get(proxyRequestURL)
 			Expect(err).NotTo(HaveOccurred())
 
-			respBytes, err = ioutil.ReadAll(resp.Body)
+			respBytes, err = io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return string(respBytes)
@@ -121,7 +120,7 @@ var _ = Describe("Application Security Groups", func() {
 			resp, err = http.Get(proxyRequestURL)
 			Expect(err).NotTo(HaveOccurred())
 
-			respBytes, err = ioutil.ReadAll(resp.Body)
+			respBytes, err = io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return string(respBytes)

@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -31,7 +31,7 @@ func NewClientTLSConfig(caCertFiles ...string) (*tls.Config, error) {
 	caCertPool := x509.NewCertPool()
 	for _, caCertFile := range caCertFiles {
 		var err error
-		certBytes, err := ioutil.ReadFile(caCertFile)
+		certBytes, err := os.ReadFile(caCertFile)
 		if err != nil {
 			return nil, fmt.Errorf("failed read ca cert file: %s", err.Error())
 		}

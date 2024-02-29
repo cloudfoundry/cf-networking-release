@@ -2,8 +2,8 @@ package scaling_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -34,7 +34,7 @@ var _ = BeforeSuite(func() {
 	config = helpers.LoadConfig()
 
 	configPath := helpers.ConfigPath()
-	configBytes, err := ioutil.ReadFile(configPath)
+	configBytes, err := os.ReadFile(configPath)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = json.Unmarshal(configBytes, &pushConfig)

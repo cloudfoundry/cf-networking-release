@@ -3,7 +3,7 @@ package integration_test
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -69,7 +69,7 @@ var _ = Describe("Create Tags API", func() {
 
 		It("creates a new tag", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseBody, err := ioutil.ReadAll(resp.Body)
+			responseBody, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(responseBody)).To(MatchJSON(`{"type":"router-type","id":"router-guid","tag":"0001"}`))
 		})
@@ -88,7 +88,7 @@ var _ = Describe("Create Tags API", func() {
 
 			It("returns the same tag", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseBody, err := ioutil.ReadAll(resp.Body)
+				responseBody, err := io.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(responseBody)).To(MatchJSON(`{"type":"router-type","id":"router-guid","tag":"0001"}`))
 			})

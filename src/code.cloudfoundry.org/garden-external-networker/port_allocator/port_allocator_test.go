@@ -2,7 +2,6 @@ package port_allocator_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 
 	libfakes "code.cloudfoundry.org/lib/fakes"
@@ -108,7 +107,7 @@ var _ = Describe("PortAllocator", func() {
 		})
 
 		It("closes (and thus unlocks) the file", func() {
-			file, err := ioutil.TempFile("", "")
+			file, err := os.CreateTemp("", "")
 			Expect(err).NotTo(HaveOccurred())
 
 			locker.OpenReturns(file, nil)
@@ -186,7 +185,7 @@ var _ = Describe("PortAllocator", func() {
 		})
 
 		It("closes (and thus unlocks) the file", func() {
-			file, err := ioutil.TempFile("", "")
+			file, err := os.CreateTemp("", "")
 			Expect(err).NotTo(HaveOccurred())
 
 			locker.OpenReturns(file, nil)

@@ -2,7 +2,7 @@ package performance_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	helpersConfig "github.com/cloudfoundry/cf-test-helpers/v2/config"
@@ -31,7 +31,7 @@ func TestPerformance(t *testing.T) {
 	BeforeSuite(func() {
 		// Read and set config
 		configPath := helpersConfig.ConfigPath()
-		configBytes, err := ioutil.ReadFile(configPath)
+		configBytes, err := os.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = json.Unmarshal(configBytes, &config)

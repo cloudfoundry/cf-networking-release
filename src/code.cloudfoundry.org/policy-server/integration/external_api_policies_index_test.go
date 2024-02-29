@@ -3,7 +3,7 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -61,7 +61,7 @@ var _ = Describe("External API Listing Policies", func() {
 			)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err := ioutil.ReadAll(resp.Body)
+			responseString, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON("{}"))
 		}
@@ -84,7 +84,7 @@ var _ = Describe("External API Listing Policies", func() {
 			)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err := ioutil.ReadAll(resp.Body)
+			responseString, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			var responseJson policiesResponse

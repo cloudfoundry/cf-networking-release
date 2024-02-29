@@ -3,7 +3,6 @@ package smoke_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -48,7 +47,7 @@ func TestSmoke(t *testing.T) {
 
 	BeforeSuite(func() {
 		configPath := helpersConfig.ConfigPath()
-		configBytes, err := ioutil.ReadFile(configPath)
+		configBytes, err := os.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = json.Unmarshal(configBytes, &config)

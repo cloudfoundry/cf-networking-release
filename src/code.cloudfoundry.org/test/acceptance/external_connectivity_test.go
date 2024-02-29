@@ -2,7 +2,7 @@ package acceptance_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -73,7 +73,7 @@ var _ = Describe("external connectivity", func() {
 		}
 		defer resp.Body.Close()
 
-		respBytes, err := ioutil.ReadAll(resp.Body)
+		respBytes, err := io.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		respBody := string(respBytes)
 

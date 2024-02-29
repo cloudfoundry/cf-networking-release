@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -89,7 +88,7 @@ var _ = Describe("External API Space Developer", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-						responseString, err := ioutil.ReadAll(resp.Body)
+						responseString, err := io.ReadAll(resp.Body)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 					})
@@ -105,7 +104,7 @@ var _ = Describe("External API Space Developer", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-						responseString, err := ioutil.ReadAll(resp.Body)
+						responseString, err := io.ReadAll(resp.Body)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 					})
@@ -146,7 +145,7 @@ var _ = Describe("External API Space Developer", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-						responseString, err := ioutil.ReadAll(resp.Body)
+						responseString, err := io.ReadAll(resp.Body)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 					})
@@ -162,7 +161,7 @@ var _ = Describe("External API Space Developer", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON(`{"error": "failed reading request body"}`))
 			})
@@ -195,7 +194,7 @@ var _ = Describe("External API Space Developer", func() {
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON(`{"error": "policy quota exceeded"}`))
 
@@ -241,7 +240,7 @@ var _ = Describe("External API Space Developer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
@@ -256,7 +255,7 @@ var _ = Describe("External API Space Developer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 				})
@@ -275,7 +274,7 @@ var _ = Describe("External API Space Developer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{
 					"total_policies": 0,
@@ -328,7 +327,7 @@ var _ = Describe("External API Space Developer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					expectedResp := `{
 						"total_policies": 1,
@@ -347,7 +346,7 @@ var _ = Describe("External API Space Developer", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})

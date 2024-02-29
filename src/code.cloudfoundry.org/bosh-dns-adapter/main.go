@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -37,7 +36,7 @@ func main() {
 	configPath := flag.String("c", "", "path to config file")
 	flag.Parse()
 
-	bytes, err := ioutil.ReadFile(*configPath)
+	bytes, err := os.ReadFile(*configPath)
 	if err != nil {
 		logger.Info("Could not read config file", lager.Data{"path": *configPath})
 		os.Exit(2)

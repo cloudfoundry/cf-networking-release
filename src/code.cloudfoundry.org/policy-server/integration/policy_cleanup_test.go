@@ -2,7 +2,7 @@ package integration_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -95,7 +95,7 @@ var _ = Describe("Policy Cleanup", func() {
 				`
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			bodyBytes, _ := io.ReadAll(resp.Body)
 			Expect(bodyBytes).To(MatchJSON(stalePoliciesStr))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("CleanupRequestTime"),
@@ -138,7 +138,7 @@ var _ = Describe("Policy Cleanup", func() {
 						nil,
 					)
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					bodyBytes, _ := ioutil.ReadAll(resp.Body)
+					bodyBytes, _ := io.ReadAll(resp.Body)
 					return bodyBytes
 				}
 

@@ -3,7 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"code.cloudfoundry.org/lager/v3"
@@ -54,7 +54,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("create-policies")
 	tokenData := getTokenData(req)
 
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		h.ErrorResponse.BadRequest(logger, w, err, "failed reading request body")
 		return

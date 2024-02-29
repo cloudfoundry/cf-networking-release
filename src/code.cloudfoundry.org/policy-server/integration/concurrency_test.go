@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync/atomic"
 
@@ -58,7 +58,7 @@ var _ = Describe("External API Concurrency", func() {
 				})
 				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), nil, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON("{}"))
 			}
@@ -94,7 +94,7 @@ var _ = Describe("External API Concurrency", func() {
 			By("getting all the policies")
 			resp := helpers.MakeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseBytes, err := ioutil.ReadAll(resp.Body)
+			responseBytes, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var policiesResponse struct {
 				TotalPolicies int          `json:"total_policies"`
@@ -113,7 +113,7 @@ var _ = Describe("External API Concurrency", func() {
 			tagsRoute := "external/tags"
 			resp = helpers.MakeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseBytes, err = ioutil.ReadAll(resp.Body)
+			responseBytes, err = io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var tagsResponse struct {
 				Tags []api.Tag `json:"tags"`
@@ -135,7 +135,7 @@ var _ = Describe("External API Concurrency", func() {
 				})
 				resp := helpers.MakeAndDoRequest(method, url, nil, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON("{}"))
 			}
@@ -182,7 +182,7 @@ var _ = Describe("External API Concurrency", func() {
 
 			resp := helpers.MakeAndDoRequest("GET", policiesUrl, nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseBytes, err := ioutil.ReadAll(resp.Body)
+			responseBytes, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var policiesResponse struct {
 				TotalPolicies int          `json:"total_policies"`

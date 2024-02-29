@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -169,7 +169,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				if err != nil {
 					return "server is not listening yet"
 				}
-				respBody, err := ioutil.ReadAll(resp.Body)
+				respBody, err := io.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				return string(respBody)
 			}).Should(MatchJSON(`{
@@ -227,7 +227,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 			resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
 			Expect(err).ToNot(HaveOccurred())
-			respBody, err := ioutil.ReadAll(resp.Body)
+			respBody, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(respBody).To(MatchJSON(`{
@@ -259,7 +259,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/large-id.internal.local.", port)
 			resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
 			Expect(err).ToNot(HaveOccurred())
-			respBody, err := ioutil.ReadAll(resp.Body)
+			respBody, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(respBody).To(MatchJSON(`{
@@ -396,7 +396,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				resp, err := client.Get(url)
 				Expect(err).ToNot(HaveOccurred())
 
-				respBody, err := ioutil.ReadAll(resp.Body)
+				respBody, err := io.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
 				return respBody
@@ -408,7 +408,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				url := fmt.Sprintf("https://127.0.0.1:%d/routes", port)
 				resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
 				Expect(err).ToNot(HaveOccurred())
-				respBody, err := ioutil.ReadAll(resp.Body)
+				respBody, err := io.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(respBody).To(Or(MatchJSON(`{
@@ -511,7 +511,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 					url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 					resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
 					Expect(err).ToNot(HaveOccurred())
-					respBody, err := ioutil.ReadAll(resp.Body)
+					respBody, err := io.ReadAll(resp.Body)
 					Expect(err).ToNot(HaveOccurred())
 					return string(respBody)
 				}).Should(MatchJSON(`{
@@ -602,7 +602,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 						resp, err := client.Get(url)
 						Expect(err).ToNot(HaveOccurred())
 
-						respBody, err := ioutil.ReadAll(resp.Body)
+						respBody, err := io.ReadAll(resp.Body)
 						Expect(err).ToNot(HaveOccurred())
 
 						return respBody
@@ -638,7 +638,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 						resp, err := client.Get(url)
 						Expect(err).ToNot(HaveOccurred())
 
-						respBody, err := ioutil.ReadAll(resp.Body)
+						respBody, err := io.ReadAll(resp.Body)
 						Expect(err).ToNot(HaveOccurred())
 
 						return respBody
@@ -854,12 +854,12 @@ func newFakeRouteEmitter(natsUrl string, natsClientTlsConfig *tls.Config) *nats.
 }
 
 func writeConfigFile(configJson string) string {
-	configFile, err := ioutil.TempFile(os.TempDir(), "sd_config")
+	configFile, err := os.CreateTemp(os.TempDir(), "sd_config")
 	Expect(err).ToNot(HaveOccurred())
 
 	configPath := configFile.Name()
 
-	err = ioutil.WriteFile(configPath, []byte(configJson), os.ModePerm)
+	err = os.WriteFile(configPath, []byte(configJson), os.ModePerm)
 	Expect(err).ToNot(HaveOccurred())
 
 	return configPath

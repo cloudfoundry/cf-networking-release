@@ -1,7 +1,7 @@
 package manifest_generator_test
 
 import (
-	"io/ioutil"
+	"os"
 
 	"code.cloudfoundry.org/cf-pusher/manifest_generator"
 	"code.cloudfoundry.org/cf-pusher/models"
@@ -32,7 +32,7 @@ var _ = Describe("ManifestGenerator", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(file).To(BeAnExistingFile())
-		contents, err := ioutil.ReadFile(file)
+		contents, err := os.ReadFile(file)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(contents).To(MatchYAML(`
 applications:

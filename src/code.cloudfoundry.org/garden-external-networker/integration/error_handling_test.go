@@ -3,7 +3,7 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -22,20 +22,20 @@ var _ = Describe("Garden External Networker errors", func() {
 	var writeConfig = func(configHash map[string]interface{}) {
 		configBytes, err := json.Marshal(configHash)
 		Expect(err).NotTo(HaveOccurred())
-		err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0600)
+		err = os.WriteFile(fakeConfigFilePath, configBytes, 0600)
 		Expect(err).NotTo(HaveOccurred())
 	}
 
 	BeforeEach(func() {
 		var err error
-		configFile, err := ioutil.TempFile("", "adapter-config-")
+		configFile, err := os.CreateTemp("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(configFile.Close()).To(Succeed())
 
-		dir, err := ioutil.TempDir("", "fake-cni-dir")
+		dir, err := os.MkdirTemp("", "fake-cni-dir")
 		Expect(err).ToNot(HaveOccurred())
 
-		stateFilePath, err := ioutil.TempFile("", "external-networker-state.json")
+		stateFilePath, err := os.CreateTemp("", "external-networker-state.json")
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeConfigFilePath = configFile.Name()

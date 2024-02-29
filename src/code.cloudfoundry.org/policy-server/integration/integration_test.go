@@ -3,7 +3,7 @@ package integration_test
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -72,7 +72,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 			})
@@ -85,7 +85,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 
@@ -103,7 +103,7 @@ var _ = Describe("Integration", func() {
 				)
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
@@ -125,7 +125,7 @@ var _ = Describe("Integration", func() {
 					)
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(ContainSubstring("some-client-id"))
 
@@ -157,7 +157,7 @@ var _ = Describe("Integration", func() {
 					)
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					responseString, err := ioutil.ReadAll(resp.Body)
+					responseString, err := io.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(ContainSubstring("some-user"))
 
@@ -176,7 +176,7 @@ var _ = Describe("Integration", func() {
 				)
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
@@ -198,7 +198,7 @@ var _ = Describe("Integration", func() {
 				)
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err = ioutil.ReadAll(resp.Body)
+				responseString, err = io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 

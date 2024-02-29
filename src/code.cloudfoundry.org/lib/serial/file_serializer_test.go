@@ -2,7 +2,6 @@ package serial_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -80,7 +79,7 @@ var _ = Describe("FileSerializer", func() {
 
 		BeforeEach(func() {
 			var err error
-			file, err = ioutil.TempFile("", "some-file.json")
+			file, err = os.CreateTemp("", "some-file.json")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -93,7 +92,7 @@ var _ = Describe("FileSerializer", func() {
 			outData := map[string]string{"some": "data"}
 			Expect(serializer.EncodeAndOverwrite(file, outData)).To(Succeed())
 
-			fileBytes, err := ioutil.ReadFile(file.Name())
+			fileBytes, err := os.ReadFile(file.Name())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fileBytes).To(MatchJSON(`{"some":"data"}`))
 		})
@@ -107,7 +106,7 @@ var _ = Describe("FileSerializer", func() {
 				outData := map[string]string{"some": "new data"}
 				Expect(serializer.EncodeAndOverwrite(file, outData)).To(Succeed())
 
-				fileBytes, err := ioutil.ReadFile(file.Name())
+				fileBytes, err := os.ReadFile(file.Name())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fileBytes).To(MatchJSON(`{"some":"new data"}`))
 			})

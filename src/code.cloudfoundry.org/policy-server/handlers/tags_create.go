@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"code.cloudfoundry.org/policy-server/api"
@@ -29,7 +29,7 @@ func (h *TagsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("create-tags")
 
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 
 	if err != nil {
 		h.ErrorResponse.BadRequest(logger, w, err, "failed reading request body")

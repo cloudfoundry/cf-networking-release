@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -40,7 +39,7 @@ func TestAcceptance(t *testing.T) {
 		config = helpers.LoadConfig()
 
 		configPath := helpers.ConfigPath()
-		configBytes, err := ioutil.ReadFile(configPath)
+		configBytes, err := os.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = json.Unmarshal(configBytes, &testConfig)

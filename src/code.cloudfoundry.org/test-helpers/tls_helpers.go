@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net"
 	"os"
@@ -49,7 +49,7 @@ func mapToX509Cert(PemEncodedCertFilePath string) []*x509.Certificate {
 	caFile, err := os.Open(PemEncodedCertFilePath)
 	Expect(err).NotTo(HaveOccurred())
 
-	caFileContents, err := ioutil.ReadAll(caFile)
+	caFileContents, err := io.ReadAll(caFile)
 	Expect(err).NotTo(HaveOccurred())
 	caFileBlock, _ := pem.Decode(caFileContents)
 	caCertificate, err := x509.ParseCertificates(caFileBlock.Bytes)
@@ -93,7 +93,7 @@ func buildCaFile() (string, *rsa.PrivateKey, error) {
 		return "", nil, err
 	}
 
-	file, err := ioutil.TempFile(os.TempDir(), "bosh-dns-adapter-ca")
+	file, err := os.CreateTemp(os.TempDir(), "bosh-dns-adapter-ca")
 	if err != nil {
 		return "", nil, err
 	}
@@ -139,7 +139,7 @@ func buildCertPem(privKey *rsa.PrivateKey, caFilePath string) (cert []byte, key 
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 	}
 
-	caBytes, err := ioutil.ReadFile(caFilePath)
+	caBytes, err := os.ReadFile(caFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -180,8 +180,8 @@ func buildCertPem(privKey *rsa.PrivateKey, caFilePath string) (cert []byte, key 
 }
 
 func writeClientCredFile(data []byte) string {
-	tempFile, err := ioutil.TempFile(os.TempDir(), "clientcredstest")
+	tempFile, err := os.CreateTemp(os.TempDir(), "clientcredstest")
 	Expect(err).NotTo(HaveOccurred())
-	Expect(ioutil.WriteFile(tempFile.Name(), data, os.ModePerm)).To(Succeed())
+	Expect(os.WriteFile(tempFile.Name(), data, os.ModePerm)).To(Succeed())
 	return tempFile.Name()
 }

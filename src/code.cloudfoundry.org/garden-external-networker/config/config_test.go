@@ -3,7 +3,6 @@ package config_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"code.cloudfoundry.org/garden-external-networker/config"
@@ -20,7 +19,7 @@ var _ = Describe("Config", func() {
 		)
 
 		BeforeEach(func() {
-			file, err = ioutil.TempFile(os.TempDir(), "config-")
+			file, err = os.CreateTemp(os.TempDir(), "config-")
 			Expect(err).NotTo(HaveOccurred())
 		})
 

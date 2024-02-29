@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -101,7 +100,7 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 var MockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/check_token" {
 		if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
-			bodyBytes, _ := ioutil.ReadAll(r.Body)
+			bodyBytes, _ := io.ReadAll(r.Body)
 			token := strings.Split(string(bodyBytes), "=")[1]
 			if len(token) == 0 {
 				panic("bad token")
@@ -233,7 +232,7 @@ func DefaultTLSConfig() *tls.Config {
 	cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
 	Expect(err).NotTo(HaveOccurred())
 
-	clientCACert, err := ioutil.ReadFile("fixtures/netman-ca.crt")
+	clientCACert, err := os.ReadFile("fixtures/netman-ca.crt")
 	Expect(err).NotTo(HaveOccurred())
 
 	clientCertPool := x509.NewCertPool()
@@ -248,13 +247,13 @@ func DefaultTLSConfig() *tls.Config {
 }
 
 func WriteConfigFile(policyServerConfig interface{}) string {
-	configFile, err := ioutil.TempFile("", "test-config")
+	configFile, err := os.CreateTemp("", "test-config")
 	Expect(err).NotTo(HaveOccurred())
 
 	configBytes, err := json.Marshal(policyServerConfig)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = ioutil.WriteFile(configFile.Name(), configBytes, os.ModePerm)
+	err = os.WriteFile(configFile.Name(), configBytes, os.ModePerm)
 	Expect(err).NotTo(HaveOccurred())
 
 	return configFile.Name()

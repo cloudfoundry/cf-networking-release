@@ -3,7 +3,7 @@ package acceptance_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -263,7 +263,7 @@ func httpGetBytes(url string) (httpResp, error) {
 	}
 	defer resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return httpResp{}, err
 	}

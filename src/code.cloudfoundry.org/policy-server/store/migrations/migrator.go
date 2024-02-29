@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/cf-container-networking/sql-migrate"
+	migrate "github.com/cf-container-networking/sql-migrate"
 	"github.com/jmoiron/sqlx"
 )
 
