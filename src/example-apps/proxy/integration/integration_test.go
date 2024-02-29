@@ -3,7 +3,7 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
@@ -70,7 +70,7 @@ var _ = Describe("Integration", func() {
 			defer response.Body.Close()
 			Expect(response.StatusCode).To(Equal(200))
 
-			responseBytes, err := ioutil.ReadAll(response.Body)
+			responseBytes, err := io.ReadAll(response.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			var responseData struct {
@@ -90,7 +90,7 @@ var _ = Describe("Integration", func() {
 			defer response.Body.Close()
 			Expect(response.StatusCode).To(Equal(200))
 
-			responseBytes, err := ioutil.ReadAll(response.Body)
+			responseBytes, err := io.ReadAll(response.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseBytes).To(ContainSubstring("Ping succeeded"))
 		})
@@ -101,7 +101,7 @@ var _ = Describe("Integration", func() {
 			defer response.Body.Close()
 			Expect(response.StatusCode).To(Equal(200))
 
-			responseBytes, err := ioutil.ReadAll(response.Body)
+			responseBytes, err := io.ReadAll(response.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseBytes).To(ContainSubstring("Example Domain"))
 		})
@@ -115,7 +115,7 @@ var _ = Describe("Integration", func() {
 			Expect(err).NotTo(HaveOccurred())
 			defer statsResponse.Body.Close()
 
-			responseBytes, err := ioutil.ReadAll(statsResponse.Body)
+			responseBytes, err := io.ReadAll(statsResponse.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var statsJSON struct {
 				Latency []float64
@@ -130,7 +130,7 @@ var _ = Describe("Integration", func() {
 			defer response.Body.Close()
 			Expect(response.StatusCode).To(Equal(200))
 
-			responseBytes, err := ioutil.ReadAll(response.Body)
+			responseBytes, err := io.ReadAll(response.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseBytes).To(ContainSubstring("127.0.0.1"))
 		})

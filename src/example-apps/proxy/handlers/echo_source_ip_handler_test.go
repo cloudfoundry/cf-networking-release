@@ -1,7 +1,7 @@
 package handlers_test
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"proxy/handlers"
@@ -34,7 +34,7 @@ var _ = Describe("EchoSourceIPHandler", func() {
 			handler.ServeHTTP(resp, req)
 
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(body)).To(Equal("foo"))
 		})
