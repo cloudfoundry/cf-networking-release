@@ -2,7 +2,6 @@ package acceptance_test
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"time"
 
@@ -47,7 +46,7 @@ var _ = Describe("Container startup time with a big ASG", func() {
 
 			By("pushing an app", func() {
 				start := time.Now()
-				appB := fmt.Sprintf("appB-%d", rand.Int31())
+				appB := fmt.Sprintf("appB-%d", randomGenerator.Int31())
 				pushProxy(appB)
 				durationWithoutASG = time.Since(start)
 			})
@@ -63,7 +62,7 @@ var _ = Describe("Container startup time with a big ASG", func() {
 
 			By("pushing another app", func() {
 				start := time.Now()
-				appA := fmt.Sprintf("appA-%d", rand.Int31())
+				appA := fmt.Sprintf("appA-%d", randomGenerator.Int31())
 				pushProxy(appA)
 				durationWithASG = time.Since(start)
 			})

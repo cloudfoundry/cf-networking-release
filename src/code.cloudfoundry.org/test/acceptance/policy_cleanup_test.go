@@ -2,7 +2,6 @@ package acceptance_test
 
 import (
 	"fmt"
-	"math/rand"
 
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
@@ -18,7 +17,7 @@ var _ = Describe("policy cleanup", func() {
 	)
 
 	BeforeEach(func() {
-		appA = fmt.Sprintf("appA-%d", rand.Int31())
+		appA = fmt.Sprintf("appA-%d", randomGenerator.Int31())
 
 		AuthAsAdmin()
 

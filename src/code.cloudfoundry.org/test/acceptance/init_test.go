@@ -25,10 +25,11 @@ import (
 const Timeout_Push = 2 * time.Minute
 
 var (
-	appsDir    string
-	config     *helpers.Config
-	testConfig pusherConfig.Config
-	cfCLI      *cf_cli_adapter.Adapter
+	appsDir         string
+	config          *helpers.Config
+	testConfig      pusherConfig.Config
+	cfCLI           *cf_cli_adapter.Adapter
+	randomGenerator *rand.Rand
 )
 
 func TestAcceptance(t *testing.T) {
@@ -67,7 +68,7 @@ func TestAcceptance(t *testing.T) {
 		appsDir = os.Getenv("APPS_DIR")
 		Expect(appsDir).NotTo(BeEmpty())
 
-		rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
+		randomGenerator = rand.New(rand.NewSource(GinkgoRandomSeed() + int64(GinkgoParallelProcess())))
 	})
 
 	RunSpecs(t, "Acceptance Suite")

@@ -3,7 +3,6 @@ package smoke_test
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,8 +61,6 @@ func TestSmoke(t *testing.T) {
 
 		appsDir = os.Getenv("APPS_DIR")
 		Expect(appsDir).NotTo(BeEmpty())
-
-		rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 	})
 
 	RunSpecs(t, "Smoke Suite")

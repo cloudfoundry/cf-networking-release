@@ -3,7 +3,6 @@ package acceptance_test
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"regexp"
@@ -29,7 +28,7 @@ var _ = Describe("external connectivity", func() {
 			Skip("skipping external connectivity tests")
 		}
 
-		appA = fmt.Sprintf("appA-%d", rand.Int31())
+		appA = fmt.Sprintf("appA-%d", randomGenerator.Int31())
 
 		orgName = testConfig.Prefix + "external-connectivity-org"
 		spaceName = testConfig.Prefix + "space"

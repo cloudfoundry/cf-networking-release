@@ -2,7 +2,6 @@ package nonmutualtls_test
 
 import (
 	"encoding/json"
-	"math/rand"
 	"os"
 	"testing"
 
@@ -56,8 +55,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	return data
 }, func(data []byte) {
 	Expect(json.Unmarshal(data, &paths)).To(Succeed())
-
-	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {

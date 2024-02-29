@@ -19,12 +19,13 @@ import (
 const Timeout_Short = 20 * time.Second
 
 var (
-	config     *helpers.Config
-	pushConfig pusherConfig.Config
+	config          *helpers.Config
+	pushConfig      pusherConfig.Config
+	randomGenerator *rand.Rand
 )
 
 func TestScaling(t *testing.T) {
-	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
+	randomGenerator = rand.New(rand.NewSource(GinkgoRandomSeed() + int64(GinkgoParallelProcess())))
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Scaling Suite")

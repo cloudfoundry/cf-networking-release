@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"fmt"
-	"math/rand"
 	"net"
 	"testing"
 
@@ -30,8 +29,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	return []byte(exampleAppPath)
 }, func(data []byte) {
 	exampleAppPath = string(data)
-
-	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {

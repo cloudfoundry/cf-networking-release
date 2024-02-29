@@ -2,7 +2,6 @@ package timeouts_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"code.cloudfoundry.org/policy-server/integration/helpers"
@@ -30,7 +29,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	return []byte(policyServerPath)
 }, func(data []byte) {
 	policyServerPath = string(data)
-	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {

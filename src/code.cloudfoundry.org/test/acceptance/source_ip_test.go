@@ -2,7 +2,6 @@ package acceptance_test
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
@@ -20,7 +19,7 @@ var _ = Describe("c2c traffic source ip", func() {
 	)
 
 	BeforeEach(func() {
-		appName = fmt.Sprintf("appA-%d", rand.Int31())
+		appName = fmt.Sprintf("appA-%d", randomGenerator.Int31())
 
 		orgName = testConfig.Prefix + "source-traffic-org"
 		spaceName = testConfig.Prefix + "space"

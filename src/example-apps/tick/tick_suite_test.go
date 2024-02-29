@@ -3,7 +3,6 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 
@@ -52,8 +51,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 	binaryPath = apps.AppPath
 	registryBinaryPath = apps.RegPath
-
-	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 var _ = SynchronizedAfterSuite(func() {

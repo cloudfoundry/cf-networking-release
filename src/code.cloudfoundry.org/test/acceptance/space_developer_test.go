@@ -3,7 +3,6 @@ package acceptance_test
 import (
 	"crypto/tls"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strings"
 
@@ -47,8 +46,8 @@ var _ = Describe("space developer policy configuration", func() {
 		)
 
 		prefix = testConfig.Prefix
-		appA = fmt.Sprintf("appA-%d", rand.Int31())
-		appB = fmt.Sprintf("appB-%d", rand.Int31())
+		appA = fmt.Sprintf("appA-%d", randomGenerator.Int31())
+		appB = fmt.Sprintf("appB-%d", randomGenerator.Int31())
 
 		AuthAsAdmin()
 
