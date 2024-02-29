@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -151,7 +150,7 @@ var _ = Describe("Garden External Networker", func() {
 		fakeLogDir, err = os.MkdirTemp("", "fake-logs-")
 		Expect(err).NotTo(HaveOccurred())
 
-		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelProcess(), rand.Int63())
+		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelProcess(), randomGenerator.Int63())
 
 		sleepCmd := exec.Command("sleep", "1000")
 		if runtime.GOOS == "windows" {

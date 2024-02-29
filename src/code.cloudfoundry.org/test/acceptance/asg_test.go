@@ -3,7 +3,6 @@ package acceptance_test
 import (
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -49,7 +48,7 @@ var _ = Describe("Application Security Groups", func() {
 		setupOrgAndSpace(orgName, spaceName)
 
 		By("Pushing an app")
-		appName = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", rand.Int31())
+		appName = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", randomGenerator.Int31())
 		pushProxy(appName)
 	})
 

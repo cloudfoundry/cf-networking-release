@@ -2,7 +2,6 @@ package acceptance_test
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
@@ -24,7 +23,7 @@ var _ = Describe("Custom iptables compatibility", func() {
 			Skip("skipping custom iptables compatibility tests")
 		}
 
-		appName = fmt.Sprintf("appA-%d", rand.Int31())
+		appName = fmt.Sprintf("appA-%d", randomGenerator.Int31())
 
 		orgName = testConfig.Prefix + "custom-iptables-org"
 		spaceName = testConfig.Prefix + "space"

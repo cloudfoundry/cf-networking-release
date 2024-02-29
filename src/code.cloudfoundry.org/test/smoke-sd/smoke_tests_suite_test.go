@@ -2,7 +2,6 @@ package smoke_test
 
 import (
 	"encoding/json"
-	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -61,8 +60,6 @@ var _ = BeforeSuite(func() {
 	// Set env vars
 	appsDir = os.Getenv("APPS_DIR")
 	Expect(appsDir).NotTo(BeEmpty())
-
-	rand.Seed(GinkgoRandomSeed() + int64(GinkgoParallelProcess()))
 })
 
 func Auth(username, password string) {

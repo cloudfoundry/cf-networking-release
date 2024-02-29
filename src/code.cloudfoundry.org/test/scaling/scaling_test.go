@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/http"
 	"os/exec"
@@ -382,7 +381,7 @@ func sampleConnections(population []Connection, samplePercent int) []Connection 
 	}
 	sample := []Connection{}
 	for i := 0; i < sampleSize; i++ {
-		j := rand.Intn(populationSize)
+		j := randomGenerator.Intn(populationSize)
 		sample = append(sample, shadowPopulation[j])
 		shadowPopulation = append(shadowPopulation[:j], shadowPopulation[j+1:]...)
 		populationSize--
