@@ -8,6 +8,7 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 )
 
+//lint:ignore U1000 - used in fakes
 //go:generate counterfeiter -o ../fakes/cni_library.go --fake-name CNILibrary . cniLibrary
 type cniLibrary interface {
 	libcni.CNI
