@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -13,7 +13,7 @@ func (h *UploadHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		resp.Write([]byte("0 bytes received and read"))
 		return
 	}
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
 		resp.Write([]byte(fmt.Sprintf("error: %s", err)))

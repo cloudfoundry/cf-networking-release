@@ -3,7 +3,7 @@ package handlers
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -46,7 +46,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	defer getResp.Body.Close()
 	h.Stats.Add(time.Since(before).Seconds())
 
-	readBytes, err := ioutil.ReadAll(getResp.Body)
+	readBytes, err := io.ReadAll(getResp.Body)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
 		resp.Write([]byte(fmt.Sprintf("read body failed: %s", err)))
