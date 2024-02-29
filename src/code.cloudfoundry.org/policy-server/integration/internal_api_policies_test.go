@@ -3,7 +3,7 @@ package integration_test
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -81,7 +81,7 @@ var _ = Describe("Internal Policies API", func() {
 			tlsConfig,
 		)
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		responseBytes, err := ioutil.ReadAll(resp.Body)
+		responseBytes, err := io.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchUnorderedJSON(expectedResponse)))
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -131,7 +131,7 @@ var _ = Describe("Internal Policies API", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err := ioutil.ReadAll(resp.Body)
+			responseString, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 		})

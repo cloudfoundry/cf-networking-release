@@ -1,7 +1,6 @@
 package bindmount_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -30,16 +29,16 @@ var _ = Describe("Mounter", func() {
 		mounter = &bindmount.Mounter{}
 
 		var err error
-		sourceDir, err = ioutil.TempDir("", "bind-mount-test-source-")
+		sourceDir, err = os.MkdirTemp("", "bind-mount-test-source-")
 		Expect(err).NotTo(HaveOccurred())
 
-		targetDir, err = ioutil.TempDir("", "bind-mount-test-target-")
+		targetDir, err = os.MkdirTemp("", "bind-mount-test-target-")
 		Expect(err).NotTo(HaveOccurred())
 
 		sourceFile = filepath.Join(sourceDir, "the-source")
 		targetFile = filepath.Join(targetDir, "some-sub-dir", "the-target")
 
-		Expect(ioutil.WriteFile(sourceFile, []byte("some data"), 0644)).To(Succeed())
+		Expect(os.WriteFile(sourceFile, []byte("some data"), 0644)).To(Succeed())
 	})
 
 	Describe("IdempotentlyMount", func() {
@@ -68,7 +67,7 @@ var _ = Describe("Mounter", func() {
 
 				Expect(os.RemoveAll(sourceDir)).To(Succeed())
 
-				Expect(ioutil.ReadFile(targetFile)).To(Equal([]byte("some data")))
+				Expect(os.ReadFile(targetFile)).To(Equal([]byte("some data")))
 			})
 		})
 

@@ -2,7 +2,7 @@ package smoke_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -189,7 +189,7 @@ func httpGetBytes(url string) (httpResp, error) {
 	}
 	defer resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return httpResp{}, err
 	}

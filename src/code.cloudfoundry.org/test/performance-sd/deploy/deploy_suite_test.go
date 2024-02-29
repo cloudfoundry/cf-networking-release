@@ -3,7 +3,6 @@ package deploy_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
@@ -36,7 +35,7 @@ func TestPerformance(t *testing.T) {
 	BeforeSuite(func() {
 		// Read and set config
 		configPath := helpersConfig.ConfigPath()
-		configBytes, err := ioutil.ReadFile(configPath)
+		configBytes, err := os.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = json.Unmarshal(configBytes, &config)

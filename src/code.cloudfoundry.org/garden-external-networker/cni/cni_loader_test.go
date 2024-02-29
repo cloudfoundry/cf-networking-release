@@ -2,7 +2,7 @@ package cni_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"code.cloudfoundry.org/garden-external-networker/cni"
@@ -23,7 +23,7 @@ var _ = Describe("GetNetworkConfig", func() {
 	)
 
 	BeforeEach(func() {
-		dir, err = ioutil.TempDir("", "test-cni-dir")
+		dir, err = os.MkdirTemp("", "test-cni-dir")
 		Expect(err).NotTo(HaveOccurred())
 		logger = &bytes.Buffer{}
 
@@ -64,7 +64,7 @@ var _ = Describe("GetNetworkConfig", func() {
 
 	Context("when a valid config file exists", func() {
 		BeforeEach(func() {
-			err = ioutil.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
+			err = os.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -79,7 +79,7 @@ var _ = Describe("GetNetworkConfig", func() {
 
 	Context("when a valid config list files exists", func() {
 		BeforeEach(func() {
-			err = ioutil.WriteFile(filepath.Join(dir, "foo.conflist"), []byte(`{
+			err = os.WriteFile(filepath.Join(dir, "foo.conflist"), []byte(`{
 				"name": "mynetlist",
 				"plugins": [
 			    { "name": "mynet2", "type": "vxlan" },
@@ -101,16 +101,16 @@ var _ = Describe("GetNetworkConfig", func() {
 
 	Context("when multiple valid config and config list files exists", func() {
 		BeforeEach(func() {
-			err = ioutil.WriteFile(filepath.Join(dir, "aaa.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
+			err = os.WriteFile(filepath.Join(dir, "aaa.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = ioutil.WriteFile(filepath.Join(dir, "zzz.conf"), []byte(`{ "name": "barnet", "type": "dummy" }`), 0600)
+			err = os.WriteFile(filepath.Join(dir, "zzz.conf"), []byte(`{ "name": "barnet", "type": "dummy" }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = ioutil.WriteFile(filepath.Join(dir, "ccc.conflist"), []byte(`{ "name": "nopelist", "plugins": [{ "name": "badnet", "type": "bridge" }] }`), 0600)
+			err = os.WriteFile(filepath.Join(dir, "ccc.conflist"), []byte(`{ "name": "nopelist", "plugins": [{ "name": "badnet", "type": "bridge" }] }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = ioutil.WriteFile(filepath.Join(dir, "bbb.conflist"), []byte(`{ "name": "mynetlist", "plugins": [{ "name": "mynet2", "type": "vxlan" }] }`), 0600)
+			err = os.WriteFile(filepath.Join(dir, "bbb.conflist"), []byte(`{ "name": "mynetlist", "plugins": [{ "name": "mynet2", "type": "vxlan" }] }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

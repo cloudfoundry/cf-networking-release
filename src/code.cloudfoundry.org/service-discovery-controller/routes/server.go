@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -138,7 +137,7 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 }
 
 func (s *Server) buildTLSServerConfig() (*tls.Config, error) {
-	caCert, err := ioutil.ReadFile(s.config.CACert)
+	caCert, err := os.ReadFile(s.config.CACert)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read ca file: %s", err)
 	}

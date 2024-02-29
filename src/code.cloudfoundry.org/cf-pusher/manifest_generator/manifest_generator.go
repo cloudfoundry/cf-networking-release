@@ -1,7 +1,7 @@
 package manifest_generator
 
 import (
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -10,7 +10,7 @@ type ManifestGenerator struct{}
 
 func (m *ManifestGenerator) Generate(o interface{}) (string, error) {
 	// TODO: improve test coverage/refactor this
-	tmpfile, err := ioutil.TempFile("", "manifest")
+	tmpfile, err := os.CreateTemp("", "manifest")
 	if err != nil {
 		return "", err // Not tested
 	}

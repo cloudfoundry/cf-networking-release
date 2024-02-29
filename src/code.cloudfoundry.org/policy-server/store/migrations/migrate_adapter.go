@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cf-container-networking/sql-migrate"
+	migrate "github.com/cf-container-networking/sql-migrate"
 )
 
 type MigrateAdapter struct {

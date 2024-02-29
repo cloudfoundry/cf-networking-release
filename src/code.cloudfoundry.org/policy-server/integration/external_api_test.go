@@ -3,7 +3,6 @@ package integration_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -66,7 +65,7 @@ var _ = Describe("External API", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
-			responseString, err := ioutil.ReadAll(resp.Body)
+			responseString, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON(`{ "error": "missing authorization header"}`))
 		}
@@ -79,7 +78,7 @@ var _ = Describe("External API", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
-			responseString, err := ioutil.ReadAll(resp.Body)
+			responseString, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
 		}

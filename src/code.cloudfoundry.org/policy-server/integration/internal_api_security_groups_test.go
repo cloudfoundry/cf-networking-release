@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -157,7 +157,7 @@ var _ = Describe("Internal API Listing security groups", func() {
 			)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err := ioutil.ReadAll(resp.Body)
+			responseString, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			var responseJson api.AsgsPayload
@@ -239,7 +239,7 @@ var _ = Describe("Internal API Listing security groups", func() {
 				)
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
+				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 
 				var firstResponseJson api.AsgsPayload
@@ -259,7 +259,7 @@ var _ = Describe("Internal API Listing security groups", func() {
 				)
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err = ioutil.ReadAll(resp.Body)
+				responseString, err = io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 
 				var secondResponseJson api.AsgsPayload

@@ -3,7 +3,7 @@ package uaa_client_test
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -49,7 +49,7 @@ var _ = Describe("Client", func() {
 		`
 			returnedResponse = &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(strings.NewReader(body)),
+				Body:       io.NopCloser(strings.NewReader(body)),
 			}
 			httpClient.DoReturns(returnedResponse, nil)
 		})
@@ -62,7 +62,7 @@ var _ = Describe("Client", func() {
 			receivedRequest := httpClient.DoArgsForCall(0)
 			Expect(receivedRequest.Method).To(Equal("POST"))
 			Expect(receivedRequest.URL.RawQuery).To(BeEmpty())
-			receivedBytes, _ := ioutil.ReadAll(receivedRequest.Body)
+			receivedBytes, _ := io.ReadAll(receivedRequest.Body)
 			Expect(receivedBytes).To(Equal([]byte("client_id=some-name&grant_type=client_credentials")))
 
 			authHeader := receivedRequest.Header["Authorization"]
@@ -97,7 +97,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				httpClient.DoReturns(&http.Response{
 					StatusCode: 418,
-					Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
+					Body:       io.NopCloser(strings.NewReader("bad thing")),
 				}, nil)
 				client.HTTPClient = httpClient
 			})
@@ -129,7 +129,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				returnedResponse = &http.Response{
 					StatusCode: 200,
-					Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
+					Body:       io.NopCloser(strings.NewReader(`%%%%`)),
 				}
 				httpClient.DoReturns(returnedResponse, nil)
 			})
@@ -155,7 +155,7 @@ var _ = Describe("Client", func() {
 			}
 			returnedResponse = &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(strings.NewReader(`{"scope":["network.admin"], "user_name":"some-user"}`)),
+				Body:       io.NopCloser(strings.NewReader(`{"scope":["network.admin"], "user_name":"some-user"}`)),
 			}
 			httpClient.DoReturns(returnedResponse, nil)
 		})
@@ -168,7 +168,7 @@ var _ = Describe("Client", func() {
 			receivedRequest := httpClient.DoArgsForCall(0)
 			Expect(receivedRequest.Method).To(Equal("POST"))
 			Expect(receivedRequest.URL.RawQuery).To(BeEmpty())
-			receivedBytes, _ := ioutil.ReadAll(receivedRequest.Body)
+			receivedBytes, _ := io.ReadAll(receivedRequest.Body)
 			Expect(receivedBytes).To(Equal([]byte("token=" + fakeToken)))
 
 			authHeader := receivedRequest.Header["Authorization"]
@@ -206,7 +206,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				httpClient.DoReturns(&http.Response{
 					StatusCode: 418,
-					Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
+					Body:       io.NopCloser(strings.NewReader("bad thing")),
 				}, nil)
 				client.HTTPClient = httpClient
 			})
@@ -238,7 +238,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				returnedResponse = &http.Response{
 					StatusCode: 200,
-					Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
+					Body:       io.NopCloser(strings.NewReader(`%%%%`)),
 				}
 				httpClient.DoReturns(returnedResponse, nil)
 			})

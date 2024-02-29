@@ -3,7 +3,7 @@ package routes_test
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -77,7 +77,7 @@ var _ = Describe("Server", func() {
 				return err
 			}).Should(BeNil())
 
-			respBodyBytes, err := ioutil.ReadAll(resp.Body)
+			respBodyBytes, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			respBody = string(respBodyBytes)
 		})
@@ -134,7 +134,7 @@ var _ = Describe("Server", func() {
 		It("returns an internal server error", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
 
-			respBodyBytes, err := ioutil.ReadAll(resp.Body)
+			respBodyBytes, err := io.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			respBody := string(respBodyBytes)
 			Expect(respBody).To(ContainSubstring("address table is not warm"))

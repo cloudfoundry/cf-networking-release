@@ -3,7 +3,6 @@ package config_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"code.cloudfoundry.org/policy-server/config"
@@ -56,7 +55,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 				},
 				"retry_deadline_seconds": 300,
 			}
-			file, err = ioutil.TempFile(os.TempDir(), "config-")
+			file, err = os.CreateTemp(os.TempDir(), "config-")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -109,7 +108,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 
 		Context("when the file has invalid json", func() {
 			It("returns a meaningful error", func() {
-				configFile, err := ioutil.TempFile("", "config")
+				configFile, err := os.CreateTemp("", "config")
 				Expect(err).NotTo(HaveOccurred())
 				defer os.Remove(configFile.Name())
 

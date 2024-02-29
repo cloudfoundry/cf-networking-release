@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -79,7 +79,7 @@ func digForNumberOfIPs(hostName string, expectedLength int) []string {
 			return []string{}
 		}
 
-		ipsJson, err := ioutil.ReadAll(resp.Body)
+		ipsJson, err := io.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = json.Unmarshal(bytes.TrimSpace(ipsJson), &proxyIPs)

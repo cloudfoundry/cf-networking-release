@@ -5,7 +5,7 @@ package uaa_client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -98,7 +98,7 @@ func (c *Client) makeRequest(request *http.Request, response interface{}) error 
 	}
 	defer resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("read body: %s", err)
 	}

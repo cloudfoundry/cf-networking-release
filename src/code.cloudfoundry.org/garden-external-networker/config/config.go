@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -30,7 +29,7 @@ func New(configFilePath string) (Config, error) {
 		return cfg, fmt.Errorf("file does not exist: %s", err)
 	}
 
-	configBytes, err := ioutil.ReadFile(configFilePath)
+	configBytes, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return cfg, fmt.Errorf("reading config file: %s", err)
 	}

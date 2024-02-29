@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/containernetworking/cni/libcni"
 	"io"
 	"time"
+
+	"github.com/containernetworking/cni/libcni"
 )
 
 type CNILoader struct {

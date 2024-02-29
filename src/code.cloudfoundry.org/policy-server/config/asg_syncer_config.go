@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	validator "gopkg.in/validator.v2"
 
@@ -39,7 +39,7 @@ func (c *ASGSyncerConfig) Validate() error {
 }
 
 func NewASGSyncer(path string) (*ASGSyncerConfig, error) {
-	jsonBytes, err := ioutil.ReadFile(path)
+	jsonBytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading config: %s", err)
 	}

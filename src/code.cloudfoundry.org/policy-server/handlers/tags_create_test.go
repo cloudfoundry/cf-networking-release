@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 
@@ -68,14 +68,14 @@ var _ = Describe("Tags index handler", func() {
 		Expect(groupGuid).To(Equal(expectedGroupGuid))
 		Expect(groupType).To(Equal(expectedGroupType))
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(body)).To(Equal(`{"id":"router-guid","tag":"0001","type":"router"}`))
 	})
 
 	Context("when there are errors reading the body bytes", func() {
 		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(&testsupport.BadReader{})
+			request.Body = io.NopCloser(&testsupport.BadReader{})
 		})
 
 		It("calls the bad request handler", func() {

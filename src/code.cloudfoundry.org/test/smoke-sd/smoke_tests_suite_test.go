@@ -2,7 +2,6 @@ package smoke_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -45,7 +44,7 @@ type SmokeConfig struct {
 var _ = BeforeSuite(func() {
 	// Read and set config
 	configPath := helpersConfig.ConfigPath()
-	configBytes, err := ioutil.ReadFile(configPath)
+	configBytes, err := os.ReadFile(configPath)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = json.Unmarshal(configBytes, &config)

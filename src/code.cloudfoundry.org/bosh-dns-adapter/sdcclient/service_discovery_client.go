@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -26,7 +26,7 @@ type host struct {
 }
 
 func NewServiceDiscoveryClient(serverURL, caPath, clientCertPath, clientKeyPath string) (*ServiceDiscoveryClient, error) {
-	caPemBytes, err := ioutil.ReadFile(caPath)
+	caPemBytes, err := os.ReadFile(caPath)
 	if err != nil {
 		return nil, fmt.Errorf("read CA file: %s", err)
 	}
@@ -88,7 +88,7 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 		}
 
 		defer func(httpResp *http.Response) {
-			io.Copy(ioutil.Discard, httpResp.Body)
+			io.Copy(io.Discard, httpResp.Body)
 			httpResp.Body.Close()
 		}(httpResp)
 
@@ -103,7 +103,7 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 		return []string{}, fmt.Errorf("Received non successful response from server: %+v", httpResp)
 	}
 
-	bytes, err := ioutil.ReadAll(httpResp.Body)
+	bytes, err := io.ReadAll(httpResp.Body)
 	httpResp.Body.Close()
 	if err != nil {
 		return []string{}, err

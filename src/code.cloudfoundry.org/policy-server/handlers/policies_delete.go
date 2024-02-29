@@ -3,7 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"code.cloudfoundry.org/lager/v3"
@@ -32,7 +32,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("delete-policies")
 	tokenData := getTokenData(req)
 
-	bodyBytes, err := ioutil.ReadAll(req.Body)
+	bodyBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		h.ErrorResponse.BadRequest(logger, w, err, "invalid request body")
 		return

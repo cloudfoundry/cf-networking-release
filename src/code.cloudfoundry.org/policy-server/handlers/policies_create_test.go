@@ -3,7 +3,7 @@ package handlers_test
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 
@@ -288,7 +288,7 @@ var _ = Describe("PoliciesCreate", func() {
 
 	Context("when there are errors reading the body bytes", func() {
 		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(&testsupport.BadReader{})
+			request.Body = io.NopCloser(&testsupport.BadReader{})
 		})
 
 		It("calls the bad request handler", func() {

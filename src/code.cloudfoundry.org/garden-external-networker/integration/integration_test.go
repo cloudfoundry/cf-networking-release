@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -97,7 +96,7 @@ func writeConfig(index int, outDir string) error {
 		"type": "plugin-%d"
 	}`, index, index)
 	outpath := filepath.Join(outDir, fmt.Sprintf("%d-plugin-%d.conf", 10*index, index))
-	return ioutil.WriteFile(outpath, []byte(config), 0600)
+	return os.WriteFile(outpath, []byte(config), 0600)
 }
 
 func sameFile(path1, path2 string) bool {
@@ -146,10 +145,10 @@ var _ = Describe("Garden External Networker", func() {
 
 	BeforeEach(func() {
 		var err error
-		cniConfigDir, err = ioutil.TempDir("", "cni-config-")
+		cniConfigDir, err = os.MkdirTemp("", "cni-config-")
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeLogDir, err = ioutil.TempDir("", "fake-logs-")
+		fakeLogDir, err = os.MkdirTemp("", "fake-logs-")
 		Expect(err).NotTo(HaveOccurred())
 
 		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelProcess(), rand.Int63())
@@ -170,12 +169,12 @@ var _ = Describe("Garden External Networker", func() {
 
 		fakePid = fakeProcess.Pid
 
-		bindMountRoot, err = ioutil.TempDir("", "bind-mount-root")
+		bindMountRoot, err = os.MkdirTemp("", "bind-mount-root")
 		Expect(err).NotTo(HaveOccurred())
 
 		expectedNetNSPath = filepath.Join(bindMountRoot, containerHandle)
 
-		stateFile, err := ioutil.TempFile("", "external-networker-state.json")
+		stateFile, err := os.CreateTemp("", "external-networker-state.json")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(stateFile.Close()).To(Succeed())
 		stateFilePath = stateFile.Name()
@@ -184,11 +183,11 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(writeConfig(1, cniConfigDir)).To(Succeed())
 		Expect(writeConfig(2, cniConfigDir)).To(Succeed())
 
-		configFile, err := ioutil.TempFile("", "adapter-config-")
+		configFile, err := os.CreateTemp("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())
 		fakeConfigFilePath = configFile.Name()
 		proxyRedirectCIDR = "10.255.0.0/16"
-		cniPluginDir, err = ioutil.TempDir("", "cni-plugin-")
+		cniPluginDir, err = os.MkdirTemp("", "cni-plugin-")
 		Expect(err).NotTo(HaveOccurred())
 
 		cniPluginNames := []string{"plugin-0", "plugin-1", "plugin-2", "plugin-3"}
@@ -300,7 +299,7 @@ var _ = Describe("Garden External Networker", func() {
 			config["proxy_redirect_cidr"] = proxyRedirectCIDR
 			configBytes, err := json.Marshal(config)
 			Expect(err).NotTo(HaveOccurred())
-			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
+			err = os.WriteFile(fakeConfigFilePath, configBytes, 0644)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -316,7 +315,7 @@ var _ = Describe("Garden External Networker", func() {
 			config["enable_ingress_proxy_redirect"] = true
 			configBytes, err := json.Marshal(config)
 			Expect(err).NotTo(HaveOccurred())
-			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
+			err = os.WriteFile(fakeConfigFilePath, configBytes, 0644)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -347,7 +346,7 @@ var _ = Describe("Garden External Networker", func() {
 		}`))
 
 		By("checking that the first CNI plugin in the plugin directory got called with ADD")
-		logFileContents, err := ioutil.ReadFile(filepath.Join(fakeLogDir, "plugin-0.log"))
+		logFileContents, err := os.ReadFile(filepath.Join(fakeLogDir, "plugin-0.log"))
 		Expect(err).NotTo(HaveOccurred())
 		var pluginCallInfo fakePluginLogData
 		Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
@@ -369,7 +368,7 @@ var _ = Describe("Garden External Networker", func() {
 		runAndWait(downCommand)
 
 		By("checking that the first CNI plugin in the plugin directory got called with DEL")
-		logFileContents, err = ioutil.ReadFile(filepath.Join(fakeLogDir, "plugin-0.log"))
+		logFileContents, err = os.ReadFile(filepath.Join(fakeLogDir, "plugin-0.log"))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
 
@@ -430,7 +429,7 @@ var _ = Describe("Garden External Networker", func() {
 			delete(config, "search_domains")
 			configBytes, err := json.Marshal(config)
 			Expect(err).NotTo(HaveOccurred())
-			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
+			err = os.WriteFile(fakeConfigFilePath, configBytes, 0644)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
