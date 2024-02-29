@@ -3,7 +3,7 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os/exec"
 	"tick/a8"
@@ -33,7 +33,7 @@ var _ = Describe("Tick app", func() {
 			if err != nil {
 				return "", err
 			}
-			respBytes, err := ioutil.ReadAll(resp.Body)
+			respBytes, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return "", err
 			}
