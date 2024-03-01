@@ -74,7 +74,6 @@ var _ = Describe("Main", func() {
 		fakeServiceDiscoveryControllerServer.HTTPTestServer.TLS.ClientCAs = testhelpers.CertPool(caFileName)
 		fakeServiceDiscoveryControllerServer.HTTPTestServer.TLS.ClientAuth = tls.RequireAndVerifyClientCert
 		fakeServiceDiscoveryControllerServer.HTTPTestServer.TLS.CipherSuites = []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256}
-		fakeServiceDiscoveryControllerServer.HTTPTestServer.TLS.PreferServerCipherSuites = true
 		fakeServiceDiscoveryControllerServer.HTTPTestServer.TLS.Certificates = []tls.Certificate{serverCert}
 
 		fakeServiceDiscoveryControllerServer.AppendHandlers(fakeServiceDiscoveryControllerResponse...)
