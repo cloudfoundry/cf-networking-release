@@ -16,7 +16,7 @@ func TestIntegration(t *testing.T) {
 }
 
 var (
-	paths testPaths
+	paths           testPaths
 	randomGenerator *rand.Rand
 )
 
