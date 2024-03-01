@@ -2,7 +2,7 @@ package handlers_test
 
 import (
 	"bytes"
-	"math/rand"
+	"crypto/rand"
 	"net/http"
 	"net/http/httptest"
 	"proxy/handlers"

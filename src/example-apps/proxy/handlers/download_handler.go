@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
