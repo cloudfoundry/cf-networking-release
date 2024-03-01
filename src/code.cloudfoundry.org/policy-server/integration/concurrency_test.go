@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"sync/atomic"
 
@@ -29,11 +30,14 @@ var _ = Describe("External API Concurrency", func() {
 		dbConf            db.Config
 
 		fakeMetron metrics.FakeMetron
+		serverURL  string
 	)
+
+	policiesRoute := "external/policies"
+	tagsRoute := "external/tags"
 
 	BeforeEach(func() {
 		fakeMetron = metrics.NewFakeMetron()
-
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("concurrency_test_node_%d", ports.PickAPort())
 
@@ -41,6 +45,10 @@ var _ = Describe("External API Concurrency", func() {
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]
+	})
+	JustBeforeEach(func() {
+		randomGenerator := rand.New(rand.NewSource(GinkgoRandomSeed() + int64(GinkgoParallelProcess())))
+		serverURL = policyServerUrl(policyServerConfs, randomGenerator)
 	})
 
 	AfterEach(func() {
@@ -51,12 +59,11 @@ var _ = Describe("External API Concurrency", func() {
 
 	Context("when there are concurrent create requests", func() {
 		It("remains consistent", func() {
-			policiesRoute := "external/policies"
 			add := func(policy api.Policy) {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []api.Policy{policy},
 				})
-				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), nil, bytes.NewReader(requestBody))
+				resp := helpers.MakeAndDoRequest("POST", fmt.Sprintf("%s/%s", serverURL, policiesRoute), nil, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := io.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
@@ -92,7 +99,7 @@ var _ = Describe("External API Concurrency", func() {
 			Expect(nAdded).To(Equal(int32(nPolicies)))
 
 			By("getting all the policies")
-			resp := helpers.MakeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), nil, nil)
+			resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", serverURL, policiesRoute), nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -110,8 +117,7 @@ var _ = Describe("External API Concurrency", func() {
 			}
 
 			By("verify tags")
-			tagsRoute := "external/tags"
-			resp = helpers.MakeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), nil, nil)
+			resp = helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", serverURL, tagsRoute), nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err = io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())

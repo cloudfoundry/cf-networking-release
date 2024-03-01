@@ -22,7 +22,6 @@ var (
 	policyServerInternalPath  string
 	policyServerAsgSyncerPath string
 	migrateDbPath             string
-	randomGenerator           *rand.Rand
 )
 
 type policyServerPaths struct {
@@ -93,7 +92,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	policyServerAsgSyncerPath = paths.AsgSyncer
 	migrateDbPath = paths.MigrateDb
 
-	randomGenerator = rand.New(rand.NewSource(GinkgoRandomSeed() + int64(GinkgoParallelProcess())))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {
@@ -161,7 +159,7 @@ func stopPolicyServers(sessions []*gexec.Session, configs []config.Config) {
 	testhelpers.RemoveDatabase(configs[0].Database)
 }
 
-func policyServerUrl(route string, confs []config.Config) string {
-	conf := confs[randomGenerator.Intn(len(confs))]
-	return fmt.Sprintf("http://%s:%d/networking/v1/%s", conf.ListenHost, conf.ListenPort, route)
+func policyServerUrl(confs []config.Config, rng *rand.Rand) string {
+	conf := confs[rng.Intn(len(confs))]
+	return fmt.Sprintf("http://%s:%d/networking/v1", conf.ListenHost, conf.ListenPort)
 }
