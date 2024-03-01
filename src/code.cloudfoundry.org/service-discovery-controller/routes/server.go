@@ -155,7 +155,6 @@ func (s *Server) buildTLSServerConfig() (*tls.Config, error) {
 	)
 
 	serverConfig := tlsConfig.Server(tlsconfig.WithClientAuthentication(caCertPool))
-	serverConfig.BuildNameToCertificate()
 	return serverConfig, err
 }
 

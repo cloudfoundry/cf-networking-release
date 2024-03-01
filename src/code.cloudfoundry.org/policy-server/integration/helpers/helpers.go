@@ -242,7 +242,6 @@ func DefaultTLSConfig() *tls.Config {
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      clientCertPool,
 	}
-	tlsConfig.BuildNameToCertificate()
 	return tlsConfig
 }
 
