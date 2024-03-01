@@ -113,6 +113,7 @@ var _ = Describe("Config", func() {
 			Expect(parsedConfig.Nats.TLSEnabled).To(Equal(true))
 
 			Expect(parsedConfig.Nats.CAPool).ToNot(BeNil())
+			//lint:ignore SA1019 - ignoring tlsCert.RootCAs.Subjects is deprecated ERR because cert does not come from SystemCertPool.
 			poolSubjects := parsedConfig.Nats.CAPool.Subjects()
 			Expect(string(poolSubjects[0])).To(Equal(string(expectedSubject)))
 
