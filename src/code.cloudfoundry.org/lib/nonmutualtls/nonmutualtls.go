@@ -18,7 +18,6 @@ func NewServerTLSConfig(certFile, keyFile string) (*tls.Config, error) {
 		Certificates: []tls.Certificate{keyPair},
 		MinVersion:   tls.VersionTLS12,
 	}
-	c.PreferServerCipherSuites = true
 	c.CipherSuites = []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256}
 	return c, nil
 }
