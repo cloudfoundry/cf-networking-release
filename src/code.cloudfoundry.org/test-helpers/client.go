@@ -14,8 +14,6 @@ func NewClient(caCertPool *x509.CertPool, cert tls.Certificate) *http.Client {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	tlsConfig.BuildNameToCertificate()
-
 	tr := &http.Transport{
 		TLSClientConfig: tlsConfig,
 	}

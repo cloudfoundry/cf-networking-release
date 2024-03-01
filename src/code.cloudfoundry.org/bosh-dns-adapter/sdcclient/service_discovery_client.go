@@ -47,8 +47,6 @@ func NewServiceDiscoveryClient(serverURL, caPath, clientCertPath, clientKeyPath 
 		Certificates: []tls.Certificate{cert},
 	}
 
-	tlsConfig.BuildNameToCertificate()
-
 	tr := &http.Transport{
 		TLSClientConfig:     tlsConfig,
 		IdleConnTimeout:     0,
