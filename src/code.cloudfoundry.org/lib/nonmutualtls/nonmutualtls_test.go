@@ -87,8 +87,11 @@ var _ = Describe("TLS config for internal API server", func() {
 		})
 
 		It("loads multiple ca certs", func() {
+			//lint:ignore SA1019 - ignoring tlsCert.RootCAs.Subjects is deprecated ERR because cert does not come from SystemCertPool.
 			Expect(len(clientTLSConfig.RootCAs.Subjects())).To(Equal(2))
+			//lint:ignore SA1019 - ignoring tlsCert.RootCAs.Subjects is deprecated ERR because cert does not come from SystemCertPool.
 			Expect(string(clientTLSConfig.RootCAs.Subjects()[0])).To(ContainSubstring("server-ca-1"))
+			//lint:ignore SA1019 - ignoring tlsCert.RootCAs.Subjects is deprecated ERR because cert does not come from SystemCertPool.
 			Expect(string(clientTLSConfig.RootCAs.Subjects()[1])).To(ContainSubstring("server-ca-2"))
 		})
 
