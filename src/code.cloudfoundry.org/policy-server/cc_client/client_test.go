@@ -12,8 +12,6 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/policy-server/cc_client"
-
-	//	. "code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/cc_client/fixtures"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
