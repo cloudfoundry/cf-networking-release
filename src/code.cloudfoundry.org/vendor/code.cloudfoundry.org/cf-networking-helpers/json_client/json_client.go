@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -81,7 +80,7 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 	}
 	defer resp.Body.Close() // untested
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("body read: %s", err)
 	}

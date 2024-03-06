@@ -71,7 +71,7 @@ func (e *ErrorResponse) NotAcceptable(logger lager.Logger, w http.ResponseWriter
 }
 
 func (e *ErrorResponse) respondWithCode(statusCode int, logger lager.Logger, w http.ResponseWriter, err error, description string) {
-	logger.Error(fmt.Sprintf("%s", description), err)
+	logger.Error(description, err)
 	w.WriteHeader(statusCode)
 	if metadataError, ok := err.(MetadataError); ok {
 		j, _ := json.Marshal(metadataError.Metadata())

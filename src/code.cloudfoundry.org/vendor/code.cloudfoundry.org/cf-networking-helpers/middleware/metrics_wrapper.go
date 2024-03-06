@@ -12,6 +12,7 @@ type metricsSender interface {
 	IncrementCounter(string)
 }
 
+//lint:ignore U1000 - this  is used in metrics_wrapper_test.go
 //go:generate counterfeiter -o fakes/http_handler.go --fake-name HTTPHandler . http_handler
 type http_handler interface {
 	http.Handler
@@ -26,7 +27,7 @@ func (mw *MetricWrapper) Wrap(handle http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		startTime := time.Now()
 		handle.ServeHTTP(w, req)
-		mw.MetricsSender.SendDuration(fmt.Sprintf("%sRequestTime", mw.Name), time.Now().Sub(startTime))
+		mw.MetricsSender.SendDuration(fmt.Sprintf("%sRequestTime", mw.Name), time.Since(startTime))
 		mw.MetricsSender.IncrementCounter(fmt.Sprintf("%sRequestCount", mw.Name))
 	})
 }

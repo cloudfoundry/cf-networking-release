@@ -15,16 +15,16 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20240208160729-6d10e764fb3e
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240223145028-e37f8c23fd19
+	code.cloudfoundry.org/bbs v0.0.0-20240229175012-d983f41b1ba0
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240301205237-493ea68ddf5d
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240216143506-a6177cebb9a9
-	code.cloudfoundry.org/filelock v0.0.0-20240216144523-6b33e29a39ef
-	code.cloudfoundry.org/garden v0.0.0-20240228130917-90908c40e63f
+	code.cloudfoundry.org/debugserver v0.0.0-20240301143847-7967b4b03e2b
+	code.cloudfoundry.org/filelock v0.0.0-20240301144848-85a1f1402258
+	code.cloudfoundry.org/garden v0.0.0-20240306131114-33d949f4395f
 	code.cloudfoundry.org/lager/v3 v3.0.3
-	code.cloudfoundry.org/locket v0.0.0-20231220192941-f252282ff31f
-	code.cloudfoundry.org/policy_client v0.0.0-20240223145016-f864743332e6
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240216143505-4f8d9b753d56
+	code.cloudfoundry.org/locket v0.0.0-20240306153501-af84a1b5a092
+	code.cloudfoundry.org/policy_client v0.0.0-20240301145047-62efba2828ee
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240301143844-95036809ae27
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -40,7 +40,7 @@ require (
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.6.1
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.15.0
+	github.com/onsi/ginkgo/v2 v2.16.0
 	github.com/onsi/gomega v1.31.1
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -49,15 +49,15 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.21.0
-	golang.org/x/sys v0.17.0
+	golang.org/x/net v0.22.0
+	golang.org/x/sys v0.18.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240223143657-dcc89d577b62 // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240216143501-1b50cf8f87bc // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240301143849-e826842c6857 // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240301143841-f31768ae8768 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240220215648-1478b399ee36 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -71,7 +71,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20240227163752-401108e1b7e7 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
@@ -84,14 +84,14 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.43.1 // indirect
-	golang.org/x/crypto v0.20.0 // indirect
-	golang.org/x/oauth2 v0.17.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.18.0 // indirect
+	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/grpc v1.62.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240304212257-790db918fca8 // indirect
+	google.golang.org/grpc v1.62.1 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

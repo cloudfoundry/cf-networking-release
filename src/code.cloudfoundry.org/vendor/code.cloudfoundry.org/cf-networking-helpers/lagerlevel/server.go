@@ -1,13 +1,14 @@
 package lagerlevel
 
 import (
-	"code.cloudfoundry.org/lager/v3"
 	"fmt"
-	"github.com/pkg/errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
+
+	"code.cloudfoundry.org/lager/v3"
+	"github.com/pkg/errors"
 )
 
 type Server struct {
@@ -80,7 +81,7 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 }
 
 func (s *Server) handleRequest(resp http.ResponseWriter, req *http.Request) {
-	bytes, err := ioutil.ReadAll(req.Body)
+	bytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		s.logger.Info("Unable to read request body")
 		resp.WriteHeader(http.StatusBadRequest)

@@ -21,7 +21,7 @@ func CreateDatabase(config db.Config) {
 	config.Timeout = 120
 	dbToCreate := config.DatabaseName
 	config.DatabaseName = ""
-	fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%s Creating database %s", time.Now().String(), dbToCreate))
+	fmt.Fprintf(ginkgo.GinkgoWriter, "%s Creating database %s\n", time.Now().String(), dbToCreate)
 	connection := getDbConnection(config)
 	defer connection.ConnectionPool.Close()
 	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("CREATE DATABASE %s", dbToCreate))
@@ -38,7 +38,7 @@ func RemoveDatabase(config db.Config) {
 	defer connection.ConnectionPool.Close()
 	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
 	if err != nil {
-		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%+v", err))
+		fmt.Fprintf(ginkgo.GinkgoWriter, "%+v\n", err)
 	}
 }
 

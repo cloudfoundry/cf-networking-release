@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 func NewServerTLSConfig(certFile, keyFile, caCertFile string) (*tls.Config, error) {
@@ -48,7 +48,7 @@ func newTLSConfig(certFile, keyFile string) (*tls.Config, error) {
 }
 
 func newCACertPool(caCertFile string) (*x509.CertPool, error) {
-	certBytes, err := ioutil.ReadFile(caCertFile)
+	certBytes, err := os.ReadFile(caCertFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed read ca cert file: %s", err.Error())
 	}

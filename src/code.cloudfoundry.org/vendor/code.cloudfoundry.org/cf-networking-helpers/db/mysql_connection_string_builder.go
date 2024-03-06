@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -38,7 +38,7 @@ func (m *MySQLConnectionStringBuilder) Build(config Config) (string, error) {
 	if config.RequireSSL {
 		dbConfig.TLSConfig = fmt.Sprintf("%s-tls", config.DatabaseName)
 
-		certBytes, err := ioutil.ReadFile(config.CACert)
+		certBytes, err := os.ReadFile(config.CACert)
 		if err != nil {
 			return "", fmt.Errorf("reading db ca cert file: %s", err)
 		}
