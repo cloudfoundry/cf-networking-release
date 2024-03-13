@@ -31,6 +31,9 @@ files:
   - code.cloudfoundry.org/service-discovery-controller/mbus/*.go # gosub
   - code.cloudfoundry.org/service-discovery-controller/routes/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/tlsconfig/*.go # gosub
+  - code.cloudfoundry.org/vendor/filippo.io/edwards25519/*.go # gosub
+  - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.go # gosub
+  - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.s # gosub
   - code.cloudfoundry.org/vendor/github.com/bmizerany/pat/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub

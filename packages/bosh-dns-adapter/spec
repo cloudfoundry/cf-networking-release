@@ -26,6 +26,9 @@ files:
   - code.cloudfoundry.org/policy-server/store/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/helpers/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/migrations/*.go # gosub
+  - code.cloudfoundry.org/vendor/filippo.io/edwards25519/*.go # gosub
+  - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.go # gosub
+  - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.s # gosub
   - code.cloudfoundry.org/vendor/github.com/bmizerany/pat/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
