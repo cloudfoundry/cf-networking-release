@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/bbs v0.0.0-20240313161749-134f7e72b48b
+# code.cloudfoundry.org/bbs v0.0.0-20240314215631-30cc7a3ab9d1
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
@@ -412,7 +412,7 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240311173647-c811ad7063a7
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240314204616-9694c7771956
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.62.1

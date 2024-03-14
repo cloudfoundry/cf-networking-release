@@ -15,7 +15,7 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20240313161749-134f7e72b48b
+	code.cloudfoundry.org/bbs v0.0.0-20240314215631-30cc7a3ab9d1
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240308145131-7bbce6adcfd9
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240308143924-cdf7d6ade8bb
@@ -90,7 +90,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240311173647-c811ad7063a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240314204616-9694c7771956 // indirect
 	google.golang.org/grpc v1.62.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
