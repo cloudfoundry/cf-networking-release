@@ -109,7 +109,7 @@ properties:
     description: "Trusted CA for UAA server."
 
   uaa_hostname:
-    description: "Host name for the UAA server.  E.g. the service advertised via Consul DNS.  Must match common name in the UAA server cert. Must be listed in `uaa.zones.internal.hostnames`."
+    description: "Host name for the UAA server.  E.g. the service advertised via Bosh DNS.  Must match common name in the UAA server cert. Must be listed in `uaa.zones.internal.hostnames`."
     default: uaa.service.cf.internal
 
   uaa_port:
