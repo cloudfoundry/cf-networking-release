@@ -41,7 +41,7 @@ properties:
     default: 31946
 
   health_check_timeout_seconds:
-    description: "Health check timeout for Consul DNS."
+    description: "Health check timeout"
     default: 5
 
   internal_listen_port:
@@ -52,7 +52,7 @@ properties:
     description: "Trusted CA certificate that was used to sign the vxlan policy agent's client cert and key."
 
   server_cert:
-    description: "Server certificate for TLS. Must have common name that matches the Consul DNS name of the policy server, eg `policy-server.service.cf.internal`."
+    description: "Server certificate for TLS. Must have common name that matches the Bosh DNS name of the policy server, eg `policy-server.service.cf.internal`."
 
   server_key:
     description: "Server key for TLS."
