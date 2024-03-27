@@ -87,7 +87,7 @@ func lockFile(h syscall.Handle) error {
 	o := &overlapped{handle: event}
 
 	flags := LOCKFILE_EXCLUSIVE_LOCK
-	r0, _, err := syscall.Syscall6(lockFileEx.Addr(), 6, uintptr(h), uintptr(flags), 0, math.MaxInt32, math.MaxInt32, uintptr(unsafe.Pointer(o)))
+	r0, _, err := syscall.SyscallN(lockFileEx.Addr(), uintptr(h), uintptr(flags), 0, math.MaxInt32, math.MaxInt32, uintptr(unsafe.Pointer(o)))
 	if int32(r0) == 0 {
 		return fmt.Errorf("error locking file: %s", err.Error())
 	}
@@ -107,7 +107,7 @@ func unlockFile(h syscall.Handle) error {
 	defer windows.CloseHandle(event)
 	o := &overlapped{handle: event}
 
-	r0, _, err := syscall.Syscall6(unlockFileEx.Addr(), 5, uintptr(h), 0, math.MaxInt32, math.MaxInt32, uintptr(unsafe.Pointer(o)), 0)
+	r0, _, err := syscall.SyscallN(unlockFileEx.Addr(), uintptr(h), 0, math.MaxInt32, math.MaxInt32, uintptr(unsafe.Pointer(o)), 0)
 	if int32(r0) == 0 {
 		return fmt.Errorf("error unlocking file: %s", err.Error())
 	}
