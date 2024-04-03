@@ -592,10 +592,10 @@ cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoIS
 cloud.google.com/go/workflows v1.8.0/go.mod h1:ysGhmEajwZxGn1OhGOGKsTXc5PyxOc0vfKf5Af+to4M=
 cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT3ujaO/WwSA=
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240327135821-0f3dd1ac035e h1:vymYuTzPUkWlPYvZs8nqG6dDh48avTx+IKIgRB7HluU=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240327135821-0f3dd1ac035e/go.mod h1:UXRJnZVYYkX4RNkn3TOiQXdm/Uy6LnTi2uJCa+t2fUw=
-code.cloudfoundry.org/localip v0.0.0-20240327135844-618edde82d72 h1:T52yGFXJ3Gb+CY2hUb+rfpzTSMyyQKZuurm3Zd9hxRA=
-code.cloudfoundry.org/localip v0.0.0-20240327135844-618edde82d72/go.mod h1:KneZ9G6ruBL12xeC80JMxCFj5AgFv8jFDLYzvR8ZTuI=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240401155437-efd180519f25 h1:iBMWK+ZcESTqTUQjmxuxYKfT1nvKjTCrTrINXn/BoxY=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240401155437-efd180519f25/go.mod h1:hBbTYXYkbIWyEIC1pNtKHBwLZ9WaDDk630doWGos/JE=
+code.cloudfoundry.org/localip v0.0.0-20240403132407-90bfe96e2c2c h1:rTH2ETuafXRoeCw5oYGw4o9ZJzNcIpeR1A9gyitijtw=
+code.cloudfoundry.org/localip v0.0.0-20240403132407-90bfe96e2c2c/go.mod h1:2ttXvosM0IzG9Fl5P5r2cAJ/RkPsi1luXYkTz014GjY=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 gioui.org v0.0.0-20210308172011-57750fc8a0a6/go.mod h1:RSH6KIUZ0p2xy5zHDxgAM4zumjgTw83q2ge/PI+yyw8=
 git.sr.ht/~sbinet/gg v0.3.1/go.mod h1:KGYtlADtqsqANL9ueOFkWymvzUvLMQllU5Ixo+8v3pc=
@@ -763,8 +763,8 @@ github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38/go.mod h1:kpwsk12EmLe
 github.com/google/pprof v0.0.0-20210601050228-01bbb1931b22/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210609004039-a478d1d731e9/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
-github.com/google/pprof v0.0.0-20240327155427-868f304927ed h1:n8QtJTrwsv3P7dNxPaMeNkMcxvUpqocsHLr8iDLGlQI=
-github.com/google/pprof v0.0.0-20240327155427-868f304927ed/go.mod h1:kf6iHlnVGwgKolg33glAes7Yg/8iWP8ukqeldJSO7jw=
+github.com/google/pprof v0.0.0-20240402174815-29b9bb013b0f h1:f00RU+zOX+B3rLAmMMkzHUF2h1z4DeYR9tTCvEq2REY=
+github.com/google/pprof v0.0.0-20240402174815-29b9bb013b0f/go.mod h1:kf6iHlnVGwgKolg33glAes7Yg/8iWP8ukqeldJSO7jw=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
