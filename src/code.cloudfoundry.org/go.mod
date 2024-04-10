@@ -16,14 +16,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240408163833-8758af90a126
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240405145602-2db429f3abf0
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240409162815-142012a6b4fa
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240405144453-34182e5de535
+	code.cloudfoundry.org/debugserver v0.0.0-20240409162631-369419c6e60d
 	code.cloudfoundry.org/filelock v0.0.0-20240409143021-86f5884ca555
-	code.cloudfoundry.org/garden v0.0.0-20240405184154-4b258b482c64
+	code.cloudfoundry.org/garden v0.0.0-20240409184058-44b21cda626c
 	code.cloudfoundry.org/lager/v3 v3.0.3
-	code.cloudfoundry.org/locket v0.0.0-20240408164541-2c9b31c2cf1e
-	code.cloudfoundry.org/policy_client v0.0.0-20240405145556-62555a1489bd
+	code.cloudfoundry.org/locket v0.0.0-20240410131216-aa54b91f26c7
+	code.cloudfoundry.org/policy_client v0.0.0-20240409162744-4f24e42fb196
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240405144453-942277399864
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -56,8 +56,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240405144442-1a4930ebf5b9 // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240405144453-b5a6e37a8c63 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240409162632-9001435eca9c // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240409162628-8fbe9649fa0f // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240325171903-fa19631aa7ba // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.44.2 // indirect
+	go.step.sm/crypto v0.44.3 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
