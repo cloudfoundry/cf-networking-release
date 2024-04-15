@@ -31,7 +31,7 @@ require (
 	github.com/cloudfoundry-community/go-uaa v0.3.2
 	github.com/cloudfoundry/cf-test-helpers/v2 v2.9.0
 	github.com/cloudfoundry/dropsonde v1.1.0
-	github.com/containernetworking/cni v1.1.2
+	github.com/containernetworking/cni v1.2.0
 	github.com/containernetworking/plugins v1.4.1
 	github.com/coreos/go-iptables v0.7.0
 	github.com/jmoiron/sqlx v1.3.5
@@ -71,7 +71,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240409012703-83162a5b38cd // indirect
+	github.com/google/pprof v0.0.0-20240415144954-be81aee2d733 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -89,7 +89,7 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.20.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240412170617-26222e5d3d56 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415151819-79826c84ba32 // indirect
 	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
