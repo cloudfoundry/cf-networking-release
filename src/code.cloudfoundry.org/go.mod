@@ -16,14 +16,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240408163833-8758af90a126
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240410162902-c411d6661edb
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240415163311-a1954d4d52e2
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240412143000-e1e6490a72a0
-	code.cloudfoundry.org/filelock v0.0.0-20240409143021-86f5884ca555
-	code.cloudfoundry.org/garden v0.0.0-20240409184058-44b21cda626c
+	code.cloudfoundry.org/debugserver v0.0.0-20240415163122-773208e977a2
+	code.cloudfoundry.org/filelock v0.0.0-20240416143633-127f34fd06fe
+	code.cloudfoundry.org/garden v0.0.0-20240415184613-53195785dcbc
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240410131216-aa54b91f26c7
-	code.cloudfoundry.org/policy_client v0.0.0-20240411162908-9bae979b73e0
+	code.cloudfoundry.org/policy_client v0.0.0-20240415163259-80a5c9809dcb
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240410162701-78a97c114f7f
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -56,8 +56,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240413162951-28a656464511 // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240409162628-8fbe9649fa0f // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240415163141-ee22d61ddd03 // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240415163103-f50bb49169c8 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240325171903-fa19631aa7ba // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -83,13 +83,13 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.44.3 // indirect
+	go.step.sm/crypto v0.44.5 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.20.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415151819-79826c84ba32 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be // indirect
 	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
