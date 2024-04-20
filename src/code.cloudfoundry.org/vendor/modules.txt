@@ -39,7 +39,7 @@ code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20240418185000-86dc18318d57
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
-# code.cloudfoundry.org/go-diodes v0.0.0-20240325171903-fa19631aa7ba
+# code.cloudfoundry.org/go-diodes v0.0.0-20240419195010-376885f5f3d4
 ## explicit; go 1.21
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v8 v8.0.5
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240418163631-53a4fb879ae4
+# code.cloudfoundry.org/policy_client v0.0.0-20240419163651-7a7c46f7ff93
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240417163319-a2cf10de323a

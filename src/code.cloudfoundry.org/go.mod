@@ -23,7 +23,7 @@ require (
 	code.cloudfoundry.org/garden v0.0.0-20240418185000-86dc18318d57
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240410131216-aa54b91f26c7
-	code.cloudfoundry.org/policy_client v0.0.0-20240418163631-53a4fb879ae4
+	code.cloudfoundry.org/policy_client v0.0.0-20240419163651-7a7c46f7ff93
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240417163319-a2cf10de323a
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -58,7 +58,7 @@ require (
 require (
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20240418163439-6bdf47b4db95 // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20240418163405-71c2948d8306 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20240325171903-fa19631aa7ba // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20240419195010-376885f5f3d4 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
