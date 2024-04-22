@@ -124,7 +124,7 @@ var _ = Describe("ASGSyncer", func() {
 			Consistently(retChan).ShouldNot(Receive())
 
 			signals <- os.Interrupt
-			Eventually(retChan).Should(Receive(nil))
+			Eventually(retChan).Should(Receive(BeNil()))
 		})
 
 		Context("when the poller func errors", func() {
