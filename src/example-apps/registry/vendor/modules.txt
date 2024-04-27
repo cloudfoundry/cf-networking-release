@@ -31,7 +31,7 @@ github.com/amalgam8/amalgam8/registry/utils/version
 ## explicit
 github.com/ant0ine/go-json-rest/rest
 github.com/ant0ine/go-json-rest/rest/trie
-# github.com/codegangsta/cli v1.22.14 => github.com/urfave/cli v1.19.0
+# github.com/codegangsta/cli v1.22.15 => github.com/urfave/cli v1.19.0
 ## explicit
 github.com/codegangsta/cli
 # github.com/garyburd/redigo v1.6.4
