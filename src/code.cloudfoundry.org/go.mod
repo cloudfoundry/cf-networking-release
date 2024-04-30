@@ -19,7 +19,7 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240429164817-ebf54523ac36
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240429164425-f08859865117
-	code.cloudfoundry.org/filelock v0.0.0-20240428144643-f8a6b1def84d
+	code.cloudfoundry.org/filelock v0.0.0-20240430144742-533492b1653c
 	code.cloudfoundry.org/garden v0.0.0-20240429190132-fe98174c77e9
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240410131216-aa54b91f26c7
