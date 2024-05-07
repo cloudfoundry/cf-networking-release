@@ -16,15 +16,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240418184526-a7ed0dccd9f7
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240504165210-768715b1fc12
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240506165251-634bb41c4a81
 	code.cloudfoundry.org/clock v1.1.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240504164949-ec4d5482b504
-	code.cloudfoundry.org/filelock v0.0.0-20240505145246-ee31c1b1a865
-	code.cloudfoundry.org/garden v0.0.0-20240504190741-97e713d6ac8f
+	code.cloudfoundry.org/debugserver v0.0.0-20240506165051-f868bd580e8d
+	code.cloudfoundry.org/filelock v0.0.0-20240507145458-36b645f6b3ce
+	code.cloudfoundry.org/garden v0.0.0-20240506190947-afe0bd776501
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240410131216-aa54b91f26c7
-	code.cloudfoundry.org/policy_client v0.0.0-20240505165239-c654e9d01d87
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240504164951-c74da1f146df
+	code.cloudfoundry.org/policy_client v0.0.0-20240506165248-a80370dfcbd9
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240506165053-ee50c1ee9388
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -40,7 +40,7 @@ require (
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.6.1
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.17.2
+	github.com/onsi/ginkgo/v2 v2.17.3
 	github.com/onsi/gomega v1.33.1
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -49,15 +49,15 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.24.0
+	golang.org/x/net v0.25.0
 	golang.org/x/sys v0.20.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240505165047-d51b9c8b5f6e // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240504164954-71e1b8bcaf2f // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240506165100-9c1d40465aaf // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240506165051-9f6d677e8186 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240419195010-376885f5f3d4 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -88,8 +88,8 @@ require (
 	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
-	golang.org/x/tools v0.20.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240429193739-8cf5692501f6 // indirect
+	golang.org/x/tools v0.21.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240506185236-b8a5c65736ae // indirect
 	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
