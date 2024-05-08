@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240506165251-634bb41c4a81
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240507174452-9ffc46cf328c
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -17,6 +17,7 @@ code.cloudfoundry.org/cf-networking-helpers/metrics
 code.cloudfoundry.org/cf-networking-helpers/middleware
 code.cloudfoundry.org/cf-networking-helpers/middleware/adapter
 code.cloudfoundry.org/cf-networking-helpers/mutualtls
+code.cloudfoundry.org/cf-networking-helpers/poller
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
