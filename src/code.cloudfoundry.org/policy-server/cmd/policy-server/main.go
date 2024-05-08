@@ -12,7 +12,6 @@ import (
 
 	"code.cloudfoundry.org/lib/common"
 	"code.cloudfoundry.org/lib/nonmutualtls"
-	"code.cloudfoundry.org/lib/poller"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
@@ -21,6 +20,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	middlewareAdapter "code.cloudfoundry.org/cf-networking-helpers/middleware/adapter"
+	"code.cloudfoundry.org/cf-networking-helpers/poller"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagerflags"
