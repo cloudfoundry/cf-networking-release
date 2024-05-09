@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240507174452-9ffc46cf328c
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240509123847-048ca17fcb32
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,19 +25,19 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240507165104-fb56dd559b10
+# code.cloudfoundry.org/debugserver v0.0.0-20240508165206-bfca98dd3bfa
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240507165108-8f850b7f6df6
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240508165207-efae71bac995
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240507165104-e62bd37f78c9
+# code.cloudfoundry.org/durationjson v0.0.0-20240508165200-4b234932019f
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240508145508-413890995ac0
+# code.cloudfoundry.org/filelock v0.0.0-20240509145650-67a3677ef078
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240507191029-a5d2960a4fb1
+# code.cloudfoundry.org/garden v0.0.0-20240508191051-20c24f475fba
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240507202434-96dd3c119b5c
@@ -73,7 +73,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240507165300-cde941a94707
+# code.cloudfoundry.org/policy_client v0.0.0-20240508165359-aa0d0fb6b8ee
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240506165053-ee50c1ee9388
@@ -172,7 +172,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240508145209-1db217f89380
+# github.com/google/pprof v0.0.0-20240509144519-723abb6459b7
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
