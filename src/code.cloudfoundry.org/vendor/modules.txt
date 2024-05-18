@@ -28,7 +28,7 @@ code.cloudfoundry.org/clock/fakeclock
 # code.cloudfoundry.org/debugserver v0.0.0-20240510172920-2e46c6dc69d9
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240516170206-bd2d4505c48e
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240517170314-c798dbdab9ae
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.0.0-20240510172921-4f2634116b9e
@@ -73,7 +73,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240511165626-f24e009e0e7c
+# code.cloudfoundry.org/policy_client v0.0.0-20240517170309-4a8bbfd85c13
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240516170203-d50b3d56ba06
