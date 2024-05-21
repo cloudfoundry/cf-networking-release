@@ -15,14 +15,14 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20240418184526-a7ed0dccd9f7
+	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240516170300-a39b7f6cd8b1
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240510172920-2e46c6dc69d9
-	code.cloudfoundry.org/filelock v0.0.0-20240515185159-918e226e852d
+	code.cloudfoundry.org/filelock v0.0.0-20240521151048-394c3cd79271
 	code.cloudfoundry.org/garden v0.0.0-20240509191138-2c301b84985a
 	code.cloudfoundry.org/lager/v3 v3.0.3
-	code.cloudfoundry.org/locket v0.0.0-20240410131216-aa54b91f26c7
+	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
 	code.cloudfoundry.org/policy_client v0.0.0-20240517170309-4a8bbfd85c13
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240516170203-d50b3d56ba06
 	example-apps/spammer v0.0.0-00010101000000-000000000000
@@ -56,10 +56,10 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240517170314-c798dbdab9ae // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240520225601-1832168b1f9d // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20240510172921-4f2634116b9e // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240515174142-71582f284718 // indirect
-	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
+	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
@@ -69,9 +69,8 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240509144519-723abb6459b7 // indirect
+	github.com/google/pprof v0.0.0-20240521024322-9665fa269a30 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
