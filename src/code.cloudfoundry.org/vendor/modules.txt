@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240516170300-a39b7f6cd8b1
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240521170514-dd5883bed6ba
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,19 +25,19 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240510172920-2e46c6dc69d9
+# code.cloudfoundry.org/debugserver v0.0.0-20240521170706-19b15e4a38db
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240520225601-1832168b1f9d
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240522142640-ecc294d577a6
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240510172921-4f2634116b9e
+# code.cloudfoundry.org/durationjson v0.0.0-20240521170711-c4478e386717
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240521151048-394c3cd79271
+# code.cloudfoundry.org/filelock v0.0.0-20240522151230-8406fd3a5062
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240509191138-2c301b84985a
+# code.cloudfoundry.org/garden v0.0.0-20240521192510-e538d3d654a1
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240515174142-71582f284718
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240517170309-4a8bbfd85c13
+# code.cloudfoundry.org/policy_client v0.0.0-20240521170504-8e2551eaf597
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240516170203-d50b3d56ba06
@@ -145,7 +145,7 @@ github.com/containernetworking/plugins/pkg/testutils
 # github.com/coreos/go-iptables v0.7.0
 ## explicit; go 1.16
 github.com/coreos/go-iptables/iptables
-# github.com/go-logr/logr v1.4.1
+# github.com/go-logr/logr v1.4.2
 ## explicit; go 1.18
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
@@ -234,7 +234,7 @@ github.com/nats-io/nuid
 # github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 ## explicit
 github.com/nu7hatch/gouuid
-# github.com/onsi/ginkgo/v2 v2.17.3
+# github.com/onsi/ginkgo/v2 v2.18.0
 ## explicit; go 1.20
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -313,7 +313,7 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.45.0
+# go.step.sm/crypto v0.45.1
 ## explicit; go 1.20
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
@@ -400,7 +400,7 @@ golang.org/x/text/width
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240520151616-dc85e6b867a5
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240521202816-d264139d666e
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.64.0
