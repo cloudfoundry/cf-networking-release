@@ -594,12 +594,12 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b h1:bW4BnYKV5EdCwaTYhIvyHVLWFvjBG9fQ8h8IYAQv7lo=
 code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240521170514-dd5883bed6ba h1:xq+HckXGX+XIsJz2p8wHk2Hoc0twCu5ak9S6AYDBfT8=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240521170514-dd5883bed6ba/go.mod h1:AOEhYH/NmyIzlQGFppGDPYUA/QEPulmZ+B8Fl0x4eeM=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240522170543-b1c6a9333cb6 h1:S0BmQQlJBwrrwCbKYhPdxAu19NkF+t4YJuORNxiePUQ=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240522170543-b1c6a9333cb6/go.mod h1:/Y3QM5fnNox3ZQF6QNvWcLNfogQrFQuC8EoAynCS/+M=
 code.cloudfoundry.org/clock v1.1.0 h1:XLzC6W3Ah/Y7ht1rmZ6+QfPdt1iGWEAAtIZXgiaj57c=
 code.cloudfoundry.org/clock v1.1.0/go.mod h1:yA3fxddT9RINQL2XHS7PS+OXxKCGhfrZmlNUCIM6AKo=
-code.cloudfoundry.org/debugserver v0.0.0-20240521170706-19b15e4a38db h1:U3okM7LWtvw98YAmdInnKXhf9h9AoS+dy7mhGbxQL9g=
-code.cloudfoundry.org/debugserver v0.0.0-20240521170706-19b15e4a38db/go.mod h1:puuwuWAcP6xeLlDshZBC2BnpxxHsz8b+esODTWwG2Hc=
+code.cloudfoundry.org/debugserver v0.0.0-20240522170726-5166a3ff2759 h1:gp4zO6N1Tp3wbEZWbOocTySv76c1eizlU7axun05aXY=
+code.cloudfoundry.org/debugserver v0.0.0-20240522170726-5166a3ff2759/go.mod h1:XHdK64R2OLK0dCl27oZmqZVmJ/gPZ/oW/JdprlYbhQ4=
 code.cloudfoundry.org/diego-logging-client v0.0.0-20240522142640-ecc294d577a6 h1:9sBQhS9Jhi0e+b5JQ6D1ZdDE9WeC/P7N7yRQ98Q1JCc=
 code.cloudfoundry.org/diego-logging-client v0.0.0-20240522142640-ecc294d577a6/go.mod h1:4VHToYMbaXNCqe7AVu4sUyri+6E/WVT0MQ6ghxfkx28=
 code.cloudfoundry.org/durationjson v0.0.0-20240521170711-c4478e386717 h1:8yEtyRMQzI2nAxxcVGyecGSs6zy63uiMunl0d+PJvQM=
