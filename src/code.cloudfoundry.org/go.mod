@@ -19,11 +19,11 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240522170543-b1c6a9333cb6
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240522170726-5166a3ff2759
-	code.cloudfoundry.org/filelock v0.0.0-20240522151230-8406fd3a5062
+	code.cloudfoundry.org/filelock v0.0.0-20240524151430-f475f13a7f1f
 	code.cloudfoundry.org/garden v0.0.0-20240521192510-e538d3d654a1
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240522170523-ad310edef091
+	code.cloudfoundry.org/policy_client v0.0.0-20240523170554-0a80ca33c7e0
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240522170710-79df114af82a
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -40,7 +40,7 @@ require (
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-top v0.6.1
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.18.0
+	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -56,7 +56,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240522204038-615a6113989c // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240523171002-24c331f0e3c4 // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20240522170728-eb9d30509ee0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240515174142-71582f284718 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
