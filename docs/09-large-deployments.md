@@ -1,4 +1,39 @@
-# Tips for Large Deployments with CF Networking and Silk Release
+---
+title: Large Deployment Best Practices
+expires_at: never
+tags: [cf-networking-release,silk-release]
+---
+
+<!-- vim-markdown-toc GFM -->
+
+* [Large Deployment best practices for CF-Networking and Silk Release](#large-deployment-best-practices-for-cf-networking-and-silk-release)
+  * [Problem 0: Default overlay IP CIDR block too small when there are 250+ diego cells](#problem-0-default-overlay-ip-cidr-block-too-small-when-there-are-250-diego-cells)
+    * [Symptoms](#symptoms)
+    * [Solution](#solution)
+  * [Problem 1: Silk Daemon uses too much CPU](#problem-1-silk-daemon-uses-too-much-cpu)
+    * [Symptoms](#symptoms-1)
+    * [Reason](#reason)
+    * [Solution](#solution-1)
+  * [Problem 2: ARP Cache on diego-cell not large enough](#problem-2-arp-cache-on-diego-cell-not-large-enough)
+    * [Symptoms](#symptoms-2)
+    * [Reason](#reason-1)
+    * [Solution](#solution-2)
+  * [Problem 3: Too frequent and in-sync polling from the silk-daemon and the vxlan-policy-agent](#problem-3-too-frequent-and-in-sync-polling-from-the-silk-daemon-and-the-vxlan-policy-agent)
+    * [Symptoms](#symptoms-3)
+    * [Reason](#reason-2)
+    * [Solution](#solution-3)
+  * [Problem 4: Reaching the Upper Limit of Network Policies](#problem-4-reaching-the-upper-limit-of-network-policies)
+    * [Summary](#summary)
+    * [Reason](#reason-3)
+    * [Scenario 1 - policies with no overlapping apps](#scenario-1---policies-with-no-overlapping-apps)
+    * [Scenario 2 - policies with overlapping apps](#scenario-2---policies-with-overlapping-apps)
+  * [Problem 5: NAT Gateway port exhaustion](#problem-5-nat-gateway-port-exhaustion)
+    * [Symptoms](#symptoms-4)
+    * [Reason](#reason-4)
+    * [Solution](#solution-4)
+
+<!-- vim-markdown-toc -->
+# Large Deployment best practices for CF-Networking and Silk Release
 
 Some users have larger deployments than we regularly test with. We have heard of
 large deployments with 500-1000 diego cells.  These deployments have specific

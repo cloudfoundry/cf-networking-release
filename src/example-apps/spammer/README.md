@@ -1,6 +1,6 @@
 #### Spammer
 
-This app spams requests on a destination. This is used in [Outbound Connection Limit Test](`https://github.com/cloudfoundry/cf-networking-release/blob/3684d1f70b3b35eed727c19d910776955dbc2276/src/code.cloudfoundry.org/test/acceptance/outbound_conn_limit_test.go`).
+This app spams requests on a destination. This is used in [Outbound Connection Limit Test](https://github.com/cloudfoundry/cf-networking-release/blob/3684d1f70b3b35eed727c19d910776955dbc2276/src/code.cloudfoundry.org/test/acceptance/outbound_conn_limit_test.go).
 
 #### To use the example app:
 

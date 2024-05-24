@@ -1,15 +1,22 @@
+---
+title: Example Apps Overview
+expires_at: never
+tags: [cf-networking-release]
+---
+
+<!-- vim-markdown-toc GFM -->
+
+* [Example Apps Overview](#example-apps-overview)
+  * [Use case: you want an app to do network debugging](#use-case-you-want-an-app-to-do-network-debugging)
+  * [Use case: you want to try out container-to-container networking](#use-case-you-want-to-try-out-container-to-container-networking)
+  * [Use case: you want to try out container-to-container networking with service discovery](#use-case-you-want-to-try-out-container-to-container-networking-with-service-discovery)
+  * [Use case: you want to use an a8registry](#use-case-you-want-to-use-an-a8registry)
+  * [Use case: you want to test an invalid HTTP response](#use-case-you-want-to-test-an-invalid-http-response)
+
+<!-- vim-markdown-toc -->
 # Example Apps Overview
 
 This doc provides an overview of the example apps provided and the uses cases they provide.
-
-## Use Cases
-* [general network debugging](#use-case-you-want-an-app-to-do-network-debugging)
-* [use container-to-container networking](#use-case-you-want-to-try-out-container-to-container-networking)
-* [use container-to-container networking with service discovery](#use-case-you-want-to-try-out-container-to-container-networking-with-service-discovery)
-* [use Eureka for service discovery](#use-case-you-want-to-try-out-eureka-for-service-discovery)
-* [use an a8registry](#use-case-you-want-to-try-out-eureka-for-service-discovery)
-
-<hr>
 
 ## Use case: you want an app to do network debugging
 **App:** [Proxy](https://github.com/cloudfoundry/cf-networking-release/tree/develop/src/example-apps/proxy)
