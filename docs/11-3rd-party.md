@@ -1,36 +1,41 @@
+---
+title: 3rd Party Plugin Development for Container Networking
+expires_at: never
+tags: [cf-networking-release]
+---
+
+<!-- vim-markdown-toc GFM -->
+
+* [3rd Party Plugin Development for Container Networking](#3rd-party-plugin-development-for-container-networking)
+  * [Introduction](#introduction)
+  * [Architecture](#architecture)
+  * [Mandatory features](#mandatory-features)
+    * [NetOut](#netout)
+    * [NetIn](#netin)
+    * [Policy Configuration](#policy-configuration)
+    * [MTU](#mtu)
+    * [Your CNI plugin is a bosh release](#your-cni-plugin-is-a-bosh-release)
+      * [To author a BOSH release with your plugin](#to-author-a-bosh-release-with-your-plugin)
+      * [To deploy your BOSH release with Cloud Foundry](#to-deploy-your-bosh-release-with-cloud-foundry)
+  * [Optional capabilities](#optional-capabilities)
+    * [Per ASG Logging](#per-asg-logging)
+    * [Global ASG and Container-to-Container Logging](#global-asg-and-container-to-container-logging)
+    * [Bosh Backup and Restore](#bosh-backup-and-restore)
+    * [Bosh DNS](#bosh-dns)
+  * [Getting Data from CF](#getting-data-from-cf)
+    * [From Config](#from-config)
+    * [Information from Internal Policy Server](#information-from-internal-policy-server)
+    * [Information from CAPI](#information-from-capi)
+      * [Poll for Cloud Controller for ASGs or events](#poll-for-cloud-controller-for-asgs-or-events)
+    * [From Diego](#from-diego)
+      * [Subscribe to BBS event stream for receiving LRP events](#subscribe-to-bbs-event-stream-for-receiving-lrp-events)
+      * [Registering container IPs instead of port mappings with the RE](#registering-container-ips-instead-of-port-mappings-with-the-re)
+  * [Tests](#tests)
+  * [Common Gotchas](#common-gotchas)
+  * [Feedback](#feedback)
+
+<!-- vim-markdown-toc -->
 # 3rd Party Plugin Development for Container Networking
-
-## Table of Contents
-
-<!--ts-->
-* [Introduction](#introduction)
-* [Architecture](#architecture)
-* [Mandatory features](#mandatory-features)
-  * [NetOut](#netout)
-  * [NetIn](#netin)
-  * [Policy Configuration](#policy-configuration)
-  * [MTU](#mtu)
-  * [Your CNI plugin is a bosh release](#your-cni-plugin-is-a-bosh-release)
-    * [To author a BOSH release with your plugin](#to-author-a-bosh-release-with-your-plugin)
-    * [To deploy your BOSH release with Cloud Foundry](#to-deploy-your-bosh-release-with-cloud-foundry)
-* [Optional capabilities](#optional-capabilities)
-  * [Per ASG Logging](#per-asg-logging)
-  * [Global ASG and Container-to-Container Logging](#global-asg-and-container-to-container-logging)
-  * [Bosh Backup and Restore](#bosh-backup-and-restore)
-  * [Bosh DNS](#bosh-dns)
-* [Getting Data from CF](#getting-data-from-cf)
-  * [From Config](#from-config)
-  * [Information from Internal Policy Server](#information-from-internal-policy-server)
-  * [Information from CAPI](#information-from-capi)
-    * [Poll for Cloud Controller for ASGs or events](#poll-for-cloud-controller-for-asgs-or-events)
-  * [From Diego](#from-diego)
-    * [Subscribe to BBS event stream for receiving LRP events](#subscribe-to-bbs-event-stream-for-receiving-lrp-events)
-    * [Registering container IPs instead of port mappings with the RE](#registering-container-ips-instead-of-port-mappings-with-the-re)
-* [Tests](#tests)
-* [Common Gotchas](#common-gotchas)
-* [Feedback](#feedback)
-<!--te-->
-
 
 ## Introduction
 
@@ -49,7 +54,7 @@ is correct.
 ## Architecture
 
 > If you want to integrate your own CNI plugin with Cloud Foundry, begin by
-> reviewing the component diagrams on the [architecture page](arch.md). Note
+> reviewing the component diagrams on the [architecture page](02-what-is-cf-networking.md#architecture). Note
 > that your plugin would replace the components in red, and take on the
 > responsibilities of these components.
 
@@ -94,7 +99,7 @@ via DNAT. For example, the cni-wrapper-plugin in silk-release - see
 - gets this data from the
 [garden-cni](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release)
 job. These can also be retreived from [environment
-variables](https://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html#CF-INSTANCE-PORTS)
+variables](https://docs.cloudfoundry.org/devguide/deploy-apps/environment-variable.html#CF-INSTANCE-PORT)
 
 ### Policy Configuration
 **Spec**: App-to-app policies between app containers and task containers for
@@ -259,7 +264,7 @@ gorouter access to application containers, and `netOutRules` which are egress
 whitelist rules used for implementing application security groups.
 
 A reference implementation of these features can be seen in the
-[cni-wrapper-plugin](https://github.com/cloudfoundry/silk-release/tree/develop/src/cni-wrapper-plugin).
+[cni-wrapper-plugin](https://github.com/cloudfoundry/silk-release/tree/develop/src/code.cloudfoundry.org/cni-wrapper-plugin).
 
 For example, at deploy time, Silk's CNI config is generated from this
 [template](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-cni/templates/cni-wrapper-plugin.conflist.erb),
@@ -378,13 +383,8 @@ the policies are honored.
 3rd party integrators should expect the internal policy server component will be
 present in a standard CF deploy.
 
-For how to use the Internal Policy Server API, [read
-here](policy-server-internal-api.md).
-
-### Information from the External Policy Server
-
-For how to use the External Policy Server API, [read
-here](policy-server-external-api.md).
+For how to use the Policy Server API, [read
+here](08-policy-server-api.md).
 
 ### Information from CAPI
 #### Poll for Cloud Controller for ASGs or events

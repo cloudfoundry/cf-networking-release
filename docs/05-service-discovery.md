@@ -1,26 +1,96 @@
-# CF App Service Discovery
+---
+title: Service Discovery
+expires_at: never
+tags: [cf-networking-release]
+---
 
-- [High Level Overview](#high-level-overview)
-    - [Problem we are trying to solve](#problem-we-are-trying-to-solve)
-    - [App Developer Experience](#app-developer-experience)
-    - [Interaction with Policy](#interaction-with-policy)
-- [
-Domains](#internal-domains)
-    - [Example usage](#example-usage)
-- [Architecture](#architecture)
-    - [Architecture Diagram](#architecture-diagram)
-- [Deployment Instructions](#deployment-instructions)
-    - [BOSH-lite](#bosh-lite)
-    - [All other platforms](#all-other-platforms)
-- [Logging](#logging)
-    - [Debugging problems](#debugging-problems)
-- [Metrics](#metrics)
-- [Tests](#tests)
-    - [Unit](#unit)
-    - [Smoke](#smoke)
-    - [Acceptance](#acceptance)
+<!-- vim-markdown-toc GFM -->
 
-## High Level Overview
+* [Service Discovery](#service-discovery)
+  * [Architecture](#architecture)
+    * [Architecture Diagram](#architecture-diagram)
+  * [Metrics](#metrics)
+  * [CF App Service Discovery](#cf-app-service-discovery)
+    * [Motivation](#motivation)
+    * [App Developer Experience](#app-developer-experience)
+    * [Interaction with Policy](#interaction-with-policy)
+  * [Internal Domains](#internal-domains)
+    * [Configuring Custom Internal Domains](#configuring-custom-internal-domains)
+    * [Updating to cf-networking-release v2.11.0 or later](#updating-to-cf-networking-release-v2110-or-later)
+    * [Notes on CAPI Release](#notes-on-capi-release)
+      * [Example steps](#example-steps)
+  * [Logging](#logging)
+    * [Debugging problems](#debugging-problems)
+  * [Tests](#tests)
+    * [Running Acceptance Tests](#running-acceptance-tests)
+      * [Running the full acceptance test on bosh-lite](#running-the-full-acceptance-test-on-bosh-lite)
+      * [Running the full acceptance test on specific env](#running-the-full-acceptance-test-on-specific-env)
+      * [The full set of config parameters is explained below:](#the-full-set-of-config-parameters-is-explained-below)
+        * [Required parameters:](#required-parameters)
+    * [Running Smoke Tests](#running-smoke-tests)
+      * [The full set of config parameters is explained below:](#the-full-set-of-config-parameters-is-explained-below-1)
+  * [Configuring](#configuring)
+    * [Configuring Custom Internal Domains](#configuring-custom-internal-domains-1)
+
+<!-- vim-markdown-toc -->
+# Service Discovery
+
+## Architecture
+
+### Architecture Diagram
+![](service-discovery-arch.png)
+
+Routes are emitted from the Route Emitter. Internal routes are emitted from the
+Route Emitter as well, on a separate topic.
+
+The NATS message queue cluster that handles routes for the gorouter also handles
+internal routes.
+
+The Service Discovery Controller (SDC) subscribes to route updates from NATS on
+the internal routes topic. The SDC is highly available. The SDC has no
+persistence, it is an in memory store of internal domain names to IPs. The SDC
+warms (populates routes) before entering service.
+
+Each Diego Cell has a BOSH DNS and a BOSH-DNS Adapter. App containers are
+configured to use the BOSH DNS server on their Deigo cell as their DNS server.
+The BOSH-DNS Adapter configures BOSH DNS to route queries for internal domains
+to itself. When a request for an internal domain hits BOSH DNS it looks at the
+domain name. If it's internal it directs the request to the BOSH-DNS Adapter.
+BOSH DNS communicates to the BOSH DNS Adapter via http (following the [Google
+DNS over
+HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https)
+schema).
+
+The BOSH DNS adapter in turn makes a request to the SDC. This HTTP connection is
+secured using mTLS. Responses from the SDC contain all the IPs of all the app
+containers associated with the requested route. Responses from the BOSH DNS
+adapter contain all the IPs returned from the SDC, shuffled. BOSH DNS in turn
+returns the full set of IPs originally from the SDC. Clients typically use the
+first IP in the DNS response, the shuffling provides a crude form of load
+balancing.
+
+## Metrics
+
+Below are a list of metrics for service discovery components. To deploy a firehose nozzle to see the metrics, upload the
+[datadog-firehose-nozzle-release](http://bosh.io/releases/github.com/DataDog/datadog-firehose-nozzle-release) and follow
+the instructions [here](https://github.com/DataDog/datadog-firehose-nozzle-release) to deploy.
+
+Metric Name | Description
+------------ | -------------
+`bosh_dns_adapter.GetIPsRequestTime` | duration of get ip request in milliseconds
+`bosh_dns_adapter.GetIPsRequestCount` | number of get ip requests
+`bosh_dns_adapter.DNSRequstFailures` | number of failed requests to the Service Discovery Controller
+`bosh_dns_adapter.uptime` | process uptime, emitted on 10 second interval
+`service_discovery_controller.RegistrationRequestTime` | duration of registration request in milliseconds
+`service_discovery_controller.RegistrationRequestCount` | number of registration requests
+`service_discovery_controller.addressTableLookupTime` | duration of looking up address table in milliseconds
+`service_discovery_controller.uptime` | process uptime, emitted on 10 second interval
+`service_discovery_controller.dnsRequest` | count of successful dnsRequests, emitted on a 10 second interval
+`service_discovery_controller.registerMessagesReceived` | count of route register messages received via NATS from route emitter
+`service_discovery_controller.maxRouteMessageTimePerInterval` | maximum time taken from BBS to SDC, only on new app creation
+
+
+## CF App Service Discovery
 
 ### Motivation
 Previously, Application Developers who wanted to use container to container
@@ -306,4 +376,56 @@ Parameter | Description | Required?
 Once the config is set, run the smoke tests:
 ```bash
 ginkgo -r ./src/code.cloudfoundry.org/test/smoke-sd
+```
+:
+
+## Configuring
+
+### Configuring Custom Internal Domains
+
+Creating your own internal domain requires [enable-service-discovery
+opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/enable-service-discovery.yml)
+and the following two operations:
+1. Add the custom internal domain name(s) to the `internal_domains` property on
+   the `bosh-dns-adapter` job.
+
+```yaml
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=bosh-dns-adapter/properties/internal_domains?
+  value: ["apps.internal."]
+```
+
+> NOTE: The internal domain property in bosh-dns-adapter supports domains with
+> and without the trailing dot.
+
+2. Run the following command after deployment:
+
+```bash
+cf create-shared-domain <DOMAIN> --internal
+```
+
+Or, add the custom internal domain to the `apps_domains` property on
+`cloud_controller_ng` job.
+
+```yaml
+- type: replace
+  path: /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/-
+  value:
+    name: apps.internal
+    internal: true
+```
+
+NOTE: The internal domain property in cloud_controller_ng does not accept
+domains with a trailing dot.
+
+3. Deploy.
+
+To delete a shared domain, run one of the following commands:
+
+```bash
+cf curl -X DELETE /v2/shared_domains/<SHARED DOMAIN GUID>
+```
+
+```bash
+cf delete-shared-domain <DOMAIN> [-f]
 ```

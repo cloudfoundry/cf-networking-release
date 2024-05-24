@@ -1,6 +1,6 @@
 #### Smoke
 
-This app performs a smoke test on itself. This is used in [Diego CI](`https://github.com/cloudfoundry/diego-ci`).
+This app performs a smoke test on itself. This is used in [smoke test](../../code.cloudfoundry.org/test/smoke)
 
 #### To use the example app:
 

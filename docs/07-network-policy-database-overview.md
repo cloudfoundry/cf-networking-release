@@ -1,20 +1,28 @@
-# Network Policy Database Overview
+---
+title: Network Policy Database
+expires_at: never
+tags: [cf-networking-release]
+---
+
+<!-- vim-markdown-toc GFM -->
+
+* [Network Policy Database](#network-policy-database)
+   * [<a name="access-db"></a> How to access an internal database](#a-nameaccess-dba-how-to-access-an-internal-database)
+   * [<a name="table-overview"></a> Table Overview](#a-nametable-overviewa-table-overview)
+   * [<a name="network-policy-tables"></a> Network Policy Related Tables](#a-namenetwork-policy-tablesa-network-policy-related-tables)
+      * [<a name="groups-table"></a> Groups](#a-namegroups-tablea-groups)
+      * [<a name="destinations-table"></a> Destinations](#a-namedestinations-tablea-destinations)
+      * [<a name="policies-table"></a> Policies](#a-namepolicies-tablea-policies)
+   * [<a name="network-policy-example"></a> Networking Policy Example](#a-namenetwork-policy-examplea-networking-policy-example)
+   * [<a name="migrations-tables"></a> Migration Related Tables](#a-namemigrations-tablesa-migration-related-tables)
+      * [<a name="gorp-mirations-table"></a> gorp_migrations](#a-namegorp-mirations-tablea-gorp_migrations)
+      * [<a name="gorp-lock-table"></a> gorp_lock](#a-namegorp-lock-tablea-gorp_lock)
+
+<!-- vim-markdown-toc -->
+
+# Network Policy Database
 
 This document is intended to help people who are poking around the `network_policy` database. There are a lot of tables (most of them empty) and the names of the rows are not the most intuative. This doc should help you connect to the database and understand what you find there.
-
-## Table of Contents
-
-* [How to access an internal database](#access-db)
-* [Table Overview](#table-overview)
-* [Networking Policy Related Tables](#network-policy-tables)
-  * [Groups](#groups-table)
-  * [Destinations](#destinations-table)
-  * [Policies](#policies-table)
-* [Networking Policy Example Rows](#network-policy-example)
-* [Migration Related Tables](#migration-tables)
-  * [Gorp_migrations](#gorp-migrations-table)
-  * [Gorp_lock](#gorp-lock-table)
--------------------------------------------------------------------------------------------
 
 ## <a name="access-db"></a> How to access an internal database
 1. Bosh ssh onto the VM where the `policy-server` is running. You can figure out what machine by running `bosh is --ps | grep policy-server`.
@@ -197,7 +205,7 @@ mysql> describe gorp_migrations;
 
 | Field | Note  |
 |---|---|
-| id | This value refers to the "id" of the migration as specified in [migrations.go](https://github.com/cloudfoundry/cf-networking-release/blob/develop/src/policy-server/store/migrations/migrations.go) |
+| id | This value refers to the "id" of the migration as specified in [migrations.go](https://github.com/cloudfoundry/cf-networking-release/blob/develop/src/code.cloudfoundry.org/policy-server/store/migrations/migrations.go) |
 | applied_at | This is the time when the migration was applied to the database. |
 
 ### <a name="gorp-lock-table"></a> gorp_lock

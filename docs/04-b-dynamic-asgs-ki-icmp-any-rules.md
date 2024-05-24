@@ -1,15 +1,24 @@
-# Apps stop running after a deploy when using dynamic ASGs with icmp any rule
+---
+title: Dynamic ASG ICMP Any Bug
+expires_at: 2025-04-28
+tags: [cf-networking-release,silk-release]
+---
 
-## Table of Contents
-* [Context](#context)
-* [Issue](#issue)
-* [Expected Logs](#expected-logs)
-* [Affected ASGs](#affected-asgs)
-* [Affected Versions](#affected-versions)
-* [Fixed Version](#fixed-version)
-* [Check your ASGs](#check-your-asgs)
-* [Temporary Mitigation](#temporary-mitigation)
-* [Permanent Fix](#permanent-fix)
+<!-- vim-markdown-toc GFM -->
+
+* [Apps stop running after a deploy when using dynamic ASGs with icmp any rule](#apps-stop-running-after-a-deploy-when-using-dynamic-asgs-with-icmp-any-rule)
+  * [Context](#context)
+  * [Issue](#issue)
+  * [Expected Logs](#expected-logs)
+  * [Affected ASGs](#affected-asgs)
+  * [Affected Versions](#affected-versions)
+  * [Fixed Version](#fixed-version)
+  * [Check your ASGs](#check-your-asgs)
+  * [Temporary Mitigation](#temporary-mitigation)
+  * [Permanent Fix](#permanent-fix)
+
+<!-- vim-markdown-toc -->
+# Apps stop running after a deploy when using dynamic ASGs with icmp any rule
 
 ## Context
 All ICMP packets have a type and a code, each represented by one byte. For ASGs
