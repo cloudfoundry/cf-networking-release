@@ -19,11 +19,11 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240524170756-d102f142126f
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240524171011-a228404938b4
-	code.cloudfoundry.org/filelock v0.0.0-20240524151430-f475f13a7f1f
-	code.cloudfoundry.org/garden v0.0.0-20240524192812-a517c05e8706
+	code.cloudfoundry.org/filelock v0.0.0-20240526151625-2fe9a338870a
+	code.cloudfoundry.org/garden v0.0.0-20240525192816-95cc6e9bd84a
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240524170759-f66e7cba4f15
+	code.cloudfoundry.org/policy_client v0.0.0-20240525170807-53aa54d85888
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240522170710-79df114af82a
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -70,12 +70,12 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240521024322-9665fa269a30 // indirect
+	github.com/google/pprof v0.0.0-20240525223248-4bfdf5a9a2af // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
-	github.com/jackc/pgx/v5 v5.5.5 // indirect
+	github.com/jackc/pgx/v5 v5.6.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
