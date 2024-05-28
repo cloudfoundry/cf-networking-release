@@ -34,7 +34,7 @@ code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.0.0-20240526171154-48413eb7953b
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240526151625-2fe9a338870a
+# code.cloudfoundry.org/filelock v0.0.0-20240528151814-fec2f63a5995
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20240526192913-7f9f6ab34afd
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240526170949-30d3923b2e1a
+# code.cloudfoundry.org/policy_client v0.0.0-20240527171048-67ecf8ab24d5
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240522170710-79df114af82a
@@ -167,7 +167,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240525223248-4bfdf5a9a2af
+# github.com/google/pprof v0.0.0-20240528025155-186aa0362fba
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
@@ -399,7 +399,7 @@ golang.org/x/text/width
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240521202816-d264139d666e
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240528155852-a33235495d66
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.64.0
