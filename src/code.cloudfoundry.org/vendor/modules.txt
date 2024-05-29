@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240526170953-b6170891f573
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240528171056-466c0f1d1c41
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,19 +25,19 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240526171159-961b724bcdaa
+# code.cloudfoundry.org/debugserver v0.0.0-20240528171256-ba541ff4aaaf
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240526171204-4928a34fc1a0
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240528171304-21a75a4002e7
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240526171154-48413eb7953b
+# code.cloudfoundry.org/durationjson v0.0.0-20240528171241-639cd04bbf26
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20240528151814-fec2f63a5995
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240526192913-7f9f6ab34afd
+# code.cloudfoundry.org/garden v0.0.0-20240528193019-27e36ab812ea
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240515174142-71582f284718
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240527171048-67ecf8ab24d5
+# code.cloudfoundry.org/policy_client v0.0.0-20240528171047-7b5771db0559
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240522170710-79df114af82a
@@ -399,7 +399,7 @@ golang.org/x/text/width
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240528155852-a33235495d66
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.64.0
