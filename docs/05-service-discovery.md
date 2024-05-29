@@ -279,7 +279,7 @@ curl -X POST -d 'info' localhost:8066/log-level
 ## Tests
 
 Please refer to the [contributing
-guide](https://github.com/cloudfoundry/cf-networking-release/blob/develop/docs/contributing.md)
+guide](https://github.com/cloudfoundry/cf-networking-release/blob/develop/.github/CONTRIBUTING.md)
 for information on running unit and integration tests.  Service-Discovery
 specific instructions for running Acceptance and Smoke tests below.
 
