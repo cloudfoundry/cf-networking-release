@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240604171709-dd2b0e7a5fb1
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240605171753-cbd271632a86
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,13 +25,13 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240604172006-4dee5ddcdb7c
+# code.cloudfoundry.org/debugserver v0.0.0-20240605172147-3433a40ea1bc
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240604172016-489f4029d3f1
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240605172200-e2549c297631
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240604172003-0d793792bfe4
+# code.cloudfoundry.org/durationjson v0.0.0-20240605172149-1c08fce07291
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20240605152813-891eacc2974f
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240604171705-baff8db0b17c
+# code.cloudfoundry.org/policy_client v0.0.0-20240605171751-2236e7efe268
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240604172015-5be76e21ea65
@@ -177,7 +177,7 @@ github.com/google/pprof/profile
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
 github.com/jackc/pgpassfile
-# github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9
+# github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
 ## explicit; go 1.14
 github.com/jackc/pgservicefile
 # github.com/jackc/pgx/v5 v5.6.0
@@ -312,7 +312,7 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.46.0
+# go.step.sm/crypto v0.47.0
 ## explicit; go 1.20
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
