@@ -600,8 +600,8 @@ code.cloudfoundry.org/clock v1.1.0 h1:XLzC6W3Ah/Y7ht1rmZ6+QfPdt1iGWEAAtIZXgiaj57
 code.cloudfoundry.org/clock v1.1.0/go.mod h1:yA3fxddT9RINQL2XHS7PS+OXxKCGhfrZmlNUCIM6AKo=
 code.cloudfoundry.org/debugserver v0.0.0-20240605172147-3433a40ea1bc h1:8/ZQ94SzErTOQauUS8+m8dBASYOQXI7SNidpoBrXEXc=
 code.cloudfoundry.org/debugserver v0.0.0-20240605172147-3433a40ea1bc/go.mod h1:1pcxPb5e3omAEcU4hXW3zy1D4qfi0Ttyh3vmhGb1PdA=
-code.cloudfoundry.org/diego-logging-client v0.0.0-20240605172200-e2549c297631 h1:9iB9Sk5TUf2aFDXK41Y4to3qkYFydnYzN7zRGKZEuNw=
-code.cloudfoundry.org/diego-logging-client v0.0.0-20240605172200-e2549c297631/go.mod h1:Eg48/PGnrnxAt1kgp/axEkUCwgj+5uK+sHIHUaP2Sxw=
+code.cloudfoundry.org/diego-logging-client v0.0.0-20240607172319-a6c635476209 h1:PlsEnMpnqQ7RpQVe2BU9/eDQ5q4dZkV3hZ2+daev2Og=
+code.cloudfoundry.org/diego-logging-client v0.0.0-20240607172319-a6c635476209/go.mod h1:HjPyuTujjbCeZoRfm0K0nYyi7fzTJINQ+M0I7mQuXy8=
 code.cloudfoundry.org/durationjson v0.0.0-20240605172149-1c08fce07291 h1:k1AK823tnpP3T+OKOdU6rdV9ddNDFYA0E3gcArn1LXU=
 code.cloudfoundry.org/durationjson v0.0.0-20240605172149-1c08fce07291/go.mod h1:L6sgZgivKogoY3mLklqlbCxRKtht3p8tU8PrP8gdCSU=
 code.cloudfoundry.org/filelock v0.0.0-20240605152813-891eacc2974f h1:9zSHZdWWYBW2WzH4+DXBgqmUASelrjH3XOShRwva4ig=
@@ -618,8 +618,8 @@ code.cloudfoundry.org/lager/v3 v3.0.3 h1:/UTmadZfIaKuT/whEinSxK1mzRfNu1uPfvjFfGq
 code.cloudfoundry.org/lager/v3 v3.0.3/go.mod h1:Zn5q1SrIuuHjEUE7xerMKt3ztunrJQCZETAo7rV0CH8=
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03 h1:jrunp9b2C7KMCIYlgU8CGxRa0u4A1EtJiYHaZRSo5GQ=
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
-code.cloudfoundry.org/policy_client v0.0.0-20240606171829-4a5d1e3881a9 h1:SBcwmhyFDiOXy2jIn6iLL40eBO6YhORb/CGILxQlapU=
-code.cloudfoundry.org/policy_client v0.0.0-20240606171829-4a5d1e3881a9/go.mod h1:Whx6BDY83mV7rfEOWK98A/idNekG4fJePNXU8NOGM4s=
+code.cloudfoundry.org/policy_client v0.0.0-20240607171900-290f353c511b h1:g7lov56UlfmQJ9UOamI7YnwdfZj6mIlUF1bgYE49Vyk=
+code.cloudfoundry.org/policy_client v0.0.0-20240607171900-290f353c511b/go.mod h1:jBF/GwiqMZkih2Jwo15K7ukS0iuajT/DEpV+d8ifSVA=
 code.cloudfoundry.org/tlsconfig v0.0.0-20240606172222-82aa02bc07ea h1:PjyR5Os5IVETrZkgATzSNl4R++/h+r6uQchSJ3dZsgc=
 code.cloudfoundry.org/tlsconfig v0.0.0-20240606172222-82aa02bc07ea/go.mod h1:RwJBA7HrvmyPNY8pRzAwlJ56WFmqJiPjxywZpxCZdWQ=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
