@@ -16,11 +16,11 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240606171834-15498a222c4a
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240611172312-b062b95acdd0
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240605172147-3433a40ea1bc
 	code.cloudfoundry.org/filelock v0.0.0-20240605152813-891eacc2974f
-	code.cloudfoundry.org/garden v0.0.0-20240604193611-1a2f0f635229
+	code.cloudfoundry.org/garden v0.0.0-20240611194356-c66dc427ceca
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
 	code.cloudfoundry.org/policy_client v0.0.0-20240607171900-290f353c511b
@@ -56,7 +56,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240610172700-1709b2f54f2e // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240611172713-2a88719c2fed // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20240605172149-1c08fce07291 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
