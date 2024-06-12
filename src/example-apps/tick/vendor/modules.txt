@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240606171834-15498a222c4a
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240611172312-b062b95acdd0
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 # code.cloudfoundry.org/localip v0.0.0-20240605172145-e093a99dad61
