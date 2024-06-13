@@ -23,7 +23,7 @@ require (
 	code.cloudfoundry.org/garden v0.0.0-20240611194356-c66dc427ceca
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240607171900-290f353c511b
+	code.cloudfoundry.org/policy_client v0.0.0-20240612172445-ba3c6f2110c7
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240606172222-82aa02bc07ea
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -82,7 +82,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.47.0 // indirect
+	go.step.sm/crypto v0.47.1 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
