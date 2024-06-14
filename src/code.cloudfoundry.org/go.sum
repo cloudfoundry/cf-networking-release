@@ -594,8 +594,8 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b h1:bW4BnYKV5EdCwaTYhIvyHVLWFvjBG9fQ8h8IYAQv7lo=
 code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240611172312-b062b95acdd0 h1:GomScSHZ3RawKNnN9GI1GG3EDdeVyukUWIrtmmjORDs=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240611172312-b062b95acdd0/go.mod h1:hzHWRlRCnKVXDnkA2jLg7xB4UyEo0m6DjAP8ODMf9Tg=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240613172441-2507c0d99202 h1:5X85e3a46czG9uqfLPa2v0vyYGI3FrfgiQFnYzzpEFc=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240613172441-2507c0d99202/go.mod h1:lQgn0O8UXIeiIKacxha4yM9TO61LAdc8TG9aj6iHyH0=
 code.cloudfoundry.org/clock v1.1.0 h1:XLzC6W3Ah/Y7ht1rmZ6+QfPdt1iGWEAAtIZXgiaj57c=
 code.cloudfoundry.org/clock v1.1.0/go.mod h1:yA3fxddT9RINQL2XHS7PS+OXxKCGhfrZmlNUCIM6AKo=
 code.cloudfoundry.org/debugserver v0.0.0-20240605172147-3433a40ea1bc h1:8/ZQ94SzErTOQauUS8+m8dBASYOQXI7SNidpoBrXEXc=
@@ -620,8 +620,8 @@ code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03 h1:jrunp9b2C7KMC
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
 code.cloudfoundry.org/policy_client v0.0.0-20240612172445-ba3c6f2110c7 h1:9oXtcT+gxd69d1jIBu1I9Ce/pK8Z6W2MGtUvbbvoALI=
 code.cloudfoundry.org/policy_client v0.0.0-20240612172445-ba3c6f2110c7/go.mod h1:71ia7aJUkCLuO1cIO3hOs/p+Ycdr/TCp6Kso/XWiaZQ=
-code.cloudfoundry.org/tlsconfig v0.0.0-20240606172222-82aa02bc07ea h1:PjyR5Os5IVETrZkgATzSNl4R++/h+r6uQchSJ3dZsgc=
-code.cloudfoundry.org/tlsconfig v0.0.0-20240606172222-82aa02bc07ea/go.mod h1:RwJBA7HrvmyPNY8pRzAwlJ56WFmqJiPjxywZpxCZdWQ=
+code.cloudfoundry.org/tlsconfig v0.0.0-20240613173017-075d5b187a0d h1:nedO/GTZuf/FlRvrAuXWX9FdBBEd1hWXlhn1bp6li68=
+code.cloudfoundry.org/tlsconfig v0.0.0-20240613173017-075d5b187a0d/go.mod h1:qDYY1KwaNSWV7beH9J/IJR5erYD3bwO4zs+nDbpgbf8=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
