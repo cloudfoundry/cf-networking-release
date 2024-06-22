@@ -594,8 +594,8 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b h1:bW4BnYKV5EdCwaTYhIvyHVLWFvjBG9fQ8h8IYAQv7lo=
 code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240618173001-1adf24be817d h1:7CPs/WO7cqd7JasoZn2NAu0MQeLQ7xJ+uoug5NkE+d0=
-code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240618173001-1adf24be817d/go.mod h1:I5nI9zEilFFyemyMjbUimsqLPzKoyirDYBI0mU4lp/Q=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240621173257-6bf00bbc6b72 h1:woq4234s4abL34yepPeWh0zSGOp0xFiipJ2ZwV86wGc=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240621173257-6bf00bbc6b72/go.mod h1:7N+zSV1VIsJZ8eSLtzwSYZubYs9VFFuwEWiV5qtzUaE=
 code.cloudfoundry.org/clock v1.1.0 h1:XLzC6W3Ah/Y7ht1rmZ6+QfPdt1iGWEAAtIZXgiaj57c=
 code.cloudfoundry.org/clock v1.1.0/go.mod h1:yA3fxddT9RINQL2XHS7PS+OXxKCGhfrZmlNUCIM6AKo=
 code.cloudfoundry.org/debugserver v0.0.0-20240618173558-74ca23c0ae8c h1:21Y7XS9UmOOkdTbEaSZPkRg8xMS20EoP6ezcXenUhKQ=
@@ -604,8 +604,8 @@ code.cloudfoundry.org/diego-logging-client v0.0.0-20240618173608-2e708c3385e1 h1
 code.cloudfoundry.org/diego-logging-client v0.0.0-20240618173608-2e708c3385e1/go.mod h1:7aqB3KhGciVteRlpRuXSsm+U/tgxHnYpyDb3F2d19y4=
 code.cloudfoundry.org/durationjson v0.0.0-20240618173555-a9e7689cae2f h1:dvn3+Kj2KRZn+gJl1fen0B8TgUregbzgO8wUCALME/k=
 code.cloudfoundry.org/durationjson v0.0.0-20240618173555-a9e7689cae2f/go.mod h1:mg9OQ2pXPAaF1z9hSGx/5ZhQA/tlyU0EXQS9PDq1FGo=
-code.cloudfoundry.org/filelock v0.0.0-20240618153619-7ab7dc153b43 h1:1ykvn17FPpxsMWjktl50NUmFc0H6KRUDBn5Uco809H0=
-code.cloudfoundry.org/filelock v0.0.0-20240618153619-7ab7dc153b43/go.mod h1:IS9/LAinI6eQjPC2ZHQ+qhAIigXXrYQ8P3YLZXTGdvw=
+code.cloudfoundry.org/filelock v0.0.0-20240622153826-711d9a2fceb6 h1:Bum4LTrWZWb+a8WkV4R2589jk3oAaVTnuUQr8ObdLnw=
+code.cloudfoundry.org/filelock v0.0.0-20240622153826-711d9a2fceb6/go.mod h1:ZPpSoYDQczJPTQN5dquiCiT5J8yzqufyEv+eUrl0dXw=
 code.cloudfoundry.org/garden v0.0.0-20240618195149-8ca9acd40cec h1:U0BhgV6hBxEkyncVqn8qgsCOQNqgDZ1feyx3/3NQslQ=
 code.cloudfoundry.org/garden v0.0.0-20240618195149-8ca9acd40cec/go.mod h1:jjW6cVQ31usvkg5c+o5nZKfYe3HwXJFpaQOZgNs5N38=
 code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3 h1:4WCYwJmqSfV7ChDohsJB8Z0aDVklIE+n8OTBJxpif0c=
@@ -823,8 +823,8 @@ github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38/go.mod h1:kpwsk12EmLe
 github.com/google/pprof v0.0.0-20210601050228-01bbb1931b22/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210609004039-a478d1d731e9/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
-github.com/google/pprof v0.0.0-20240618054019-d3b898a103f8 h1:ASJ/LAqdCHOyMYI+dwNxn7Rd8FscNkMyTr1KZU1JI/M=
-github.com/google/pprof v0.0.0-20240618054019-d3b898a103f8/go.mod h1:K1liHPHnj73Fdn/EKuT8nrFqBihUSKXoLYU0BuatOYo=
+github.com/google/pprof v0.0.0-20240622144329-c177fd99eaa9 h1:ouFdLLCOyCfnxGpQTMZKHLyHr/D1GFbQzEsJxumO16E=
+github.com/google/pprof v0.0.0-20240622144329-c177fd99eaa9/go.mod h1:K1liHPHnj73Fdn/EKuT8nrFqBihUSKXoLYU0BuatOYo=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

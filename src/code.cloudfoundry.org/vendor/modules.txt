@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240618173001-1adf24be817d
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240621173257-6bf00bbc6b72
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -34,7 +34,7 @@ code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.0.0-20240618173555-a9e7689cae2f
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240618153619-7ab7dc153b43
+# code.cloudfoundry.org/filelock v0.0.0-20240622153826-711d9a2fceb6
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20240618195149-8ca9acd40cec
@@ -167,7 +167,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240618054019-d3b898a103f8
+# github.com/google/pprof v0.0.0-20240622144329-c177fd99eaa9
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1

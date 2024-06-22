@@ -16,10 +16,10 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240618173001-1adf24be817d
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240621173257-6bf00bbc6b72
 	code.cloudfoundry.org/clock v1.1.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240618173558-74ca23c0ae8c
-	code.cloudfoundry.org/filelock v0.0.0-20240618153619-7ab7dc153b43
+	code.cloudfoundry.org/filelock v0.0.0-20240622153826-711d9a2fceb6
 	code.cloudfoundry.org/garden v0.0.0-20240618195149-8ca9acd40cec
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
@@ -70,7 +70,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240618054019-d3b898a103f8 // indirect
+	github.com/google/pprof v0.0.0-20240622144329-c177fd99eaa9 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
