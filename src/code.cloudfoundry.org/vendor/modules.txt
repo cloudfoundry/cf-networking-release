@@ -28,13 +28,13 @@ code.cloudfoundry.org/clock/fakeclock
 # code.cloudfoundry.org/debugserver v0.0.0-20240622173946-6ebc359d7f4f
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240622173949-f2ec4270dfa9
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240624174153-027a6a0f439c
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.0.0-20240622173936-69f1d911dfdb
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240622153826-711d9a2fceb6
+# code.cloudfoundry.org/filelock v0.0.0-20240625154104-9dfeddeb8fbb
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20240622195556-3d9d714dfef8
@@ -125,7 +125,7 @@ github.com/cloudfoundry/dropsonde/runtime_stats
 # github.com/cloudfoundry/sonde-go v0.0.0-20240620221854-09ef53324489
 ## explicit; go 1.18
 github.com/cloudfoundry/sonde-go/events
-# github.com/containernetworking/cni v1.2.1 => github.com/containernetworking/cni v1.1.2
+# github.com/containernetworking/cni v1.2.2 => github.com/containernetworking/cni v1.1.2
 ## explicit; go 1.14
 github.com/containernetworking/cni/libcni
 github.com/containernetworking/cni/pkg/invoke
@@ -167,7 +167,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240622144329-c177fd99eaa9
+# github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
