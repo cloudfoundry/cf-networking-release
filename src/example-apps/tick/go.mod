@@ -3,8 +3,8 @@ module tick
 go 1.20
 
 require (
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240622173319-f03c5f2c7673
-	code.cloudfoundry.org/localip v0.0.0-20240622173945-c9d07224d751
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240625173540-5af747cc4d50
+	code.cloudfoundry.org/localip v0.0.0-20240625174231-6e14c198f7fa
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
