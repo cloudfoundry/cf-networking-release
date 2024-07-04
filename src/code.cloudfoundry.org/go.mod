@@ -19,11 +19,11 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240702174257-9a772442b375
 	code.cloudfoundry.org/clock v1.2.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240625174232-b3229b6daea3
-	code.cloudfoundry.org/filelock v0.0.0-20240625154104-9dfeddeb8fbb
+	code.cloudfoundry.org/filelock v0.0.0-20240704154913-915c936c7db2
 	code.cloudfoundry.org/garden v0.0.0-20240625195848-36e99aad95da
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240626173536-c40f6a4c0571
+	code.cloudfoundry.org/policy_client v0.0.0-20240703174331-2fb6f3b8e4d0
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240702174858-4c0df2f29c62
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -50,13 +50,13 @@ require (
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.26.0
-	golang.org/x/sys v0.21.0
+	golang.org/x/sys v0.22.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240702174911-eee1e008b8e0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240703175007-4cd6b2daa77c // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20240625174233-9ff5003698bf // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.48.0 // indirect
+	go.step.sm/crypto v0.48.1 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
