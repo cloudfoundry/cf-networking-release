@@ -16,15 +16,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240702174257-9a772442b375
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240704174539-dee812c25e95
 	code.cloudfoundry.org/clock v1.2.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240625174232-b3229b6daea3
-	code.cloudfoundry.org/filelock v0.0.0-20240704154913-915c936c7db2
-	code.cloudfoundry.org/garden v0.0.0-20240625195848-36e99aad95da
+	code.cloudfoundry.org/debugserver v0.0.0-20240704175129-4d9e1bd21cf9
+	code.cloudfoundry.org/filelock v0.0.0-20240705155015-e5997ec78fec
+	code.cloudfoundry.org/garden v0.0.0-20240704200653-6c85f6c7e8c5
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240703174331-2fb6f3b8e4d0
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240702174858-4c0df2f29c62
+	code.cloudfoundry.org/policy_client v0.0.0-20240704174520-8d6071a5c148
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240704175129-ec907c2cc365
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -49,15 +49,15 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.26.0
+	golang.org/x/net v0.27.0
 	golang.org/x/sys v0.22.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240703175007-4cd6b2daa77c // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240625174233-9ff5003698bf // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240704175139-8bfcd6a760fa // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240704175136-11dced74d892 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.48.1 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
