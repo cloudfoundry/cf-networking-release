@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240704174539-dee812c25e95
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240705174608-10d4ff6b6193
 ## explicit; go 1.20
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,19 +25,19 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240704175129-4d9e1bd21cf9
+# code.cloudfoundry.org/debugserver v0.0.0-20240705175209-1b863bb63b67
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240704175139-8bfcd6a760fa
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240705175210-f205aacaea3c
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240704175136-11dced74d892
+# code.cloudfoundry.org/durationjson v0.0.0-20240705175208-6880c3129de7
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20240705155015-e5997ec78fec
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240704200653-6c85f6c7e8c5
+# code.cloudfoundry.org/garden v0.0.0-20240705200726-e508adf1e306
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3
@@ -72,10 +72,10 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240704174520-8d6071a5c148
+# code.cloudfoundry.org/policy_client v0.0.0-20240705174600-18975e7085fc
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
-# code.cloudfoundry.org/tlsconfig v0.0.0-20240704175129-ec907c2cc365
+# code.cloudfoundry.org/tlsconfig v0.0.0-20240705175211-7a5a6eee6ef2
 ## explicit; go 1.19
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer

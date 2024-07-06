@@ -16,15 +16,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240704174539-dee812c25e95
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240705174608-10d4ff6b6193
 	code.cloudfoundry.org/clock v1.2.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240704175129-4d9e1bd21cf9
+	code.cloudfoundry.org/debugserver v0.0.0-20240705175209-1b863bb63b67
 	code.cloudfoundry.org/filelock v0.0.0-20240705155015-e5997ec78fec
-	code.cloudfoundry.org/garden v0.0.0-20240704200653-6c85f6c7e8c5
+	code.cloudfoundry.org/garden v0.0.0-20240705200726-e508adf1e306
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240704174520-8d6071a5c148
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240704175129-ec907c2cc365
+	code.cloudfoundry.org/policy_client v0.0.0-20240705174600-18975e7085fc
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240705175211-7a5a6eee6ef2
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -56,8 +56,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240704175139-8bfcd6a760fa // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240704175136-11dced74d892 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240705175210-f205aacaea3c // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240705175208-6880c3129de7 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
