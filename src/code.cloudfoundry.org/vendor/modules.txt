@@ -3,8 +3,8 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240708175029-e471b48d5f9b
-## explicit; go 1.20
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240710175338-519d5f940a6d
+## explicit; go 1.21
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
 code.cloudfoundry.org/cf-networking-helpers/db/monitor
@@ -34,7 +34,7 @@ code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.0.0-20240708175642-5f5c6a0497f4
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240708155324-70e410f18013
+# code.cloudfoundry.org/filelock v0.0.0-20240711155740-a50c183dc1e0
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20240708201037-a065bfb99bfb
@@ -75,8 +75,8 @@ code.cloudfoundry.org/locket/models
 # code.cloudfoundry.org/policy_client v0.0.0-20240709175211-d84795ca20e6
 ## explicit; go 1.20
 code.cloudfoundry.org/policy_client
-# code.cloudfoundry.org/tlsconfig v0.0.0-20240705175211-7a5a6eee6ef2
-## explicit; go 1.19
+# code.cloudfoundry.org/tlsconfig v0.0.0-20240710175717-1267031d8b88
+## explicit; go 1.21
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
 ## explicit; go 1.20
@@ -167,7 +167,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0
+# github.com/google/pprof v0.0.0-20240711041743-f6c9dda6c6da
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
@@ -398,7 +398,7 @@ golang.org/x/text/width
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240711142825-46eb208f015d
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.65.0

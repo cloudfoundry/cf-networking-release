@@ -16,15 +16,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240708175029-e471b48d5f9b
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240710175338-519d5f940a6d
 	code.cloudfoundry.org/clock v1.2.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240708175632-eff029929d18
-	code.cloudfoundry.org/filelock v0.0.0-20240708155324-70e410f18013
+	code.cloudfoundry.org/filelock v0.0.0-20240711155740-a50c183dc1e0
 	code.cloudfoundry.org/garden v0.0.0-20240708201037-a065bfb99bfb
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
 	code.cloudfoundry.org/policy_client v0.0.0-20240709175211-d84795ca20e6
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240705175211-7a5a6eee6ef2
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240710175717-1267031d8b88
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -70,7 +70,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0 // indirect
+	github.com/google/pprof v0.0.0-20240711041743-f6c9dda6c6da // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -88,7 +88,7 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240711142825-46eb208f015d // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
