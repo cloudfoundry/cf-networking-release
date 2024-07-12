@@ -16,14 +16,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240710175338-519d5f940a6d
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240711175438-bacd434c9f92
 	code.cloudfoundry.org/clock v1.2.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240708175632-eff029929d18
+	code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42
 	code.cloudfoundry.org/filelock v0.0.0-20240711155740-a50c183dc1e0
-	code.cloudfoundry.org/garden v0.0.0-20240708201037-a065bfb99bfb
+	code.cloudfoundry.org/garden v0.0.0-20240711201323-3e0daa304ebb
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240709175211-d84795ca20e6
+	code.cloudfoundry.org/policy_client v0.0.0-20240711175427-b7c1da7308b8
 	code.cloudfoundry.org/tlsconfig v0.0.0-20240710175717-1267031d8b88
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -56,8 +56,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240709175802-904ac8cf53b0 // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240708175642-5f5c6a0497f4 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240711175830-8c315b151f27 // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240711175827-ec11f50a5c9e // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.49.0 // indirect
+	go.step.sm/crypto v0.50.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect

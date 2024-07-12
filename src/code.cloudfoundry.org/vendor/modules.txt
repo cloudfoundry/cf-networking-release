@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240710175338-519d5f940a6d
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240711175438-bacd434c9f92
 ## explicit; go 1.21
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,19 +25,19 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240708175632-eff029929d18
+# code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240709175802-904ac8cf53b0
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240711175830-8c315b151f27
 ## explicit; go 1.21
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240708175642-5f5c6a0497f4
+# code.cloudfoundry.org/durationjson v0.0.0-20240711175827-ec11f50a5c9e
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.0.0-20240711155740-a50c183dc1e0
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240708201037-a065bfb99bfb
+# code.cloudfoundry.org/garden v0.0.0-20240711201323-3e0daa304ebb
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240604201846-c756bfed2ed3
@@ -72,8 +72,8 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240709175211-d84795ca20e6
-## explicit; go 1.20
+# code.cloudfoundry.org/policy_client v0.0.0-20240711175427-b7c1da7308b8
+## explicit; go 1.21
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.0.0-20240710175717-1267031d8b88
 ## explicit; go 1.21
@@ -312,7 +312,7 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.49.0
+# go.step.sm/crypto v0.50.0
 ## explicit; go 1.21
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
