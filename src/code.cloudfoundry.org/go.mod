@@ -16,15 +16,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240521125508-20d3971ce31b
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240711175438-bacd434c9f92
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240712175536-1abbce636440
 	code.cloudfoundry.org/clock v1.2.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42
 	code.cloudfoundry.org/filelock v0.0.0-20240711155740-a50c183dc1e0
 	code.cloudfoundry.org/garden v0.0.0-20240711201323-3e0daa304ebb
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240711175427-b7c1da7308b8
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240710175717-1267031d8b88
+	code.cloudfoundry.org/policy_client v0.0.0-20240712175538-c01baec4626d
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240712175922-ffce9516cec8
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d

@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240711175438-bacd434c9f92
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240712175536-1abbce636440
 ## explicit; go 1.21
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -72,10 +72,10 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240711175427-b7c1da7308b8
+# code.cloudfoundry.org/policy_client v0.0.0-20240712175538-c01baec4626d
 ## explicit; go 1.21
 code.cloudfoundry.org/policy_client
-# code.cloudfoundry.org/tlsconfig v0.0.0-20240710175717-1267031d8b88
+# code.cloudfoundry.org/tlsconfig v0.0.0-20240712175922-ffce9516cec8
 ## explicit; go 1.21
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
