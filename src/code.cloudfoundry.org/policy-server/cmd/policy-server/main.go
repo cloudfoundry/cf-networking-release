@@ -117,7 +117,7 @@ func main() {
 		logger,
 	)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	logger.Info("db connection retrieved", lager.Data{})

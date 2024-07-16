@@ -69,7 +69,7 @@ func main() {
 		logger,
 	)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	securityGroupsStore := &store.SGStore{
