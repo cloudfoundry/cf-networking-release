@@ -1,3 +1,4 @@
 #!/bin/bash -eu
 
-rm -rf /var/vcap/data/garden-cni || true
+rm -rf /var/vcap/data/garden-cni/container-netns || true
+rm -rf /var/vcap/data/garden-cni/external-networker-state.json || true
