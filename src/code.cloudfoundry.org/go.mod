@@ -15,7 +15,7 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20240715202719-b18910b06516
+	code.cloudfoundry.org/bbs v0.0.0-20240717173038-096d0e1a7e95
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240712175536-1abbce636440
 	code.cloudfoundry.org/clock v1.2.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240711175828-bd4bb5559e42
