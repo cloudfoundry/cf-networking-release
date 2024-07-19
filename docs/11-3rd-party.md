@@ -393,10 +393,10 @@ None of silk-release communicates directly with CAPI. Information about ASGs are
 passed in on container creation.  If you want information about new ASGs that
 have been added through Cloud Controller, but that haven't been passed through
 on the config because the app has not been restarted, you can [poll
-CAPI](https://apidocs.cloudfoundry.org/280/security_groups/list_all_security_groups.html).
+CAPI](https://v3-apidocs.cloudfoundry.org/version/3.169.0/index.html#list-security-groups).
 
 If you want information on org, space, app events for use by your CNI plugin,
-see [the CF API docs](https://apidocs.cloudfoundry.org/280).
+see [the CF API docs](https://apidocs.cloudfoundry.org/).
 
 ### From Diego
 
