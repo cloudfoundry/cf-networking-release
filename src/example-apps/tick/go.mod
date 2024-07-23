@@ -5,8 +5,8 @@ go 1.21
 toolchain go1.22.3
 
 require (
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240721180541-c5ee9769cf6a
-	code.cloudfoundry.org/localip v0.0.0-20240721180538-4c37751a4ea9
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240722180736-46272e4ee24b
+	code.cloudfoundry.org/localip v0.0.0-20240722180725-05cb35dd1d96
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
