@@ -34,10 +34,10 @@ code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.0.0-20240727181317-1a0f6d192188
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240727161713-ab9a4dc8918d
+# code.cloudfoundry.org/filelock v0.0.0-20240730161935-76025cba563c
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240727203014-655c93589a4e
+# code.cloudfoundry.org/garden v0.0.0-20240729203109-680efb7dfd09
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240723012033-bf559dd3d0b1
@@ -255,7 +255,7 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.34.0
+# github.com/onsi/gomega v1.34.1
 ## explicit; go 1.20
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -312,7 +312,7 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.50.0
+# go.step.sm/crypto v0.51.1
 ## explicit; go 1.21
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
@@ -337,6 +337,10 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
+# golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+## explicit; go 1.20
+golang.org/x/exp/constraints
+golang.org/x/exp/slices
 # golang.org/x/net v0.27.0
 ## explicit; go 1.18
 golang.org/x/net/context
@@ -398,7 +402,7 @@ golang.org/x/text/width
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240725223205-93522f1f2a9f
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.65.0

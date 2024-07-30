@@ -19,8 +19,8 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240727181324-1b1a0055393b
 	code.cloudfoundry.org/clock v1.2.0
 	code.cloudfoundry.org/debugserver v0.0.0-20240727181254-71b66448559a
-	code.cloudfoundry.org/filelock v0.0.0-20240727161713-ab9a4dc8918d
-	code.cloudfoundry.org/garden v0.0.0-20240727203014-655c93589a4e
+	code.cloudfoundry.org/filelock v0.0.0-20240730161935-76025cba563c
+	code.cloudfoundry.org/garden v0.0.0-20240729203109-680efb7dfd09
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
 	code.cloudfoundry.org/policy_client v0.0.0-20240728181324-ab4262cc1017
@@ -41,7 +41,7 @@ require (
 	github.com/nats-io/nats-top v0.6.1
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.19.1
-	github.com/onsi/gomega v1.34.0
+	github.com/onsi/gomega v1.34.1
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
@@ -82,13 +82,14 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.50.0 // indirect
+	go.step.sm/crypto v0.51.1 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240725223205-93522f1f2a9f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
