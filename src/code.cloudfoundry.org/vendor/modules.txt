@@ -1,9 +1,9 @@
-# code.cloudfoundry.org/bbs v0.0.0-20240717173038-096d0e1a7e95
+# code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240804182054-aaad6b2709ee
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240806182235-55284921e8bd
 ## explicit; go 1.21
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -25,19 +25,19 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.20
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.0.0-20240804182117-46735d246c8b
+# code.cloudfoundry.org/debugserver v0.0.0-20240806182225-ac639d95f033
 ## explicit; go 1.19
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.0.0-20240805182117-2432cc7ef558
+# code.cloudfoundry.org/diego-logging-client v0.0.0-20240806182234-7c29d82f3f8d
 ## explicit; go 1.22
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.0.0-20240804182113-a231ac852bee
+# code.cloudfoundry.org/durationjson v0.0.0-20240806182325-1a051275a0de
 ## explicit; go 1.19
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.0.0-20240806162525-432f86b4c624
+# code.cloudfoundry.org/filelock v0.0.0-20240807162722-8815b554f063
 ## explicit; go 1.20
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240804203646-5eea090b33e7
+# code.cloudfoundry.org/garden v0.0.0-20240806203810-5e72e48b4930
 ## explicit; go 1.20
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240730232652-ce6331b0e7c0
@@ -72,10 +72,10 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.0.0-20240805182104-8ab7f4dbb755
+# code.cloudfoundry.org/policy_client v0.0.0-20240806182213-180bd66fe540
 ## explicit; go 1.21
 code.cloudfoundry.org/policy_client
-# code.cloudfoundry.org/tlsconfig v0.0.0-20240804182054-12ab4b1e7eda
+# code.cloudfoundry.org/tlsconfig v0.0.0-20240806182125-2cf75882e274
 ## explicit; go 1.21
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
@@ -341,7 +341,7 @@ golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 ## explicit; go 1.20
 golang.org/x/exp/constraints
 golang.org/x/exp/slices
-# golang.org/x/net v0.27.0
+# golang.org/x/net v0.28.0
 ## explicit; go 1.18
 golang.org/x/net/context
 golang.org/x/net/dns/dnsmessage
@@ -398,7 +398,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.23.0
+# golang.org/x/tools v0.24.0
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
