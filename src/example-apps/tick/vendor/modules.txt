@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240804182054-aaad6b2709ee
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240806182235-55284921e8bd
 ## explicit; go 1.21
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.0.0-20240804182115-99ab6f574fd8
+# code.cloudfoundry.org/localip v0.0.0-20240806182217-2f4f74599545
 ## explicit; go 1.20
 code.cloudfoundry.org/localip
 # github.com/go-logr/logr v1.4.2
@@ -70,7 +70,7 @@ github.com/tedsuo/ifrit/sigmon
 ## explicit; go 1.20
 golang.org/x/exp/constraints
 golang.org/x/exp/slices
-# golang.org/x/net v0.27.0
+# golang.org/x/net v0.28.0
 ## explicit; go 1.18
 golang.org/x/net/context
 golang.org/x/net/html
@@ -98,7 +98,7 @@ golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
-# golang.org/x/tools v0.23.0
+# golang.org/x/tools v0.24.0
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
