@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240807182441-59f538598b8c
+# code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240808182450-b43167c2e534
 ## explicit; go 1.21
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.0.0-20240807182325-18b79b2b941e
+# code.cloudfoundry.org/localip v0.0.0-20240808182500-901907e2b652
 ## explicit; go 1.20
 code.cloudfoundry.org/localip
 # github.com/go-logr/logr v1.4.2
@@ -76,7 +76,7 @@ golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
-# golang.org/x/sys v0.23.0
+# golang.org/x/sys v0.24.0
 ## explicit; go 1.18
 golang.org/x/sys/unix
 # golang.org/x/text v0.17.0
