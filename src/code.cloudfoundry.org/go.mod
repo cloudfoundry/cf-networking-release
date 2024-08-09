@@ -16,15 +16,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240807182441-59f538598b8c
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20240808182450-b43167c2e534
 	code.cloudfoundry.org/clock v1.2.0
-	code.cloudfoundry.org/debugserver v0.0.0-20240807182422-240e7d25a275
-	code.cloudfoundry.org/filelock v0.0.0-20240808162753-a392cf836086
-	code.cloudfoundry.org/garden v0.0.0-20240807204022-0f6d09d25a4d
+	code.cloudfoundry.org/debugserver v0.0.0-20240808182508-aa80400f8069
+	code.cloudfoundry.org/filelock v0.0.0-20240809162905-2d85401cacaa
+	code.cloudfoundry.org/garden v0.0.0-20240808204039-c9d130adaa53
 	code.cloudfoundry.org/lager/v3 v3.0.3
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.0.0-20240807182350-526aacc34f2a
-	code.cloudfoundry.org/tlsconfig v0.0.0-20240806182125-2cf75882e274
+	code.cloudfoundry.org/policy_client v0.0.0-20240808182442-662f254b3247
+	code.cloudfoundry.org/tlsconfig v0.0.0-20240808182450-b1b581e211a2
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -50,14 +50,14 @@ require (
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.28.0
-	golang.org/x/sys v0.23.0
+	golang.org/x/sys v0.24.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.0.0-20240807182310-8a0d0ee10c9c // indirect
-	code.cloudfoundry.org/durationjson v0.0.0-20240807182350-04b9c1d46b5e // indirect
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20240808182500-69e238999430 // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20240808182444-caf3082751ed // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240807231455-f9cf434a8c3e // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
