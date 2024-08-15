@@ -600,8 +600,8 @@ code.cloudfoundry.org/clock v1.3.0 h1:0P9zWwt9eSCHYTFWSCT7FkX21x/dEDHKTlSbvJG80R
 code.cloudfoundry.org/clock v1.3.0/go.mod h1:U4uytQbm9TLDZh+pwNaIKBINM1FIgHPQuH0IewhtNMk=
 code.cloudfoundry.org/debugserver v0.2.0 h1:1cioXsMdjz/k4FpjxDAEVvv2WjHb0ZqsJqmYlNQWhH0=
 code.cloudfoundry.org/debugserver v0.2.0/go.mod h1:GcI+09yodWsRou4wDQkOaEf0Fl48q9xXqdJpHmblNp0=
-code.cloudfoundry.org/diego-logging-client v0.2.0 h1:is2UWd9sgjZtKdy6kjAKGdMWfBghAvp2WZqBOiO/CAI=
-code.cloudfoundry.org/diego-logging-client v0.2.0/go.mod h1:nAcWiJbgqLPoN/JobYl7ArCgMe8yBaRtREl2gT3kwLw=
+code.cloudfoundry.org/diego-logging-client v0.3.0 h1:/7jRzz8BBD4C7lkWUa8OWsKGPlmldpHUU2k6sQi5yos=
+code.cloudfoundry.org/diego-logging-client v0.3.0/go.mod h1:qwmil9Bw+Z2xB2SdLFM3kruMIclhURWAqzItW9A8smo=
 code.cloudfoundry.org/durationjson v0.1.0 h1:S/ylgLAwRdCgCff99p0w5J46Pcn5Nfs+mSj1hLEJ3G0=
 code.cloudfoundry.org/durationjson v0.1.0/go.mod h1:3vKUTBFRGLvIVtat4aGSeVDoI/DWyAk4q8lRdCua0Z0=
 code.cloudfoundry.org/filelock v0.1.0 h1:RNX90wQiHTy6gbBz5dYWd3fBkcN3luqew94AogwkR8Y=
@@ -618,8 +618,8 @@ code.cloudfoundry.org/lager/v3 v3.1.0 h1:ZB4VXLSI0bIWhDSjKdEh/Jrs2SXFLX/9+z2WEZh
 code.cloudfoundry.org/lager/v3 v3.1.0/go.mod h1:5KBxqCSNJBNf/RXCindvnyAKBWxTgMMO5mtn1qkMoEM=
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03 h1:jrunp9b2C7KMCIYlgU8CGxRa0u4A1EtJiYHaZRSo5GQ=
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
-code.cloudfoundry.org/policy_client v0.2.0 h1:zh/Dd0Qw5e6GEk+QAXB+3UaJxVqGYVbQ+IaP036JUxc=
-code.cloudfoundry.org/policy_client v0.2.0/go.mod h1:wRw1kK7ZJlNwxqOgHQI9MSdoctlSHJDTUKKlPts/6Fo=
+code.cloudfoundry.org/policy_client v0.3.0 h1:8YRVE1wMxIRlS/jnzl3JREPgVaTHRLgGdLa+GGrgHtY=
+code.cloudfoundry.org/policy_client v0.3.0/go.mod h1:lF3Ob2Xm1SbCUs+jgloALOlm6zasMK88kYwTlGNKbJI=
 code.cloudfoundry.org/tlsconfig v0.1.0 h1:/SGZk3K7t79cuhSVs/qZXayEnLV1kodmvU3EBcc4E4w=
 code.cloudfoundry.org/tlsconfig v0.1.0/go.mod h1:6ymG8DjGLta+bnqdpUmdv88Ikje2VvOTq+8drVe4pUU=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -1632,8 +1632,8 @@ google.golang.org/genproto v0.0.0-20230323212658-478b75c54725/go.mod h1:UUQDJDOl
 google.golang.org/genproto v0.0.0-20230330154414-c0448cd141ea/go.mod h1:UUQDJDOlWu4KYeJZffbWgBkS1YFobzKbLVfK69pe0Ak=
 google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633/go.mod h1:UUQDJDOlWu4KYeJZffbWgBkS1YFobzKbLVfK69pe0Ak=
 google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1/go.mod h1:nKE/iIaLqn2bQwXBg8f1g2Ylh6r5MN5CmZvuzZCgsCU=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20240812133136-8ffd90a71988 h1:V71AcdLZr2p8dC9dbOIMCpqi4EmRl8wUwnJzXXLmbmc=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20240812133136-8ffd90a71988/go.mod h1:Ue6ibwXGpU+dqIcODieyLOcgj7z8+IcskoNIgZxtrFY=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 h1:e7S5W7MGGLaSu8j3YjdezkZ+m1/Nm0uRVRMEMGk26Xs=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142/go.mod h1:UqMtugtsSgubUsoxbuAoiCXvqvErP7Gf0so0mK9tHxU=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=
