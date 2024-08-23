@@ -16,14 +16,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db
-	code.cloudfoundry.org/cf-networking-helpers v0.2.0
-	code.cloudfoundry.org/clock v1.3.0
-	code.cloudfoundry.org/debugserver v0.2.0
-	code.cloudfoundry.org/filelock v0.2.0
-	code.cloudfoundry.org/garden v0.0.0-20240821205034-986bea9dbba9
-	code.cloudfoundry.org/lager/v3 v3.1.0
+	code.cloudfoundry.org/cf-networking-helpers v0.3.0
+	code.cloudfoundry.org/clock v1.4.0
+	code.cloudfoundry.org/debugserver v0.3.0
+	code.cloudfoundry.org/filelock v0.3.0
+	code.cloudfoundry.org/garden v0.0.0-20240822205122-48ae705920d5
+	code.cloudfoundry.org/lager/v3 v3.2.0
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.3.0
+	code.cloudfoundry.org/policy_client v0.4.0
 	code.cloudfoundry.org/tlsconfig v0.1.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -38,7 +38,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-top v0.6.1
+	github.com/nats-io/nats-top v0.6.2
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
@@ -56,8 +56,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.5.0 // indirect
-	code.cloudfoundry.org/durationjson v0.1.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.6.0 // indirect
+	code.cloudfoundry.org/durationjson v0.2.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240813203737-5032edb05ceb // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -84,7 +84,7 @@ require (
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.51.1 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
