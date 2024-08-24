@@ -16,14 +16,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db
-	code.cloudfoundry.org/cf-networking-helpers v0.3.0
-	code.cloudfoundry.org/clock v1.4.0
-	code.cloudfoundry.org/debugserver v0.3.0
+	code.cloudfoundry.org/cf-networking-helpers v0.4.0
+	code.cloudfoundry.org/clock v1.5.0
+	code.cloudfoundry.org/debugserver v0.4.0
 	code.cloudfoundry.org/filelock v0.3.0
-	code.cloudfoundry.org/garden v0.0.0-20240822205122-48ae705920d5
-	code.cloudfoundry.org/lager/v3 v3.2.0
+	code.cloudfoundry.org/garden v0.0.0-20240823205131-490159a0f76e
+	code.cloudfoundry.org/lager/v3 v3.3.0
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.4.0
+	code.cloudfoundry.org/policy_client v0.5.0
 	code.cloudfoundry.org/tlsconfig v0.1.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -56,8 +56,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.6.0 // indirect
-	code.cloudfoundry.org/durationjson v0.2.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.7.0 // indirect
+	code.cloudfoundry.org/durationjson v0.3.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240813203737-5032edb05ceb // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -89,7 +89,7 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240822170219-fc7c04adadcd // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240823204242-4ba0660f739c // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
