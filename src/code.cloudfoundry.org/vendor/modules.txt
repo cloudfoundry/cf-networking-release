@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.6.0
+# code.cloudfoundry.org/cf-networking-helpers v0.7.0
 ## explicit; go 1.22
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -21,23 +21,23 @@ code.cloudfoundry.org/cf-networking-helpers/poller
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/clock v1.6.0
+# code.cloudfoundry.org/clock v1.7.0
 ## explicit; go 1.22
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.6.0
+# code.cloudfoundry.org/debugserver v0.7.0
 ## explicit; go 1.22
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.9.0
+# code.cloudfoundry.org/diego-logging-client v0.10.0
 ## explicit; go 1.22
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.4.0
+# code.cloudfoundry.org/durationjson v0.5.0
 ## explicit; go 1.22
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.4.0
+# code.cloudfoundry.org/filelock v0.5.0
 ## explicit; go 1.22
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20240827205525-d20c12167221
+# code.cloudfoundry.org/garden v0.0.0-20240828205541-a750c1e932f1
 ## explicit; go 1.22
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20240813203737-5032edb05ceb
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.8.0
+# code.cloudfoundry.org/policy_client v0.9.0
 ## explicit; go 1.22
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.1.0
@@ -167,7 +167,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240827171923-fa2c70bbbfe5
+# github.com/google/pprof v0.0.0-20240829160300-da1f7e9f2b25
 ## explicit; go 1.22
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
