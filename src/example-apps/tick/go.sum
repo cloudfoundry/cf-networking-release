@@ -594,8 +594,8 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/cf-networking-helpers v0.7.0 h1:qNUOSaHs2Iw+/RieHMWUjitS1le8IShi5SGhEdkWmiQ=
 code.cloudfoundry.org/cf-networking-helpers v0.7.0/go.mod h1:OJwSVcf2MqiTybLQ2KXDl/f6boHWMKbbh/OsBpYbvgM=
-code.cloudfoundry.org/localip v0.5.0 h1:cmAg/2pYqJVdaBXahc/ZMr5XFKoHvMvfbGfqS53dhiY=
-code.cloudfoundry.org/localip v0.5.0/go.mod h1:11bJNelRzGxxegJyO+qnj0/IY4kemcHMUE9obBNUZtY=
+code.cloudfoundry.org/localip v0.6.0 h1:P4Kq+2vR5QnAB3d7Pe0Lw7rJAF3oqvJcdHlyekvX8K0=
+code.cloudfoundry.org/localip v0.6.0/go.mod h1:OUZU9oLJgfYgKth1nF0bLokBrawWtna9+bHTQ0UsK2Q=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 gioui.org v0.0.0-20210308172011-57750fc8a0a6/go.mod h1:RSH6KIUZ0p2xy5zHDxgAM4zumjgTw83q2ge/PI+yyw8=
 git.sr.ht/~sbinet/gg v0.3.1/go.mod h1:KGYtlADtqsqANL9ueOFkWymvzUvLMQllU5Ixo+8v3pc=
