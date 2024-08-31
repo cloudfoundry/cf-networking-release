@@ -312,8 +312,8 @@ github.com/tedsuo/ifrit/sigmon
 github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.51.1
-## explicit; go 1.21
+# go.step.sm/crypto v0.51.2
+## explicit; go 1.22
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
 go.step.sm/crypto/internal/emoji

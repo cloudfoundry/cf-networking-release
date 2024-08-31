@@ -82,7 +82,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.51.1 // indirect
+	go.step.sm/crypto v0.51.2 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
