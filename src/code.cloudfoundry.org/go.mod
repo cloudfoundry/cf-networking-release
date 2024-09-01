@@ -16,7 +16,7 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db
-	code.cloudfoundry.org/cf-networking-helpers v0.7.0
+	code.cloudfoundry.org/cf-networking-helpers v0.8.0
 	code.cloudfoundry.org/clock v1.8.0
 	code.cloudfoundry.org/debugserver v0.8.0
 	code.cloudfoundry.org/filelock v0.5.0
@@ -24,7 +24,7 @@ require (
 	code.cloudfoundry.org/lager/v3 v3.3.0
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
 	code.cloudfoundry.org/policy_client v0.10.0
-	code.cloudfoundry.org/tlsconfig v0.1.0
+	code.cloudfoundry.org/tlsconfig v0.2.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d

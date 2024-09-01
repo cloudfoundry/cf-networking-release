@@ -594,8 +594,8 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db h1:6eRhLjxWbnhBfaRzjYGPPNIJ6Qu535/KREpanrkz6mQ=
 code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
-code.cloudfoundry.org/cf-networking-helpers v0.7.0 h1:qNUOSaHs2Iw+/RieHMWUjitS1le8IShi5SGhEdkWmiQ=
-code.cloudfoundry.org/cf-networking-helpers v0.7.0/go.mod h1:OJwSVcf2MqiTybLQ2KXDl/f6boHWMKbbh/OsBpYbvgM=
+code.cloudfoundry.org/cf-networking-helpers v0.8.0 h1:Q6hNnvOCn8WWYoXmiVj9x803R0NN92k4OSMhapP3T8c=
+code.cloudfoundry.org/cf-networking-helpers v0.8.0/go.mod h1:dvAcfObADBGLSHLCidaiSXFSvga91jHa5DKQDBEK+uM=
 code.cloudfoundry.org/clock v1.8.0 h1:ZwMn0gnHW3SkYwkSnRyJGthtVQaByupg94MxZrK7NMg=
 code.cloudfoundry.org/clock v1.8.0/go.mod h1:fYHefCehCof0TsgRTh7c8Zzwk87+63x3A3YVQasuFYE=
 code.cloudfoundry.org/debugserver v0.8.0 h1:YFw1jenQFDVkyZ/7ykQnY0Nl1EuDm3lnjZq5XFr6VcU=
@@ -620,8 +620,8 @@ code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03 h1:jrunp9b2C7KMC
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
 code.cloudfoundry.org/policy_client v0.10.0 h1:xELg6vC7ZjY9Qo9dUHvlCCGx8+Ytdsz0fCT4ghEh/Ns=
 code.cloudfoundry.org/policy_client v0.10.0/go.mod h1:ppbGX8/p59GV6Hi0iPvp3wgSF/ZILfV2ccAPKl356n4=
-code.cloudfoundry.org/tlsconfig v0.1.0 h1:/SGZk3K7t79cuhSVs/qZXayEnLV1kodmvU3EBcc4E4w=
-code.cloudfoundry.org/tlsconfig v0.1.0/go.mod h1:6ymG8DjGLta+bnqdpUmdv88Ikje2VvOTq+8drVe4pUU=
+code.cloudfoundry.org/tlsconfig v0.2.0 h1:OPmMIduZVg1AE6m7V+CrULybZMeEWLPXxkKAc0RYLlU=
+code.cloudfoundry.org/tlsconfig v0.2.0/go.mod h1:7soG27nMBzgrlYo6FuVCVxCjdMmVUBgdKLmtjrMFBrg=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
