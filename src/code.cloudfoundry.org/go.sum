@@ -600,8 +600,8 @@ code.cloudfoundry.org/clock v1.8.0 h1:ZwMn0gnHW3SkYwkSnRyJGthtVQaByupg94MxZrK7NM
 code.cloudfoundry.org/clock v1.8.0/go.mod h1:fYHefCehCof0TsgRTh7c8Zzwk87+63x3A3YVQasuFYE=
 code.cloudfoundry.org/debugserver v0.8.0 h1:YFw1jenQFDVkyZ/7ykQnY0Nl1EuDm3lnjZq5XFr6VcU=
 code.cloudfoundry.org/debugserver v0.8.0/go.mod h1:8r9r1OWH3uK/btBT7NuorUdWGhQxuFEh+O3pJJEom9Y=
-code.cloudfoundry.org/diego-logging-client v0.11.0 h1:GQz8os6RpI8DjBHsSwE/M0UIgXoXavIREQP8+SP2AC0=
-code.cloudfoundry.org/diego-logging-client v0.11.0/go.mod h1:+tD1MEKo/eRU5QFYItIy6JiwuiVzei/OQacZvyEuZHw=
+code.cloudfoundry.org/diego-logging-client v0.12.0 h1:0j6fN5bzgLVGf4agLTUOcfEnDit5c/y05QG1AC8TaeM=
+code.cloudfoundry.org/diego-logging-client v0.12.0/go.mod h1:1cQznlhgOU9q8ti88kaIjVFUwLMcutw56ldOWQ9buxY=
 code.cloudfoundry.org/durationjson v0.6.0 h1:JO/+RiEQhpO64jXaTemntXAnsa5VGDICQVhu6L8wXfk=
 code.cloudfoundry.org/durationjson v0.6.0/go.mod h1:da2mafk3WUu7XV4flFSNEf/LeH3rQow8eF6YgiaWMc8=
 code.cloudfoundry.org/filelock v0.5.0 h1:Qk3rjO6EVrRtRaXV/pD2iYi54+UU6l+pxHXMLbt5BOk=
@@ -618,8 +618,8 @@ code.cloudfoundry.org/lager/v3 v3.3.0 h1:adWGo2aBLpHVfUG+3D2FQ4B6Mf2Bcz47KITbn8V
 code.cloudfoundry.org/lager/v3 v3.3.0/go.mod h1:k/AYgZTVrwQaneNfQ2EwnZxUb9iUFE7i6AJ3KVOtAdE=
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03 h1:jrunp9b2C7KMCIYlgU8CGxRa0u4A1EtJiYHaZRSo5GQ=
 code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
-code.cloudfoundry.org/policy_client v0.10.0 h1:xELg6vC7ZjY9Qo9dUHvlCCGx8+Ytdsz0fCT4ghEh/Ns=
-code.cloudfoundry.org/policy_client v0.10.0/go.mod h1:ppbGX8/p59GV6Hi0iPvp3wgSF/ZILfV2ccAPKl356n4=
+code.cloudfoundry.org/policy_client v0.11.0 h1:s/T02S8HuWR3mxpHwrApj2cW23tJEnXaMqBitCBllKw=
+code.cloudfoundry.org/policy_client v0.11.0/go.mod h1:W2wPDJp/GYakIaIj9vO5D6Ju7S6RdumwbIoLV8RLhw4=
 code.cloudfoundry.org/tlsconfig v0.2.0 h1:OPmMIduZVg1AE6m7V+CrULybZMeEWLPXxkKAc0RYLlU=
 code.cloudfoundry.org/tlsconfig v0.2.0/go.mod h1:7soG27nMBzgrlYo6FuVCVxCjdMmVUBgdKLmtjrMFBrg=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

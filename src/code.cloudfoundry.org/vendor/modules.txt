@@ -28,7 +28,7 @@ code.cloudfoundry.org/clock/fakeclock
 # code.cloudfoundry.org/debugserver v0.8.0
 ## explicit; go 1.22
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.11.0
+# code.cloudfoundry.org/diego-logging-client v0.12.0
 ## explicit; go 1.22
 code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.6.0
@@ -72,7 +72,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.10.0
+# code.cloudfoundry.org/policy_client v0.11.0
 ## explicit; go 1.22
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.2.0
