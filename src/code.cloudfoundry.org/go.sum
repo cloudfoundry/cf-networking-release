@@ -604,8 +604,8 @@ code.cloudfoundry.org/diego-logging-client v0.12.0 h1:0j6fN5bzgLVGf4agLTUOcfEnDi
 code.cloudfoundry.org/diego-logging-client v0.12.0/go.mod h1:1cQznlhgOU9q8ti88kaIjVFUwLMcutw56ldOWQ9buxY=
 code.cloudfoundry.org/durationjson v0.6.0 h1:JO/+RiEQhpO64jXaTemntXAnsa5VGDICQVhu6L8wXfk=
 code.cloudfoundry.org/durationjson v0.6.0/go.mod h1:da2mafk3WUu7XV4flFSNEf/LeH3rQow8eF6YgiaWMc8=
-code.cloudfoundry.org/filelock v0.5.0 h1:Qk3rjO6EVrRtRaXV/pD2iYi54+UU6l+pxHXMLbt5BOk=
-code.cloudfoundry.org/filelock v0.5.0/go.mod h1:KWg4Gs4OYU7OAElK5wAq+3dN8BSfkmfuREKn/Ig+FWA=
+code.cloudfoundry.org/filelock v0.6.0 h1:gSvCn0owgT7DpQF8Jvk54G6eiYuiduqKWiLTLxBl56Y=
+code.cloudfoundry.org/filelock v0.6.0/go.mod h1:o8uIcdRVJ+xZOf2DsHYW36guTbr0JHZe+Dzu3nyqRSE=
 code.cloudfoundry.org/garden v0.0.0-20240829205754-f4b89addcda3 h1:2KVQkTqqBZeWLeF/IFue0j0D7xCCL5/s9oSM91zFKCs=
 code.cloudfoundry.org/garden v0.0.0-20240829205754-f4b89addcda3/go.mod h1:yjqr/TelfUbC7z0A7nsIdgwKq0AJDH44uQFt4hUgPZ8=
 code.cloudfoundry.org/go-diodes v0.0.0-20240813203737-5032edb05ceb h1:Last39ehN2b866DrM0B5FPIbdBFouL9humzWTqVTEX4=
@@ -822,8 +822,8 @@ github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38/go.mod h1:kpwsk12EmLe
 github.com/google/pprof v0.0.0-20210601050228-01bbb1931b22/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210609004039-a478d1d731e9/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
-github.com/google/pprof v0.0.0-20240829160300-da1f7e9f2b25 h1:sEDPKUw6iPjczdu33njxFjO6tYa9bfc0z/QyB/zSsBw=
-github.com/google/pprof v0.0.0-20240829160300-da1f7e9f2b25/go.mod h1:vavhavw2zAxS5dIdcRluK6cSGGPlZynqzFM8NdvU144=
+github.com/google/pprof v0.0.0-20240903155634-a8630aee4ab9 h1:q5g0N9eal4bmJwXHC5z0QCKs8qhS35hFfq0BAYsIwZI=
+github.com/google/pprof v0.0.0-20240903155634-a8630aee4ab9/go.mod h1:vavhavw2zAxS5dIdcRluK6cSGGPlZynqzFM8NdvU144=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
@@ -1629,8 +1629,8 @@ google.golang.org/genproto v0.0.0-20230323212658-478b75c54725/go.mod h1:UUQDJDOl
 google.golang.org/genproto v0.0.0-20230330154414-c0448cd141ea/go.mod h1:UUQDJDOlWu4KYeJZffbWgBkS1YFobzKbLVfK69pe0Ak=
 google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633/go.mod h1:UUQDJDOlWu4KYeJZffbWgBkS1YFobzKbLVfK69pe0Ak=
 google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1/go.mod h1:nKE/iIaLqn2bQwXBg8f1g2Ylh6r5MN5CmZvuzZCgsCU=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed h1:J6izYgfBXAI3xTKLgxzTmUltdYaLsuBxFCgDHWJ/eXg=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed/go.mod h1:UqMtugtsSgubUsoxbuAoiCXvqvErP7Gf0so0mK9tHxU=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 h1:pPJltXNxVzT4pK9yD8vR9X75DaWYYmLGMsEvBfFQZzQ=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1/go.mod h1:UqMtugtsSgubUsoxbuAoiCXvqvErP7Gf0so0mK9tHxU=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=

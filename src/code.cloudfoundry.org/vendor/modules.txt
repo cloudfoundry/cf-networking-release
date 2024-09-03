@@ -34,7 +34,7 @@ code.cloudfoundry.org/diego-logging-client
 # code.cloudfoundry.org/durationjson v0.6.0
 ## explicit; go 1.22
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.5.0
+# code.cloudfoundry.org/filelock v0.6.0
 ## explicit; go 1.22
 code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20240829205754-f4b89addcda3
@@ -167,7 +167,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240829160300-da1f7e9f2b25
+# github.com/google/pprof v0.0.0-20240903155634-a8630aee4ab9
 ## explicit; go 1.22
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
@@ -398,7 +398,7 @@ golang.org/x/text/width
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.66.0
