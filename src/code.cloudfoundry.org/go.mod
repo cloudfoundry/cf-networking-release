@@ -14,15 +14,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240806230301-9be69c0199db
-	code.cloudfoundry.org/cf-networking-helpers v0.9.0
-	code.cloudfoundry.org/clock v1.9.0
-	code.cloudfoundry.org/debugserver v0.9.0
+	code.cloudfoundry.org/cf-networking-helpers v0.10.0
+	code.cloudfoundry.org/clock v1.10.0
+	code.cloudfoundry.org/debugserver v0.10.0
 	code.cloudfoundry.org/filelock v0.7.0
-	code.cloudfoundry.org/garden v0.0.0-20240903210206-78ca42d0b3af
+	code.cloudfoundry.org/garden v0.0.0-20240904210308-248eacb9f907
 	code.cloudfoundry.org/lager/v3 v3.3.0
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
-	code.cloudfoundry.org/policy_client v0.12.0
-	code.cloudfoundry.org/tlsconfig v0.2.0
+	code.cloudfoundry.org/policy_client v0.13.0
+	code.cloudfoundry.org/tlsconfig v0.3.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -47,15 +47,15 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.28.0
+	golang.org/x/net v0.29.0
 	golang.org/x/sys v0.25.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.13.0 // indirect
-	code.cloudfoundry.org/durationjson v0.7.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.14.0 // indirect
+	code.cloudfoundry.org/durationjson v0.8.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240813203737-5032edb05ceb // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.51.2 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
