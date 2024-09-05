@@ -7,6 +7,7 @@ import (
 
 	"github.com/containernetworking/cni/libcni"
 	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/version"
 )
 
 type CNILibrary struct {
@@ -92,6 +93,32 @@ type CNILibrary struct {
 	delNetworkListReturnsOnCall map[int]struct {
 		result1 error
 	}
+	GCNetworkListStub        func(context.Context, *libcni.NetworkConfigList, *libcni.GCArgs) error
+	gCNetworkListMutex       sync.RWMutex
+	gCNetworkListArgsForCall []struct {
+		arg1 context.Context
+		arg2 *libcni.NetworkConfigList
+		arg3 *libcni.GCArgs
+	}
+	gCNetworkListReturns struct {
+		result1 error
+	}
+	gCNetworkListReturnsOnCall map[int]struct {
+		result1 error
+	}
+	GetCachedAttachmentsStub        func(string) ([]*libcni.NetworkAttachment, error)
+	getCachedAttachmentsMutex       sync.RWMutex
+	getCachedAttachmentsArgsForCall []struct {
+		arg1 string
+	}
+	getCachedAttachmentsReturns struct {
+		result1 []*libcni.NetworkAttachment
+		result2 error
+	}
+	getCachedAttachmentsReturnsOnCall map[int]struct {
+		result1 []*libcni.NetworkAttachment
+		result2 error
+	}
 	GetNetworkCachedConfigStub        func(*libcni.NetworkConfig, *libcni.RuntimeConf) ([]byte, *libcni.RuntimeConf, error)
 	getNetworkCachedConfigMutex       sync.RWMutex
 	getNetworkCachedConfigArgsForCall []struct {
@@ -150,6 +177,32 @@ type CNILibrary struct {
 	}
 	getNetworkListCachedResultReturnsOnCall map[int]struct {
 		result1 types.Result
+		result2 error
+	}
+	GetStatusNetworkListStub        func(context.Context, *libcni.NetworkConfigList) error
+	getStatusNetworkListMutex       sync.RWMutex
+	getStatusNetworkListArgsForCall []struct {
+		arg1 context.Context
+		arg2 *libcni.NetworkConfigList
+	}
+	getStatusNetworkListReturns struct {
+		result1 error
+	}
+	getStatusNetworkListReturnsOnCall map[int]struct {
+		result1 error
+	}
+	GetVersionInfoStub        func(context.Context, string) (version.PluginInfo, error)
+	getVersionInfoMutex       sync.RWMutex
+	getVersionInfoArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+	}
+	getVersionInfoReturns struct {
+		result1 version.PluginInfo
+		result2 error
+	}
+	getVersionInfoReturnsOnCall map[int]struct {
+		result1 version.PluginInfo
 		result2 error
 	}
 	ValidateNetworkStub        func(context.Context, *libcni.NetworkConfig) ([]string, error)
@@ -568,6 +621,133 @@ func (fake *CNILibrary) DelNetworkListReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *CNILibrary) GCNetworkList(arg1 context.Context, arg2 *libcni.NetworkConfigList, arg3 *libcni.GCArgs) error {
+	fake.gCNetworkListMutex.Lock()
+	ret, specificReturn := fake.gCNetworkListReturnsOnCall[len(fake.gCNetworkListArgsForCall)]
+	fake.gCNetworkListArgsForCall = append(fake.gCNetworkListArgsForCall, struct {
+		arg1 context.Context
+		arg2 *libcni.NetworkConfigList
+		arg3 *libcni.GCArgs
+	}{arg1, arg2, arg3})
+	stub := fake.GCNetworkListStub
+	fakeReturns := fake.gCNetworkListReturns
+	fake.recordInvocation("GCNetworkList", []interface{}{arg1, arg2, arg3})
+	fake.gCNetworkListMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *CNILibrary) GCNetworkListCallCount() int {
+	fake.gCNetworkListMutex.RLock()
+	defer fake.gCNetworkListMutex.RUnlock()
+	return len(fake.gCNetworkListArgsForCall)
+}
+
+func (fake *CNILibrary) GCNetworkListCalls(stub func(context.Context, *libcni.NetworkConfigList, *libcni.GCArgs) error) {
+	fake.gCNetworkListMutex.Lock()
+	defer fake.gCNetworkListMutex.Unlock()
+	fake.GCNetworkListStub = stub
+}
+
+func (fake *CNILibrary) GCNetworkListArgsForCall(i int) (context.Context, *libcni.NetworkConfigList, *libcni.GCArgs) {
+	fake.gCNetworkListMutex.RLock()
+	defer fake.gCNetworkListMutex.RUnlock()
+	argsForCall := fake.gCNetworkListArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *CNILibrary) GCNetworkListReturns(result1 error) {
+	fake.gCNetworkListMutex.Lock()
+	defer fake.gCNetworkListMutex.Unlock()
+	fake.GCNetworkListStub = nil
+	fake.gCNetworkListReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *CNILibrary) GCNetworkListReturnsOnCall(i int, result1 error) {
+	fake.gCNetworkListMutex.Lock()
+	defer fake.gCNetworkListMutex.Unlock()
+	fake.GCNetworkListStub = nil
+	if fake.gCNetworkListReturnsOnCall == nil {
+		fake.gCNetworkListReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.gCNetworkListReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *CNILibrary) GetCachedAttachments(arg1 string) ([]*libcni.NetworkAttachment, error) {
+	fake.getCachedAttachmentsMutex.Lock()
+	ret, specificReturn := fake.getCachedAttachmentsReturnsOnCall[len(fake.getCachedAttachmentsArgsForCall)]
+	fake.getCachedAttachmentsArgsForCall = append(fake.getCachedAttachmentsArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	stub := fake.GetCachedAttachmentsStub
+	fakeReturns := fake.getCachedAttachmentsReturns
+	fake.recordInvocation("GetCachedAttachments", []interface{}{arg1})
+	fake.getCachedAttachmentsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *CNILibrary) GetCachedAttachmentsCallCount() int {
+	fake.getCachedAttachmentsMutex.RLock()
+	defer fake.getCachedAttachmentsMutex.RUnlock()
+	return len(fake.getCachedAttachmentsArgsForCall)
+}
+
+func (fake *CNILibrary) GetCachedAttachmentsCalls(stub func(string) ([]*libcni.NetworkAttachment, error)) {
+	fake.getCachedAttachmentsMutex.Lock()
+	defer fake.getCachedAttachmentsMutex.Unlock()
+	fake.GetCachedAttachmentsStub = stub
+}
+
+func (fake *CNILibrary) GetCachedAttachmentsArgsForCall(i int) string {
+	fake.getCachedAttachmentsMutex.RLock()
+	defer fake.getCachedAttachmentsMutex.RUnlock()
+	argsForCall := fake.getCachedAttachmentsArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *CNILibrary) GetCachedAttachmentsReturns(result1 []*libcni.NetworkAttachment, result2 error) {
+	fake.getCachedAttachmentsMutex.Lock()
+	defer fake.getCachedAttachmentsMutex.Unlock()
+	fake.GetCachedAttachmentsStub = nil
+	fake.getCachedAttachmentsReturns = struct {
+		result1 []*libcni.NetworkAttachment
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CNILibrary) GetCachedAttachmentsReturnsOnCall(i int, result1 []*libcni.NetworkAttachment, result2 error) {
+	fake.getCachedAttachmentsMutex.Lock()
+	defer fake.getCachedAttachmentsMutex.Unlock()
+	fake.GetCachedAttachmentsStub = nil
+	if fake.getCachedAttachmentsReturnsOnCall == nil {
+		fake.getCachedAttachmentsReturnsOnCall = make(map[int]struct {
+			result1 []*libcni.NetworkAttachment
+			result2 error
+		})
+	}
+	fake.getCachedAttachmentsReturnsOnCall[i] = struct {
+		result1 []*libcni.NetworkAttachment
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *CNILibrary) GetNetworkCachedConfig(arg1 *libcni.NetworkConfig, arg2 *libcni.RuntimeConf) ([]byte, *libcni.RuntimeConf, error) {
 	fake.getNetworkCachedConfigMutex.Lock()
 	ret, specificReturn := fake.getNetworkCachedConfigReturnsOnCall[len(fake.getNetworkCachedConfigArgsForCall)]
@@ -834,6 +1014,133 @@ func (fake *CNILibrary) GetNetworkListCachedResultReturnsOnCall(i int, result1 t
 	}{result1, result2}
 }
 
+func (fake *CNILibrary) GetStatusNetworkList(arg1 context.Context, arg2 *libcni.NetworkConfigList) error {
+	fake.getStatusNetworkListMutex.Lock()
+	ret, specificReturn := fake.getStatusNetworkListReturnsOnCall[len(fake.getStatusNetworkListArgsForCall)]
+	fake.getStatusNetworkListArgsForCall = append(fake.getStatusNetworkListArgsForCall, struct {
+		arg1 context.Context
+		arg2 *libcni.NetworkConfigList
+	}{arg1, arg2})
+	stub := fake.GetStatusNetworkListStub
+	fakeReturns := fake.getStatusNetworkListReturns
+	fake.recordInvocation("GetStatusNetworkList", []interface{}{arg1, arg2})
+	fake.getStatusNetworkListMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *CNILibrary) GetStatusNetworkListCallCount() int {
+	fake.getStatusNetworkListMutex.RLock()
+	defer fake.getStatusNetworkListMutex.RUnlock()
+	return len(fake.getStatusNetworkListArgsForCall)
+}
+
+func (fake *CNILibrary) GetStatusNetworkListCalls(stub func(context.Context, *libcni.NetworkConfigList) error) {
+	fake.getStatusNetworkListMutex.Lock()
+	defer fake.getStatusNetworkListMutex.Unlock()
+	fake.GetStatusNetworkListStub = stub
+}
+
+func (fake *CNILibrary) GetStatusNetworkListArgsForCall(i int) (context.Context, *libcni.NetworkConfigList) {
+	fake.getStatusNetworkListMutex.RLock()
+	defer fake.getStatusNetworkListMutex.RUnlock()
+	argsForCall := fake.getStatusNetworkListArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *CNILibrary) GetStatusNetworkListReturns(result1 error) {
+	fake.getStatusNetworkListMutex.Lock()
+	defer fake.getStatusNetworkListMutex.Unlock()
+	fake.GetStatusNetworkListStub = nil
+	fake.getStatusNetworkListReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *CNILibrary) GetStatusNetworkListReturnsOnCall(i int, result1 error) {
+	fake.getStatusNetworkListMutex.Lock()
+	defer fake.getStatusNetworkListMutex.Unlock()
+	fake.GetStatusNetworkListStub = nil
+	if fake.getStatusNetworkListReturnsOnCall == nil {
+		fake.getStatusNetworkListReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.getStatusNetworkListReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *CNILibrary) GetVersionInfo(arg1 context.Context, arg2 string) (version.PluginInfo, error) {
+	fake.getVersionInfoMutex.Lock()
+	ret, specificReturn := fake.getVersionInfoReturnsOnCall[len(fake.getVersionInfoArgsForCall)]
+	fake.getVersionInfoArgsForCall = append(fake.getVersionInfoArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+	}{arg1, arg2})
+	stub := fake.GetVersionInfoStub
+	fakeReturns := fake.getVersionInfoReturns
+	fake.recordInvocation("GetVersionInfo", []interface{}{arg1, arg2})
+	fake.getVersionInfoMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *CNILibrary) GetVersionInfoCallCount() int {
+	fake.getVersionInfoMutex.RLock()
+	defer fake.getVersionInfoMutex.RUnlock()
+	return len(fake.getVersionInfoArgsForCall)
+}
+
+func (fake *CNILibrary) GetVersionInfoCalls(stub func(context.Context, string) (version.PluginInfo, error)) {
+	fake.getVersionInfoMutex.Lock()
+	defer fake.getVersionInfoMutex.Unlock()
+	fake.GetVersionInfoStub = stub
+}
+
+func (fake *CNILibrary) GetVersionInfoArgsForCall(i int) (context.Context, string) {
+	fake.getVersionInfoMutex.RLock()
+	defer fake.getVersionInfoMutex.RUnlock()
+	argsForCall := fake.getVersionInfoArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *CNILibrary) GetVersionInfoReturns(result1 version.PluginInfo, result2 error) {
+	fake.getVersionInfoMutex.Lock()
+	defer fake.getVersionInfoMutex.Unlock()
+	fake.GetVersionInfoStub = nil
+	fake.getVersionInfoReturns = struct {
+		result1 version.PluginInfo
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CNILibrary) GetVersionInfoReturnsOnCall(i int, result1 version.PluginInfo, result2 error) {
+	fake.getVersionInfoMutex.Lock()
+	defer fake.getVersionInfoMutex.Unlock()
+	fake.GetVersionInfoStub = nil
+	if fake.getVersionInfoReturnsOnCall == nil {
+		fake.getVersionInfoReturnsOnCall = make(map[int]struct {
+			result1 version.PluginInfo
+			result2 error
+		})
+	}
+	fake.getVersionInfoReturnsOnCall[i] = struct {
+		result1 version.PluginInfo
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *CNILibrary) ValidateNetwork(arg1 context.Context, arg2 *libcni.NetworkConfig) ([]string, error) {
 	fake.validateNetworkMutex.Lock()
 	ret, specificReturn := fake.validateNetworkReturnsOnCall[len(fake.validateNetworkArgsForCall)]
@@ -979,6 +1286,10 @@ func (fake *CNILibrary) Invocations() map[string][][]interface{} {
 	defer fake.delNetworkMutex.RUnlock()
 	fake.delNetworkListMutex.RLock()
 	defer fake.delNetworkListMutex.RUnlock()
+	fake.gCNetworkListMutex.RLock()
+	defer fake.gCNetworkListMutex.RUnlock()
+	fake.getCachedAttachmentsMutex.RLock()
+	defer fake.getCachedAttachmentsMutex.RUnlock()
 	fake.getNetworkCachedConfigMutex.RLock()
 	defer fake.getNetworkCachedConfigMutex.RUnlock()
 	fake.getNetworkCachedResultMutex.RLock()
@@ -987,6 +1298,10 @@ func (fake *CNILibrary) Invocations() map[string][][]interface{} {
 	defer fake.getNetworkListCachedConfigMutex.RUnlock()
 	fake.getNetworkListCachedResultMutex.RLock()
 	defer fake.getNetworkListCachedResultMutex.RUnlock()
+	fake.getStatusNetworkListMutex.RLock()
+	defer fake.getStatusNetworkListMutex.RUnlock()
+	fake.getVersionInfoMutex.RLock()
+	defer fake.getVersionInfoMutex.RUnlock()
 	fake.validateNetworkMutex.RLock()
 	defer fake.validateNetworkMutex.RUnlock()
 	fake.validateNetworkListMutex.RLock()
