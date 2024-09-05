@@ -1,4 +1,4 @@
-// Copyright 2016 CNI authors
+// Copyright 2022 CNI authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package testutils
+package ns
 
-import "errors"
+import "github.com/containernetworking/cni/pkg/types"
 
-// BadReader is an io.Reader which always errors
-type BadReader struct {
-	Error error
-}
-
-func (r *BadReader) Read(_ []byte) (int, error) {
-	if r.Error != nil {
-		return 0, r.Error
-	}
-	return 0, errors.New("banana")
-}
-
-func (r *BadReader) Close() error {
-	return nil
+func CheckNetNS(nsPath string) (bool, *types.Error) {
+	return false, nil
 }

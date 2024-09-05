@@ -6,8 +6,6 @@ toolchain go1.22.3
 
 replace (
 	example-apps/spammer => ../example-apps/spammer
-	github.com/containernetworking/cni => github.com/containernetworking/cni v1.1.2
-	github.com/containernetworking/plugins => github.com/containernetworking/plugins v1.1.1
 
 	github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 	github.com/nats-io/go-nats => github.com/nats-io/go-nats v1.5.1-0.20180331191609-247b2a84d8d0
@@ -81,6 +79,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
+	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.51.2 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
