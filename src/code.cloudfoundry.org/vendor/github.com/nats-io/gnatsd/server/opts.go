@@ -28,67 +28,78 @@ import (
 	"time"
 
 	"github.com/nats-io/gnatsd/conf"
-	"github.com/nats-io/gnatsd/util"
 )
 
 // ClusterOpts are options for clusters.
 type ClusterOpts struct {
-	Host           string      `json:"addr"`
-	Port           int         `json:"cluster_port"`
-	Username       string      `json:"-"`
-	Password       string      `json:"-"`
-	AuthTimeout    float64     `json:"auth_timeout"`
-	TLSTimeout     float64     `json:"-"`
-	TLSConfig      *tls.Config `json:"-"`
-	ListenStr      string      `json:"-"`
-	Advertise      string      `json:"-"`
-	NoAdvertise    bool        `json:"-"`
-	ConnectRetries int         `json:"-"`
+	Host           string            `json:"addr,omitempty"`
+	Port           int               `json:"cluster_port,omitempty"`
+	Username       string            `json:"-"`
+	Password       string            `json:"-"`
+	AuthTimeout    float64           `json:"auth_timeout,omitempty"`
+	Permissions    *RoutePermissions `json:"-"`
+	TLSTimeout     float64           `json:"-"`
+	TLSConfig      *tls.Config       `json:"-"`
+	ListenStr      string            `json:"-"`
+	Advertise      string            `json:"-"`
+	NoAdvertise    bool              `json:"-"`
+	ConnectRetries int               `json:"-"`
 }
 
 // Options block for gnatsd server.
 type Options struct {
-	ConfigFile      string        `json:"-"`
-	Host            string        `json:"addr"`
-	Port            int           `json:"port"`
-	ClientAdvertise string        `json:"-"`
-	Trace           bool          `json:"-"`
-	Debug           bool          `json:"-"`
-	NoLog           bool          `json:"-"`
-	NoSigs          bool          `json:"-"`
-	Logtime         bool          `json:"-"`
-	MaxConn         int           `json:"max_connections"`
-	Users           []*User       `json:"-"`
-	Username        string        `json:"-"`
-	Password        string        `json:"-"`
-	Authorization   string        `json:"-"`
-	PingInterval    time.Duration `json:"ping_interval"`
-	MaxPingsOut     int           `json:"ping_max"`
-	HTTPHost        string        `json:"http_host"`
-	HTTPPort        int           `json:"http_port"`
-	HTTPSPort       int           `json:"https_port"`
-	AuthTimeout     float64       `json:"auth_timeout"`
-	MaxControlLine  int           `json:"max_control_line"`
-	MaxPayload      int           `json:"max_payload"`
-	Cluster         ClusterOpts   `json:"cluster"`
-	ProfPort        int           `json:"-"`
-	PidFile         string        `json:"-"`
-	LogFile         string        `json:"-"`
-	Syslog          bool          `json:"-"`
-	RemoteSyslog    string        `json:"-"`
-	Routes          []*url.URL    `json:"-"`
-	RoutesStr       string        `json:"-"`
-	TLSTimeout      float64       `json:"tls_timeout"`
-	TLS             bool          `json:"-"`
-	TLSVerify       bool          `json:"-"`
-	TLSCert         string        `json:"-"`
-	TLSKey          string        `json:"-"`
-	TLSCaCert       string        `json:"-"`
-	TLSConfig       *tls.Config   `json:"-"`
-	WriteDeadline   time.Duration `json:"-"`
+	ConfigFile       string        `json:"-"`
+	Host             string        `json:"addr"`
+	Port             int           `json:"port"`
+	ClientAdvertise  string        `json:"-"`
+	Trace            bool          `json:"-"`
+	Debug            bool          `json:"-"`
+	NoLog            bool          `json:"-"`
+	NoSigs           bool          `json:"-"`
+	Logtime          bool          `json:"-"`
+	MaxConn          int           `json:"max_connections"`
+	MaxSubs          int           `json:"max_subscriptions,omitempty"`
+	Users            []*User       `json:"-"`
+	Username         string        `json:"-"`
+	Password         string        `json:"-"`
+	Authorization    string        `json:"-"`
+	PingInterval     time.Duration `json:"ping_interval"`
+	MaxPingsOut      int           `json:"ping_max"`
+	HTTPHost         string        `json:"http_host"`
+	HTTPPort         int           `json:"http_port"`
+	HTTPSPort        int           `json:"https_port"`
+	AuthTimeout      float64       `json:"auth_timeout"`
+	MaxControlLine   int           `json:"max_control_line"`
+	MaxPayload       int           `json:"max_payload"`
+	MaxPending       int64         `json:"max_pending"`
+	Cluster          ClusterOpts   `json:"cluster,omitempty"`
+	ProfPort         int           `json:"-"`
+	PidFile          string        `json:"-"`
+	PortsFileDir     string        `json:"-"`
+	LogFile          string        `json:"-"`
+	Syslog           bool          `json:"-"`
+	RemoteSyslog     string        `json:"-"`
+	Routes           []*url.URL    `json:"-"`
+	RoutesStr        string        `json:"-"`
+	TLSTimeout       float64       `json:"tls_timeout"`
+	TLS              bool          `json:"-"`
+	TLSVerify        bool          `json:"-"`
+	TLSCert          string        `json:"-"`
+	TLSKey           string        `json:"-"`
+	TLSCaCert        string        `json:"-"`
+	TLSConfig        *tls.Config   `json:"-"`
+	WriteDeadline    time.Duration `json:"-"`
+	RQSubsSweep      time.Duration `json:"-"`
+	MaxClosedClients int           `json:"-"`
+	LameDuckDuration time.Duration `json:"-"`
 
 	CustomClientAuthentication Authentication `json:"-"`
 	CustomRouterAuthentication Authentication `json:"-"`
+
+	// private fields, used to know if bool options are explicitly
+	// defined in config and/or command line params.
+	inConfig  map[string]bool
+	inCmdLine map[string]bool
 }
 
 // Clone performs a deep copy of the Options struct, returning a new clone
@@ -114,10 +125,10 @@ func (o *Options) Clone() *Options {
 		}
 	}
 	if o.TLSConfig != nil {
-		clone.TLSConfig = util.CloneTLSConfig(o.TLSConfig)
+		clone.TLSConfig = o.TLSConfig.Clone()
 	}
 	if o.Cluster.TLSConfig != nil {
-		clone.Cluster.TLSConfig = util.CloneTLSConfig(o.Cluster.TLSConfig)
+		clone.Cluster.TLSConfig = o.Cluster.TLSConfig.Clone()
 	}
 	return clone
 }
@@ -223,10 +234,13 @@ func (o *Options) ProcessConfigFile(configFile string) error {
 			o.Host = v.(string)
 		case "debug":
 			o.Debug = v.(bool)
+			trackExplicitVal(o, &o.inConfig, "Debug", o.Debug)
 		case "trace":
 			o.Trace = v.(bool)
+			trackExplicitVal(o, &o.inConfig, "Trace", o.Trace)
 		case "logtime":
 			o.Logtime = v.(bool)
+			trackExplicitVal(o, &o.inConfig, "Logtime", o.Logtime)
 		case "authorization":
 			am := v.(map[string]interface{})
 			auth, err := parseAuthorization(am)
@@ -237,16 +251,16 @@ func (o *Options) ProcessConfigFile(configFile string) error {
 			o.Password = auth.pass
 			o.Authorization = auth.token
 			if (auth.user != "" || auth.pass != "") && auth.token != "" {
-				return fmt.Errorf("Cannot have a user/pass and token")
+				return fmt.Errorf("cannot have a user/pass and token")
 			}
 			o.AuthTimeout = auth.timeout
 			// Check for multiple users defined
 			if auth.users != nil {
 				if auth.user != "" {
-					return fmt.Errorf("Can not have a single user/pass and a users array")
+					return fmt.Errorf("can not have a single user/pass and a users array")
 				}
 				if auth.token != "" {
-					return fmt.Errorf("Can not have a token and a users array")
+					return fmt.Errorf("can not have a token and a users array")
 				}
 				o.Users = auth.users
 			}
@@ -277,18 +291,25 @@ func (o *Options) ProcessConfigFile(configFile string) error {
 			o.LogFile = v.(string)
 		case "syslog":
 			o.Syslog = v.(bool)
+			trackExplicitVal(o, &o.inConfig, "Syslog", o.Syslog)
 		case "remote_syslog":
 			o.RemoteSyslog = v.(string)
 		case "pidfile", "pid_file":
 			o.PidFile = v.(string)
+		case "ports_file_dir":
+			o.PortsFileDir = v.(string)
 		case "prof_port":
 			o.ProfPort = int(v.(int64))
 		case "max_control_line":
 			o.MaxControlLine = int(v.(int64))
 		case "max_payload":
 			o.MaxPayload = int(v.(int64))
+		case "max_pending":
+			o.MaxPending = v.(int64)
 		case "max_connections", "max_conn":
 			o.MaxConn = int(v.(int64))
+		case "max_subscriptions", "max_subs":
+			o.MaxSubs = int(v.(int64))
 		case "ping_interval":
 			o.PingInterval = time.Duration(int(v.(int64))) * time.Second
 		case "ping_max":
@@ -317,9 +338,24 @@ func (o *Options) ProcessConfigFile(configFile string) error {
 				o.WriteDeadline = time.Duration(v.(int64)) * time.Second
 				fmt.Printf("WARNING: write_deadline should be converted to a duration\n")
 			}
+		case "lame_duck_duration":
+			dur, err := time.ParseDuration(v.(string))
+			if err != nil {
+				return fmt.Errorf("error parsing lame_duck_duration: %v", err)
+			}
+			o.LameDuckDuration = dur
 		}
 	}
 	return nil
+}
+
+func trackExplicitVal(opts *Options, pm *map[string]bool, name string, val bool) {
+	m := *pm
+	if m == nil {
+		m = make(map[string]bool)
+		*pm = m
+	}
+	m[name] = val
 }
 
 // hostPort is simple struct to hold parsed listen/addr strings.
@@ -331,18 +367,18 @@ type hostPort struct {
 // parseListen will parse listen option which is replacing host/net and port
 func parseListen(v interface{}) (*hostPort, error) {
 	hp := &hostPort{}
-	switch v.(type) {
+	switch v := v.(type) {
 	// Only a port
 	case int64:
-		hp.port = int(v.(int64))
+		hp.port = int(v)
 	case string:
-		host, port, err := net.SplitHostPort(v.(string))
+		host, port, err := net.SplitHostPort(v)
 		if err != nil {
-			return nil, fmt.Errorf("Could not parse address string %q", v)
+			return nil, fmt.Errorf("could not parse address string %q", v)
 		}
 		hp.port, err = strconv.Atoi(port)
 		if err != nil {
-			return nil, fmt.Errorf("Could not parse port %q", port)
+			return nil, fmt.Errorf("could not parse port %q", port)
 		}
 		hp.host = host
 	}
@@ -371,11 +407,15 @@ func parseCluster(cm map[string]interface{}, opts *Options) error {
 				return err
 			}
 			if auth.users != nil {
-				return fmt.Errorf("Cluster authorization does not allow multiple users")
+				return fmt.Errorf("cluster authorization does not allow multiple users")
 			}
 			opts.Cluster.Username = auth.user
 			opts.Cluster.Password = auth.pass
 			opts.Cluster.AuthTimeout = auth.timeout
+			// Do not set permissions if they were specified in top-level cluster block.
+			if auth.defaultPermissions != nil && opts.Cluster.Permissions == nil {
+				setClusterPermissions(&opts.Cluster, auth.defaultPermissions)
+			}
 		case "routes":
 			ra := mv.([]interface{})
 			opts.Routes = make([]*url.URL, 0, len(ra))
@@ -406,11 +446,37 @@ func parseCluster(cm map[string]interface{}, opts *Options) error {
 			opts.Cluster.Advertise = mv.(string)
 		case "no_advertise":
 			opts.Cluster.NoAdvertise = mv.(bool)
+			trackExplicitVal(opts, &opts.inConfig, "Cluster.NoAdvertise", opts.Cluster.NoAdvertise)
 		case "connect_retries":
 			opts.Cluster.ConnectRetries = int(mv.(int64))
+		case "permissions":
+			pm, ok := mv.(map[string]interface{})
+			if !ok {
+				return fmt.Errorf("expected permissions to be a map/struct, got %+v", mv)
+			}
+			perms, err := parseUserPermissions(pm)
+			if err != nil {
+				return err
+			}
+			// This will possibly override permissions that were define in auth block
+			setClusterPermissions(&opts.Cluster, perms)
 		}
 	}
 	return nil
+}
+
+// Sets cluster's permissions based on given pub/sub permissions,
+// doing the appropriate translation.
+func setClusterPermissions(opts *ClusterOpts, perms *Permissions) {
+	// Import is whether or not we will send a SUB for interest to the other side.
+	// Export is whether or not we will accept a SUB from the remote for a given subject.
+	// Both only effect interest registration.
+	// The parsing sets Import into Publish and Export into Subscribe, convert
+	// accordingly.
+	opts.Permissions = &RoutePermissions{
+		Import: perms.Publish,
+		Export: perms.Subscribe,
+	}
 }
 
 // Helper function to parse Authorization configs.
@@ -426,11 +492,11 @@ func parseAuthorization(am map[string]interface{}) (*authorization, error) {
 			auth.token = mv.(string)
 		case "timeout":
 			at := float64(1)
-			switch mv.(type) {
+			switch mv := mv.(type) {
 			case int64:
-				at = float64(mv.(int64))
+				at = float64(mv)
 			case float64:
-				at = mv.(float64)
+				at = mv
 			}
 			auth.timeout = at
 		case "users":
@@ -439,10 +505,10 @@ func parseAuthorization(am map[string]interface{}) (*authorization, error) {
 				return nil, err
 			}
 			auth.users = users
-		case "default_permission", "default_permissions":
+		case "default_permission", "default_permissions", "permissions":
 			pm, ok := mv.(map[string]interface{})
 			if !ok {
-				return nil, fmt.Errorf("Expected default permissions to be a map/struct, got %+v", mv)
+				return nil, fmt.Errorf("expected default permissions to be a map/struct, got %+v", mv)
 			}
 			permissions, err := parseUserPermissions(pm)
 			if err != nil {
@@ -469,14 +535,14 @@ func parseUsers(mv interface{}) ([]*User, error) {
 	// Make sure we have an array
 	uv, ok := mv.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("Expected users field to be an array, got %v", mv)
+		return nil, fmt.Errorf("expected users field to be an array, got %v", mv)
 	}
 	users := []*User{}
 	for _, u := range uv {
 		// Check its a map/struct
 		um, ok := u.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("Expected user entry to be a map/struct, got %v", u)
+			return nil, fmt.Errorf("expected user entry to be a map/struct, got %v", u)
 		}
 		user := &User{}
 		for k, v := range um {
@@ -488,7 +554,7 @@ func parseUsers(mv interface{}) ([]*User, error) {
 			case "permission", "permissions", "authorization":
 				pm, ok := v.(map[string]interface{})
 				if !ok {
-					return nil, fmt.Errorf("Expected user permissions to be a map/struct, got %+v", v)
+					return nil, fmt.Errorf("expected user permissions to be a map/struct, got %+v", v)
 				}
 				permissions, err := parseUserPermissions(pm)
 				if err != nil {
@@ -499,7 +565,7 @@ func parseUsers(mv interface{}) ([]*User, error) {
 		}
 		// Check to make sure we have at least username and password
 		if user.Username == "" || user.Password == "" {
-			return nil, fmt.Errorf("User entry requires a user and a password")
+			return nil, fmt.Errorf("user entry requires a user and a password")
 		}
 		users = append(users, user)
 	}
@@ -511,55 +577,111 @@ func parseUserPermissions(pm map[string]interface{}) (*Permissions, error) {
 	p := &Permissions{}
 	for k, v := range pm {
 		switch strings.ToLower(k) {
-		case "pub", "publish":
-			subjects, err := parseSubjects(v)
+		// For routes:
+		// Import is Publish
+		// Export is Subscribe
+		case "pub", "publish", "import":
+			perms, err := parseVariablePermissions(v)
 			if err != nil {
 				return nil, err
 			}
-			p.Publish = subjects
-		case "sub", "subscribe":
-			subjects, err := parseSubjects(v)
+			p.Publish = perms
+		case "sub", "subscribe", "export":
+			perms, err := parseVariablePermissions(v)
 			if err != nil {
 				return nil, err
 			}
-			p.Subscribe = subjects
+			p.Subscribe = perms
 		default:
-			return nil, fmt.Errorf("Unknown field %s parsing permissions", k)
+			return nil, fmt.Errorf("unknown field %s parsing permissions", k)
 		}
 	}
 	return p, nil
 }
 
+// Tope level parser for authorization configurations.
+func parseVariablePermissions(v interface{}) (*SubjectPermission, error) {
+	switch v := v.(type) {
+	case map[string]interface{}:
+		// New style with allow and/or deny properties.
+		return parseSubjectPermission(v)
+	default:
+		// Old style
+		return parseOldPermissionStyle(v)
+	}
+}
+
 // Helper function to parse subject singeltons and/or arrays
 func parseSubjects(v interface{}) ([]string, error) {
 	var subjects []string
-	switch v.(type) {
+	switch v := v.(type) {
 	case string:
-		subjects = append(subjects, v.(string))
+		subjects = append(subjects, v)
 	case []string:
-		subjects = v.([]string)
+		subjects = v
 	case []interface{}:
-		for _, i := range v.([]interface{}) {
+		for _, i := range v {
 			subject, ok := i.(string)
 			if !ok {
-				return nil, fmt.Errorf("Subject in permissions array cannot be cast to string")
+				return nil, fmt.Errorf("subject in permissions array cannot be cast to string")
 			}
 			subjects = append(subjects, subject)
 		}
 	default:
-		return nil, fmt.Errorf("Expected subject permissions to be a subject, or array of subjects, got %T", v)
+		return nil, fmt.Errorf("expected subject permissions to be a subject, or array of subjects, got %T", v)
 	}
-	return checkSubjectArray(subjects)
+	if err := checkSubjectArray(subjects); err != nil {
+		return nil, err
+	}
+	return subjects, nil
+}
+
+// Helper function to parse old style authorization configs.
+func parseOldPermissionStyle(v interface{}) (*SubjectPermission, error) {
+	subjects, err := parseSubjects(v)
+	if err != nil {
+		return nil, err
+	}
+	return &SubjectPermission{Allow: subjects}, nil
+}
+
+// Helper function to parse new style authorization into a SubjectPermission with Allow and Deny.
+func parseSubjectPermission(m map[string]interface{}) (*SubjectPermission, error) {
+	if len(m) == 0 {
+		return nil, nil
+	}
+
+	p := &SubjectPermission{}
+
+	for k, v := range m {
+		switch strings.ToLower(k) {
+		case "allow":
+			subjects, err := parseSubjects(v)
+			if err != nil {
+				return nil, err
+			}
+			p.Allow = subjects
+		case "deny":
+			subjects, err := parseSubjects(v)
+			if err != nil {
+				return nil, err
+			}
+			p.Deny = subjects
+		default:
+			return nil, fmt.Errorf("unknown field name %q parsing subject permissions, only 'allow' or 'deny' are permitted", k)
+		}
+	}
+	return p, nil
 }
 
 // Helper function to validate subjects, etc for account permissioning.
-func checkSubjectArray(sa []string) ([]string, error) {
+func checkSubjectArray(sa []string) error {
 	for _, s := range sa {
 		if !IsValidSubject(s) {
-			return nil, fmt.Errorf("Subject %q is not a valid subject", s)
+			return fmt.Errorf("subject %q is not a valid subject", s)
 		}
 	}
-	return sa, nil
+	return nil
 }
 
 // PrintTLSHelpAndDie prints TLS usage and exits.
@@ -579,7 +701,7 @@ func parseCipher(cipherName string) (uint16, error) {
 
 	cipher, exists := cipherMap[cipherName]
 	if !exists {
-		return 0, fmt.Errorf("Unrecognized cipher %s", cipherName)
+		return 0, fmt.Errorf("unrecognized cipher %s", cipherName)
 	}
 
 	return cipher, nil
@@ -588,7 +710,7 @@ func parseCipher(cipherName string) (uint16, error) {
 func parseCurvePreferences(curveName string) (tls.CurveID, error) {
 	curve, exists := curvePreferenceMap[curveName]
 	if !exists {
-		return 0, fmt.Errorf("Unrecognized curve preference %s", curveName)
+		return 0, fmt.Errorf("unrecognized curve preference %s", curveName)
 	}
 	return curve, nil
 }
@@ -650,11 +772,11 @@ func parseTLS(tlsm map[string]interface{}) (*TLSConfigOpts, error) {
 			}
 		case "timeout":
 			at := float64(0)
-			switch mv.(type) {
+			switch mv := mv.(type) {
 			case int64:
-				at = float64(mv.(int64))
+				at = float64(mv)
 			case float64:
-				at = mv.(float64)
+				at = mv
 			}
 			tc.Timeout = at
 		default:
@@ -688,14 +810,15 @@ func GenTLSConfig(tc *TLSConfigOpts) (*tls.Config, error) {
 		return nil, fmt.Errorf("error parsing certificate: %v", err)
 	}
 
-	// Create TLSConfig
+	// Create the tls.Config from our options.
 	// We will determine the cipher suites that we prefer.
+	// FIXME(dlc) change if ARM based.
 	config := tls.Config{
-		CurvePreferences:         tc.CurvePreferences,
-		Certificates:             []tls.Certificate{cert},
-		PreferServerCipherSuites: true,
 		MinVersion:               tls.VersionTLS12,
 		CipherSuites:             tc.Ciphers,
+		PreferServerCipherSuites: true,
+		CurvePreferences:         tc.CurvePreferences,
+		Certificates:             []tls.Certificate{cert},
 	}
 
 	// Require client certificates as needed
@@ -766,6 +889,9 @@ func MergeOptions(fileOpts, flagOpts *Options) *Options {
 	}
 	if flagOpts.PidFile != "" {
 		opts.PidFile = flagOpts.PidFile
+	}
+	if flagOpts.PortsFileDir != "" {
+		opts.PortsFileDir = flagOpts.PortsFileDir
 	}
 	if flagOpts.ProfPort != 0 {
 		opts.ProfPort = flagOpts.ProfPort
@@ -863,7 +989,7 @@ func getURLIP(ipStr string) ([]net.IP, error) {
 
 	hostAddr, err := net.LookupHost(ipStr)
 	if err != nil {
-		return nil, fmt.Errorf("Error looking up host with route hostname: %v", err)
+		return nil, fmt.Errorf("error looking up host with route hostname: %v", err)
 	}
 	for _, addr := range hostAddr {
 		ip = net.ParseIP(addr)
@@ -879,7 +1005,7 @@ func getInterfaceIPs() ([]net.IP, error) {
 
 	interfaceAddr, err := net.InterfaceAddrs()
 	if err != nil {
-		return nil, fmt.Errorf("Error getting self referencing address: %v", err)
+		return nil, fmt.Errorf("error getting self referencing address: %v", err)
 	}
 
 	for i := 0; i < len(interfaceAddr); i++ {
@@ -887,7 +1013,7 @@ func getInterfaceIPs() ([]net.IP, error) {
 		if net.ParseIP(interfaceIP.String()) != nil {
 			localIPs = append(localIPs, interfaceIP)
 		} else {
-			return nil, fmt.Errorf("Error parsing self referencing address: %v", err)
+			return nil, fmt.Errorf("error parsing self referencing address: %v", err)
 		}
 	}
 	return localIPs, nil
@@ -923,14 +1049,16 @@ func processOptions(opts *Options) {
 	if opts.AuthTimeout == 0 {
 		opts.AuthTimeout = float64(AUTH_TIMEOUT) / float64(time.Second)
 	}
-	if opts.Cluster.Host == "" {
-		opts.Cluster.Host = DEFAULT_HOST
-	}
-	if opts.Cluster.TLSTimeout == 0 {
-		opts.Cluster.TLSTimeout = float64(TLS_TIMEOUT) / float64(time.Second)
-	}
-	if opts.Cluster.AuthTimeout == 0 {
-		opts.Cluster.AuthTimeout = float64(AUTH_TIMEOUT) / float64(time.Second)
+	if opts.Cluster.Port != 0 {
+		if opts.Cluster.Host == "" {
+			opts.Cluster.Host = DEFAULT_HOST
+		}
+		if opts.Cluster.TLSTimeout == 0 {
+			opts.Cluster.TLSTimeout = float64(TLS_TIMEOUT) / float64(time.Second)
+		}
+		if opts.Cluster.AuthTimeout == 0 {
+			opts.Cluster.AuthTimeout = float64(AUTH_TIMEOUT) / float64(time.Second)
+		}
 	}
 	if opts.MaxControlLine == 0 {
 		opts.MaxControlLine = MAX_CONTROL_LINE_SIZE
@@ -938,8 +1066,20 @@ func processOptions(opts *Options) {
 	if opts.MaxPayload == 0 {
 		opts.MaxPayload = MAX_PAYLOAD_SIZE
 	}
+	if opts.MaxPending == 0 {
+		opts.MaxPending = MAX_PENDING_SIZE
+	}
 	if opts.WriteDeadline == time.Duration(0) {
 		opts.WriteDeadline = DEFAULT_FLUSH_DEADLINE
+	}
+	if opts.RQSubsSweep == time.Duration(0) {
+		opts.RQSubsSweep = DEFAULT_REMOTE_QSUBS_SWEEPER
+	}
+	if opts.MaxClosedClients == 0 {
+		opts.MaxClosedClients = DEFAULT_MAX_CLOSED_CLIENTS
+	}
+	if opts.LameDuckDuration == 0 {
+		opts.LameDuckDuration = DEFAULT_LAME_DUCK_DURATION
 	}
 }
 
@@ -955,6 +1095,7 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 		showTLSHelp bool
 		signal      string
 		configFile  string
+		dbgAndTrace bool
 		err         error
 	)
 
@@ -970,7 +1111,7 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 	fs.BoolVar(&opts.Debug, "debug", false, "Enable Debug logging.")
 	fs.BoolVar(&opts.Trace, "V", false, "Enable Trace logging.")
 	fs.BoolVar(&opts.Trace, "trace", false, "Enable Trace logging.")
-	fs.Bool("DV", false, "Enable Debug and Trace logging.")
+	fs.BoolVar(&dbgAndTrace, "DV", false, "Enable Debug and Trace logging.")
 	fs.BoolVar(&opts.Logtime, "T", true, "Timestamp log entries.")
 	fs.BoolVar(&opts.Logtime, "logtime", true, "Timestamp log entries.")
 	fs.StringVar(&opts.Username, "user", "", "Username required for connection.")
@@ -986,12 +1127,13 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 	fs.StringVar(&signal, "signal", "", "Send signal to gnatsd process (stop, quit, reopen, reload)")
 	fs.StringVar(&opts.PidFile, "P", "", "File to store process pid.")
 	fs.StringVar(&opts.PidFile, "pid", "", "File to store process pid.")
+	fs.StringVar(&opts.PortsFileDir, "ports_file_dir", "", "Creates a ports file in the specified directory (<executable_name>_<pid>.ports)")
 	fs.StringVar(&opts.LogFile, "l", "", "File to store logging output.")
 	fs.StringVar(&opts.LogFile, "log", "", "File to store logging output.")
 	fs.BoolVar(&opts.Syslog, "s", false, "Enable syslog as log method.")
 	fs.BoolVar(&opts.Syslog, "syslog", false, "Enable syslog as log method..")
-	fs.StringVar(&opts.RemoteSyslog, "r", "", "Syslog server addr (udp://localhost:514).")
-	fs.StringVar(&opts.RemoteSyslog, "remote_syslog", "", "Syslog server addr (udp://localhost:514).")
+	fs.StringVar(&opts.RemoteSyslog, "r", "", "Syslog server addr (udp://127.0.0.1:514).")
+	fs.StringVar(&opts.RemoteSyslog, "remote_syslog", "", "Syslog server addr (udp://127.0.0.1:514).")
 	fs.BoolVar(&showVersion, "version", false, "Print version information.")
 	fs.BoolVar(&showVersion, "v", false, "Print version information.")
 	fs.IntVar(&opts.ProfPort, "profile", 0, "Profiling HTTP port")
@@ -1051,6 +1193,33 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 	// Snapshot flag options.
 	FlagSnapshot = opts.Clone()
 
+	// Keep track of the boolean flags that were explicitly set with their value.
+	fs.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "DV":
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Debug", dbgAndTrace)
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Trace", dbgAndTrace)
+		case "D":
+			fallthrough
+		case "debug":
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Debug", FlagSnapshot.Debug)
+		case "V":
+			fallthrough
+		case "trace":
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Trace", FlagSnapshot.Trace)
+		case "T":
+			fallthrough
+		case "logtime":
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Logtime", FlagSnapshot.Logtime)
+		case "s":
+			fallthrough
+		case "syslog":
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Syslog", FlagSnapshot.Syslog)
+		case "no_advertise":
+			trackExplicitVal(FlagSnapshot, &FlagSnapshot.inCmdLine, "Cluster.NoAdvertise", FlagSnapshot.Cluster.NoAdvertise)
+		}
+	})
+
 	// Process signal control.
 	if signal != "" {
 		if err := processSignal(signal); err != nil {
@@ -1099,8 +1268,7 @@ func ConfigureOptions(fs *flag.FlagSet, args []string, printVersion, printHelp, 
 			switch f.Name {
 			case "DV":
 				// Check value to support -DV=false
-				boolValue, _ := strconv.ParseBool(f.Value.String())
-				opts.Trace, opts.Debug = boolValue, boolValue
+				opts.Trace, opts.Debug = dbgAndTrace, dbgAndTrace
 			case "cluster", "cluster_listen":
 				// Override cluster config if explicitly set via flags.
 				flagErr = overrideCluster(opts)
@@ -1206,7 +1374,7 @@ func processSignal(signal string) error {
 		commandAndPid = strings.Split(signal, "=")
 	)
 	if l := len(commandAndPid); l == 2 {
-		pid = commandAndPid[1]
+		pid = maybeReadPidFile(commandAndPid[1])
 	} else if l > 2 {
 		return fmt.Errorf("invalid signal parameters: %v", commandAndPid[2:])
 	}
@@ -1215,4 +1383,15 @@ func processSignal(signal string) error {
 	}
 	os.Exit(0)
 	return nil
+}
+
+// maybeReadPidFile returns a PID or Windows service name obtained via the following method:
+// 1. Try to open a file with path "pidStr" (absolute or relative).
+// 2. If such a file exists and can be read, return its contents.
+// 3. Otherwise, return the original "pidStr" string.
+func maybeReadPidFile(pidStr string) string {
+	if b, err := ioutil.ReadFile(pidStr); err == nil {
+		return string(b)
+	}
+	return pidStr
 }

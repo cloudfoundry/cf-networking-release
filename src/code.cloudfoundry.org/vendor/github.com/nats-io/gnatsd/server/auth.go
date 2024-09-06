@@ -16,6 +16,7 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -35,6 +36,8 @@ type ClientAuthentication interface {
 	GetTLSConnectionState() *tls.ConnectionState
 	// Optionally map a user after auth.
 	RegisterUser(*User)
+	// RemoteAddress expose the connection information of the client
+	RemoteAddress() net.Addr
 }
 
 // User is for multiple accounts/users.
@@ -56,11 +59,43 @@ func (u *User) clone() *User {
 	return clone
 }
 
+// SubjectPermission is an individual allow and deny struct for publish
+// and subscribe authorizations.
+type SubjectPermission struct {
+	Allow []string `json:"allow,omitempty"`
+	Deny  []string `json:"deny,omitempty"`
+}
+
 // Permissions are the allowed subjects on a per
 // publish or subscribe basis.
 type Permissions struct {
-	Publish   []string `json:"publish"`
-	Subscribe []string `json:"subscribe"`
+	Publish   *SubjectPermission `json:"publish"`
+	Subscribe *SubjectPermission `json:"subscribe"`
+}
+
+// RoutePermissions are similar to user permissions
+// but describe what a server can import/export from and to
+// another server.
+type RoutePermissions struct {
+	Import *SubjectPermission `json:"import"`
+	Export *SubjectPermission `json:"export"`
+}
+
+// clone will clone an individual subject permission.
+func (p *SubjectPermission) clone() *SubjectPermission {
+	if p == nil {
+		return nil
+	}
+	clone := &SubjectPermission{}
+	if p.Allow != nil {
+		clone.Allow = make([]string, len(p.Allow))
+		copy(clone.Allow, p.Allow)
+	}
+	if p.Deny != nil {
+		clone.Deny = make([]string, len(p.Deny))
+		copy(clone.Deny, p.Deny)
+	}
+	return clone
 }
 
 // clone performs a deep copy of the Permissions struct, returning a new clone
@@ -71,14 +106,31 @@ func (p *Permissions) clone() *Permissions {
 	}
 	clone := &Permissions{}
 	if p.Publish != nil {
-		clone.Publish = make([]string, len(p.Publish))
-		copy(clone.Publish, p.Publish)
+		clone.Publish = p.Publish.clone()
 	}
 	if p.Subscribe != nil {
-		clone.Subscribe = make([]string, len(p.Subscribe))
-		copy(clone.Subscribe, p.Subscribe)
+		clone.Subscribe = p.Subscribe.clone()
 	}
 	return clone
+}
+
+// checkAuthforWarnings will look for insecure settings and log concerns.
+// Lock is assumed held.
+func (s *Server) checkAuthforWarnings() {
+	warn := false
+	if s.opts.Password != "" && !isBcrypt(s.opts.Password) {
+		warn = true
+	}
+	for _, u := range s.users {
+		if !isBcrypt(u.Password) {
+			warn = true
+			break
+		}
+	}
+	if warn {
+		// Warning about using plaintext passwords.
+		s.Warnf("Plaintext passwords detected. Use Nkeys or Bcrypt passwords in config files.")
+	}
 }
 
 // configureAuthorization will do any setup needed for authorization.
@@ -122,6 +174,14 @@ func (s *Server) checkAuthorization(c *client) bool {
 	}
 }
 
+// hasUsers leyt's us know if we have a users array.
+func (s *Server) hasUsers() bool {
+	s.mu.Lock()
+	hu := s.users != nil
+	s.mu.Unlock()
+	return hu
+}
+
 // isClientAuthorized will check the client against the proper authorization method and data.
 // This could be token or username/password based.
 func (s *Server) isClientAuthorized(c *client) bool {
@@ -129,10 +189,13 @@ func (s *Server) isClientAuthorized(c *client) bool {
 	opts := s.getOpts()
 
 	// Check custom auth first, then multiple users, then token, then single user/pass.
-	if s.opts.CustomClientAuthentication != nil {
-		return s.opts.CustomClientAuthentication.Check(c)
-	} else if s.users != nil {
+	if opts.CustomClientAuthentication != nil {
+		return opts.CustomClientAuthentication.Check(c)
+	} else if s.hasUsers() {
+		s.mu.Lock()
 		user, ok := s.users[c.opts.Username]
+		s.mu.Unlock()
+
 		if !ok {
 			return false
 		}
@@ -173,7 +236,10 @@ func (s *Server) isRouterAuthorized(c *client) bool {
 	if opts.Cluster.Username != c.opts.Username {
 		return false
 	}
-	return comparePasswords(opts.Cluster.Password, c.opts.Password)
+	if !comparePasswords(opts.Cluster.Password, c.opts.Password) {
+		return false
+	}
+	return true
 }
 
 // removeUnauthorizedSubs removes any subscriptions the client has that are no

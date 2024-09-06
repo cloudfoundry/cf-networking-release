@@ -17,6 +17,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -107,5 +109,11 @@ func parseHostPort(hostPort string, defaultPort int) (host string, port int, err
 		}
 		return strings.TrimSpace(host), port, nil
 	}
-	return "", -1, errors.New("No hostport specified")
+	return "", -1, errors.New("no hostport specified")
+}
+
+// Returns true if URL u1 represents the same URL than u2,
+// false otherwise.
+func urlsAreEqual(u1, u2 *url.URL) bool {
+	return reflect.DeepEqual(u1, u2)
 }

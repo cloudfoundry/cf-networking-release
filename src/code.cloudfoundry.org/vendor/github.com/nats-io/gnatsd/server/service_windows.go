@@ -22,11 +22,19 @@ import (
 )
 
 const (
-	serviceName     = "gnatsd"
 	reopenLogCode   = 128
 	reopenLogCmd    = svc.Cmd(reopenLogCode)
+	ldmCode         = 129
+	ldmCmd          = svc.Cmd(ldmCode)
 	acceptReopenLog = svc.Accepted(reopenLogCode)
 )
+
+var serviceName = "gnatsd"
+
+// SetServiceName allows setting a different service name
+func SetServiceName(name string) {
+	serviceName = name
+}
 
 // winServiceWrapper implements the svc.Handler interface for implementing
 // gnatsd as a Windows service.
@@ -81,6 +89,8 @@ loop:
 		case reopenLogCmd:
 			// File log re-open for rotating file logs.
 			w.server.ReOpenLogFile()
+		case ldmCmd:
+			go w.server.lameDuckMode()
 		case svc.ParamChange:
 			if err := w.server.Reload(); err != nil {
 				w.server.Errorf("Failed to reload server configuration: %s", err)
