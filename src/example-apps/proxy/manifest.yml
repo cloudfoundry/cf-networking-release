@@ -1,6 +1,6 @@
 ---
 applications:
-  - name: proxy
+  - name: proxy-app
     memory: 32M
     disk_quota: 32M
     buildpacks: [go_buildpack]
