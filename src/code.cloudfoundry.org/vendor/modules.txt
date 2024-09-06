@@ -203,31 +203,57 @@ github.com/jackc/puddle/v2/internal/genstack
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
+# github.com/klauspost/compress v1.17.9
+## explicit; go 1.20
+github.com/klauspost/compress/flate
+github.com/klauspost/compress/internal/race
+github.com/klauspost/compress/s2
 # github.com/lib/pq v1.10.9
 ## explicit; go 1.13
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
+# github.com/minio/highwayhash v1.0.3
+## explicit; go 1.15
+github.com/minio/highwayhash
 # github.com/montanaflynn/stats v0.7.1
 ## explicit; go 1.13
 github.com/montanaflynn/stats
-# github.com/nats-io/gnatsd v1.4.1 => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
+# github.com/nats-io/gnatsd v1.4.1
 ## explicit
 github.com/nats-io/gnatsd/conf
 github.com/nats-io/gnatsd/logger
 github.com/nats-io/gnatsd/server
 github.com/nats-io/gnatsd/server/pse
 github.com/nats-io/gnatsd/test
-github.com/nats-io/gnatsd/util
 # github.com/nats-io/go-nats v1.8.1 => github.com/nats-io/go-nats v1.5.1-0.20180331191609-247b2a84d8d0
 ## explicit
 github.com/nats-io/go-nats
 github.com/nats-io/go-nats/bench
 github.com/nats-io/go-nats/encoders/builtin
 github.com/nats-io/go-nats/util
-# github.com/nats-io/nats-top v0.6.2 => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
-## explicit
+# github.com/nats-io/jwt/v2 v2.5.8
+## explicit; go 1.18
+github.com/nats-io/jwt/v2
+# github.com/nats-io/nats-server/v2 v2.10.18
+## explicit; go 1.21
+github.com/nats-io/nats-server/v2/conf
+github.com/nats-io/nats-server/v2/internal/fastrand
+github.com/nats-io/nats-server/v2/internal/ldap
+github.com/nats-io/nats-server/v2/logger
+github.com/nats-io/nats-server/v2/server
+github.com/nats-io/nats-server/v2/server/avl
+github.com/nats-io/nats-server/v2/server/certidp
+github.com/nats-io/nats-server/v2/server/certstore
+github.com/nats-io/nats-server/v2/server/pse
+github.com/nats-io/nats-server/v2/server/stree
+github.com/nats-io/nats-server/v2/server/sysmem
+# github.com/nats-io/nats-top v0.6.2
+## explicit; go 1.21
 github.com/nats-io/nats-top/util
+# github.com/nats-io/nkeys v0.4.7
+## explicit; go 1.20
+github.com/nats-io/nkeys
 # github.com/nats-io/nuid v1.0.1
 ## explicit
 github.com/nats-io/nuid
@@ -330,12 +356,19 @@ go.step.sm/crypto/x25519
 # golang.org/x/crypto v0.27.0
 ## explicit; go 1.20
 golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blake2b
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
+golang.org/x/crypto/chacha20poly1305
+golang.org/x/crypto/cryptobyte
+golang.org/x/crypto/cryptobyte/asn1
 golang.org/x/crypto/curve25519
+golang.org/x/crypto/ed25519
 golang.org/x/crypto/internal/alias
 golang.org/x/crypto/internal/poly1305
+golang.org/x/crypto/nacl/box
 golang.org/x/crypto/nacl/secretbox
+golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
@@ -398,6 +431,9 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
+# golang.org/x/time v0.6.0
+## explicit; go 1.18
+golang.org/x/time/rate
 # golang.org/x/tools v0.24.0
 ## explicit; go 1.19
 golang.org/x/tools/cover
@@ -509,6 +545,4 @@ gopkg.in/yaml.v2
 ## explicit
 gopkg.in/yaml.v3
 # example-apps/spammer => ../example-apps/spammer
-# github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 # github.com/nats-io/go-nats => github.com/nats-io/go-nats v1.5.1-0.20180331191609-247b2a84d8d0
-# github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922

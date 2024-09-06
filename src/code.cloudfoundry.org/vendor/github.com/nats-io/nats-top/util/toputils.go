@@ -1,30 +1,36 @@
 package toputils
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
-	gnatsd "github.com/nats-io/gnatsd/server"
+	"github.com/nats-io/nats-server/v2/server"
 )
 
 const DisplaySubscriptions = 1
 
 type Engine struct {
-	Host        string
-	Port        int
-	HttpClient  *http.Client
-	Uri         string
-	Conns       int
-	SortOpt     gnatsd.SortOpt
-	Delay       int
-	DisplaySubs bool
-	StatsCh     chan *Stats
-	ShutdownCh  chan struct{}
+	Host         string
+	Port         int
+	HttpClient   *http.Client
+	Uri          string
+	Conns        int
+	SortOpt      server.SortOpt
+	Delay        int
+	DisplaySubs  bool
+	StatsCh      chan *Stats
+	ShutdownCh   chan struct{}
+	LastStats    *Stats
+	LastPollTime time.Time
+	ShowRates    bool
+	LastConnz    map[uint64]*server.ConnInfo
 }
 
 func NewEngine(host string, port int, conns int, delay int) *Engine {
@@ -35,6 +41,7 @@ func NewEngine(host string, port int, conns int, delay int) *Engine {
 		Delay:      delay,
 		StatsCh:    make(chan *Stats),
 		ShutdownCh: make(chan struct{}),
+		LastConnz:  make(map[uint64]*server.ConnInfo),
 	}
 }
 
@@ -46,9 +53,9 @@ func (engine *Engine) Request(path string) (interface{}, error) {
 	uri := engine.Uri + path
 	switch path {
 	case "/varz":
-		statz = &gnatsd.Varz{}
+		statz = &server.Varz{}
 	case "/connz":
-		statz = &gnatsd.Connz{}
+		statz = &server.Connz{}
 		uri += fmt.Sprintf("?limit=%d&sort=%s", engine.Conns, engine.SortOpt)
 		if engine.DisplaySubs {
 			uri += fmt.Sprintf("&subs=%d", DisplaySubscriptions)
@@ -62,17 +69,25 @@ func (engine *Engine) Request(path string) (interface{}, error) {
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		return nil, fmt.Errorf("could not get stats from server: %v\n", err)
+		return nil, fmt.Errorf("could not get stats from server: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("could not read response body: %v\n", err)
+		return nil, fmt.Errorf("could not read response body: %w", err)
+	}
+
+	if resp.StatusCode != 200 {
+		end := bytes.IndexAny(body, "\r\n")
+		if end > 80 {
+			end = 80
+		}
+		return nil, fmt.Errorf("stats request failed %d: %q", resp.StatusCode, string(body[:end]))
 	}
 
 	err = json.Unmarshal(body, &statz)
 	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal json: %v\n", err)
+		return nil, fmt.Errorf("could not unmarshal statz json: %w", err)
 	}
 
 	return statz, nil
@@ -81,8 +96,30 @@ func (engine *Engine) Request(path string) (interface{}, error) {
 // MonitorStats is ran as a goroutine and takes options
 // which can modify how poll values then sends to channel.
 func (engine *Engine) MonitorStats() error {
-	var pollTime time.Time
+	// Initial fetch.
+	engine.StatsCh <- engine.fetchStats()
 
+	delay := time.Duration(engine.Delay) * time.Second
+	ticker := time.NewTicker(delay)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-engine.ShutdownCh:
+			return nil
+		case <-ticker.C:
+			engine.StatsCh <- engine.fetchStats()
+		}
+	}
+}
+
+func (engine *Engine) FetchStatsSnapshot() *Stats {
+	return engine.fetchStats()
+}
+
+var errDud = fmt.Errorf("")
+
+func (engine *Engine) fetchStats() *Stats {
 	var inMsgsDelta int64
 	var outMsgsDelta int64
 	var inBytesDelta int64
@@ -98,96 +135,121 @@ func (engine *Engine) MonitorStats() error {
 	var inBytesRate float64
 	var outBytesRate float64
 
-	first := true
-	pollTime = time.Now()
+	stats := &Stats{
+		Varz:  &server.Varz{},
+		Connz: &server.Connz{},
+		Rates: &Rates{},
+		Error: errDud,
+	}
 
-	delay := time.Duration(engine.Delay) * time.Second
-
-	for {
-		stats := &Stats{
-			Varz:  &gnatsd.Varz{},
-			Connz: &gnatsd.Connz{},
-			Rates: &Rates{},
-			Error: fmt.Errorf(""),
+	// Get /varz
+	{
+		result, err := engine.Request("/varz")
+		if err != nil {
+			stats.Error = err
+			return stats
 		}
 
-		select {
-		case <-engine.ShutdownCh:
-			return nil
-		case <-time.After(delay):
-			// Get /varz
-			{
-				result, err := engine.Request("/varz")
-				if err != nil {
-					stats.Error = err
-					engine.StatsCh <- stats
-					continue
-				}
-				if varz, ok := result.(*gnatsd.Varz); ok {
-					stats.Varz = varz
-				}
-			}
-
-			// Get /connz
-			{
-				result, err := engine.Request("/connz")
-				if err != nil {
-					stats.Error = err
-					engine.StatsCh <- stats
-					continue
-				}
-				if connz, ok := result.(*gnatsd.Connz); ok {
-					stats.Connz = connz
-				}
-			}
-
-			// Periodic snapshot to get per sec metrics
-			inMsgsVal := stats.Varz.InMsgs
-			outMsgsVal := stats.Varz.OutMsgs
-			inBytesVal := stats.Varz.InBytes
-			outBytesVal := stats.Varz.OutBytes
-
-			inMsgsDelta = inMsgsVal - inMsgsLastVal
-			outMsgsDelta = outMsgsVal - outMsgsLastVal
-			inBytesDelta = inBytesVal - inBytesLastVal
-			outBytesDelta = outBytesVal - outBytesLastVal
-
-			inMsgsLastVal = inMsgsVal
-			outMsgsLastVal = outMsgsVal
-			inBytesLastVal = inBytesVal
-			outBytesLastVal = outBytesVal
-
-			now := time.Now()
-			tdelta := now.Sub(pollTime)
-			pollTime = now
-
-			// Calculate rates but the first time
-			if first {
-				first = false
-			} else {
-				inMsgsRate = float64(inMsgsDelta) / tdelta.Seconds()
-				outMsgsRate = float64(outMsgsDelta) / tdelta.Seconds()
-				inBytesRate = float64(inBytesDelta) / tdelta.Seconds()
-				outBytesRate = float64(outBytesDelta) / tdelta.Seconds()
-			}
-
-			stats.Rates = &Rates{
-				InMsgsRate:   inMsgsRate,
-				OutMsgsRate:  outMsgsRate,
-				InBytesRate:  inBytesRate,
-				OutBytesRate: outBytesRate,
-			}
-
-			engine.StatsCh <- stats
+		if varz, ok := result.(*server.Varz); ok {
+			stats.Varz = varz
 		}
 	}
+
+	// Get /connz
+	{
+		result, err := engine.Request("/connz")
+		if err != nil {
+			stats.Error = err
+			return stats
+		}
+
+		if connz, ok := result.(*server.Connz); ok {
+			stats.Connz = connz
+		}
+	}
+
+	var isFirstTime bool
+	if engine.LastStats != nil {
+		inMsgsLastVal = engine.LastStats.Varz.InMsgs
+		outMsgsLastVal = engine.LastStats.Varz.OutMsgs
+		inBytesLastVal = engine.LastStats.Varz.InBytes
+		outBytesLastVal = engine.LastStats.Varz.OutBytes
+	} else {
+		isFirstTime = true
+	}
+
+	// Periodic snapshot to get per sec metrics
+	inMsgsVal := stats.Varz.InMsgs
+	outMsgsVal := stats.Varz.OutMsgs
+	inBytesVal := stats.Varz.InBytes
+	outBytesVal := stats.Varz.OutBytes
+
+	inMsgsDelta = inMsgsVal - inMsgsLastVal
+	outMsgsDelta = outMsgsVal - outMsgsLastVal
+	inBytesDelta = inBytesVal - inBytesLastVal
+	outBytesDelta = outBytesVal - outBytesLastVal
+
+	inMsgsLastVal = inMsgsVal
+	outMsgsLastVal = outMsgsVal
+	inBytesLastVal = inBytesVal
+	outBytesLastVal = outBytesVal
+
+	// Snapshot per sec metrics for connections.
+	connz := make(map[uint64]*server.ConnInfo)
+	for _, conn := range stats.Connz.Conns {
+		connz[conn.Cid] = conn
+	}
+
+	// Calculate rates but the first time
+	if !isFirstTime {
+		tdelta := stats.Varz.Now.Sub(engine.LastStats.Varz.Now)
+
+		inMsgsRate = float64(inMsgsDelta) / tdelta.Seconds()
+		outMsgsRate = float64(outMsgsDelta) / tdelta.Seconds()
+		inBytesRate = float64(inBytesDelta) / tdelta.Seconds()
+		outBytesRate = float64(outBytesDelta) / tdelta.Seconds()
+	}
+	rates := &Rates{
+		InMsgsRate:   inMsgsRate,
+		OutMsgsRate:  outMsgsRate,
+		InBytesRate:  inBytesRate,
+		OutBytesRate: outBytesRate,
+		Connections:  make(map[uint64]*ConnRates),
+	}
+
+	// Measure per connection metrics.
+	for cid, conn := range connz {
+		cr := &ConnRates{
+			InMsgsRate:   0,
+			OutMsgsRate:  0,
+			InBytesRate:  0,
+			OutBytesRate: 0,
+		}
+		lconn, wasConnected := engine.LastConnz[cid]
+		if wasConnected {
+			cr.InMsgsRate = float64(conn.InMsgs - lconn.InMsgs)
+			cr.OutMsgsRate = float64(conn.OutMsgs - lconn.OutMsgs)
+			cr.InBytesRate = float64(conn.InBytes - lconn.InBytes)
+			cr.OutBytesRate = float64(conn.OutBytes - lconn.OutBytes)
+		}
+		rates.Connections[cid] = cr
+	}
+
+	stats.Rates = rates
+
+	// Snapshot stats.
+	engine.LastStats = stats
+	engine.LastPollTime = time.Now()
+	engine.LastConnz = connz
+
+	return stats
 }
 
 // SetupHTTPS sets up the http client and uri to use for polling.
 func (engine *Engine) SetupHTTPS(caCertOpt, certOpt, keyOpt string, skipVerifyOpt bool) error {
 	tlsConfig := &tls.Config{}
 	if caCertOpt != "" {
-		caCert, err := ioutil.ReadFile(caCertOpt)
+		caCert, err := os.ReadFile(caCertOpt)
 		if err != nil {
 			return err
 		}
@@ -219,14 +281,12 @@ func (engine *Engine) SetupHTTPS(caCertOpt, certOpt, keyOpt string, skipVerifyOp
 func (engine *Engine) SetupHTTP() {
 	engine.HttpClient = &http.Client{}
 	engine.Uri = fmt.Sprintf("http://%s:%d", engine.Host, engine.Port)
-
-	return
 }
 
 // Stats represents the monitored data from a NATS server.
 type Stats struct {
-	Varz  *gnatsd.Varz
-	Connz *gnatsd.Connz
+	Varz  *server.Varz
+	Connz *server.Connz
 	Rates *Rates
 	Error error
 }
@@ -238,21 +298,58 @@ type Rates struct {
 	OutMsgsRate  float64
 	InBytesRate  float64
 	OutBytesRate float64
+	Connections  map[uint64]*ConnRates
 }
 
-// Psize takes a float and returns a human readable string.
-func Psize(s int64) string {
+type ConnRates struct {
+	InMsgsRate   float64
+	OutMsgsRate  float64
+	InBytesRate  float64
+	OutBytesRate float64
+}
+
+const kibibyte = 1024
+const mebibyte = 1024 * 1024
+const gibibyte = 1024 * 1024 * 1024
+
+// Psize takes a float and returns a human readable string (Used for bytes).
+func Psize(displayRawValue bool, s int64) string {
 	size := float64(s)
 
-	if size < 1024 {
+	if displayRawValue || size < kibibyte {
 		return fmt.Sprintf("%.0f", size)
-	} else if size < (1024 * 1024) {
-		return fmt.Sprintf("%.1fK", size/1024)
-	} else if size < (1024 * 1024 * 1024) {
-		return fmt.Sprintf("%.1fM", size/1024/1024)
-	} else if size >= (1024 * 1024 * 1024) {
-		return fmt.Sprintf("%.1fG", size/1024/1024/1024)
-	} else {
-		return "NA"
+	}
+
+	if size < mebibyte {
+		return fmt.Sprintf("%.1fK", size/kibibyte)
+	}
+
+	if size < gibibyte {
+		return fmt.Sprintf("%.1fM", size/mebibyte)
+	}
+
+	return fmt.Sprintf("%.1fG", size/gibibyte)
+}
+
+const k = 1000
+const m = k * 1000
+const b = m * 1000
+const t = b * 1000
+
+// Nsize takes a float and returns a human readable string.
+func Nsize(displayRawValue bool, s int64) string {
+	size := float64(s)
+
+	switch {
+	case displayRawValue || size < k:
+		return fmt.Sprintf("%.0f", size)
+	case size < m:
+		return fmt.Sprintf("%.1fK", size/k)
+	case size < b:
+		return fmt.Sprintf("%.1fM", size/m)
+	case size < t:
+		return fmt.Sprintf("%.1fB", size/b)
+	default:
+		return fmt.Sprintf("%.1fT", size/t)
 	}
 }
