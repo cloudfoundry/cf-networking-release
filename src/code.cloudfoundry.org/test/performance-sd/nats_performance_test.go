@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/montanaflynn/stats"
-	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
 	"github.com/nats-io/go-nats/bench"
+	"github.com/nats-io/nats-server/v2/server"
 	toputils "github.com/nats-io/nats-top/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -244,8 +244,8 @@ func addPrefix(prefix, metricName string) string {
 	return metricName
 }
 
-func collectNatsSubscriberConnectionInfo(subscriber string) map[uint64]server.ConnInfo {
-	serviceDiscoverySubs := map[uint64]server.ConnInfo{}
+func collectNatsSubscriberConnectionInfo(subscriber string) map[uint64]*server.ConnInfo {
+	serviceDiscoverySubs := map[uint64]*server.ConnInfo{}
 
 	timeoutChan := time.After(10 * time.Second)
 	natsTopEngine := toputils.NewEngine(config.NatsURL, config.NatsMonitoringPort, 1000, 1)
@@ -265,7 +265,7 @@ func collectNatsSubscriberConnectionInfo(subscriber string) map[uint64]server.Co
 			}
 			for _, statsConn := range stats.Connz.Conns {
 				if strings.Contains(strings.Join(statsConn.Subs, ","), subscriber) {
-					serviceDiscoverySubs[statsConn.Cid] = server.ConnInfo(statsConn)
+					serviceDiscoverySubs[statsConn.Cid] = statsConn
 				}
 			}
 		case <-timeoutChan:
