@@ -66,7 +66,7 @@ $ curl https://proxy.mydomain.com/dig/example.com
 to the endpoint using UDP.
 
 ```bash
-$ curl https://proxy.mydomain.com/dig/example.com
+$ curl https://proxy.mydomain.com/digudp/example.com
 ["93.184.216.34"]
 ```
 
@@ -238,6 +238,14 @@ $ curl https://appa.mydomain.com/proxy/appB.apps.internal:8080
 {"ListenAddresses":["127.0.0.1","10.255.208.82"],"Port":8080}
 ```
 
+#### Optional parameter `protocol`
+The Proxy handler also accepts an optional string query parameter
+`protocol`.
+When set to `https`, it will:
+- Make the request to the destination using HTTPS.
+  When not set:
+- HTTP is used by default.
+
 ## `/stats`
 
 [Stats handler](./handlers/stats_handler.go) returns latency data for prior
@@ -266,7 +274,7 @@ $ curl https://appa.mydomain.com/stats
 timing information in the response.
 
 ```bash
-$ curl https://proxy.mydomain.com/dig/example.com
+$ curl https://proxy.mydomain.com/timed_dig/example.com
 {"lookup_time_ms":2,"ips":["93.184.216.34","\u003cnil\u003e"]}
 ```
 
