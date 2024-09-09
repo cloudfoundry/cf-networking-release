@@ -72,7 +72,7 @@ require (
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.6.0 // indirect
+	github.com/jackc/pgx/v5 v5.7.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -85,7 +85,6 @@ require (
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.51.2 // indirect
-	go.uber.org/automaxprocs v1.5.3 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
