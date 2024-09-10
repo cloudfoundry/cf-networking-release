@@ -15,7 +15,7 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.12.0
 	code.cloudfoundry.org/clock v1.12.0
 	code.cloudfoundry.org/debugserver v0.12.0
-	code.cloudfoundry.org/filelock v0.9.0
+	code.cloudfoundry.org/filelock v0.10.0
 	code.cloudfoundry.org/garden v0.0.0-20240909195930-f8558dc30506
 	code.cloudfoundry.org/lager/v3 v3.5.0
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
@@ -67,7 +67,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240903155634-a8630aee4ab9 // indirect
+	github.com/google/pprof v0.0.0-20240910150728-a0b0bb1d4134 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -84,7 +84,7 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.51.2 // indirect
+	go.step.sm/crypto v0.52.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
