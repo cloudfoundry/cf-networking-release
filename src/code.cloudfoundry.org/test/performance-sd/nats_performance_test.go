@@ -148,7 +148,7 @@ func closeSubscribers() {
 
 func startProfiler(exp *gmeasure.Experiment, cpuKey, memKey string, stopCpuProfiling chan struct{}, cpuValuesChannel chan float64) {
 	defer GinkgoRecover()
-	natsTopEngine := toputils.NewEngine(config.NatsURL, config.NatsMonitoringPort, 1000, 0)
+	natsTopEngine := toputils.NewEngine(config.NatsURL, config.NatsMonitoringPort, 1000, 1)
 	natsTopEngine.SetupHTTP()
 
 	go func() {
