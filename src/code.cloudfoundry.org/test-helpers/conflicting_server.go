@@ -3,13 +3,14 @@ package testhelpers
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	. "github.com/onsi/gomega"
 )
 
 func LaunchConflictingServer(port int) *http.Server {
 	address := fmt.Sprintf("127.0.0.1:%d", port)
-	conflictingServer := &http.Server{Addr: address}
+	conflictingServer := &http.Server{Addr: address, ReadHeaderTimeout: 5 * time.Second}
 	go func() { conflictingServer.ListenAndServe() }()
 	client := &http.Client{}
 	Eventually(func() bool {

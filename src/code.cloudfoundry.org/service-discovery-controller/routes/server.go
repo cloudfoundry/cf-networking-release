@@ -106,9 +106,10 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 	serverAddress := fmt.Sprintf("%s:%s", s.config.Address, s.config.Port)
 	httpServer := &http.Server{
-		Addr:      serverAddress,
-		Handler:   mux,
-		TLSConfig: tlsConfig,
+		Addr:              serverAddress,
+		Handler:           mux,
+		TLSConfig:         tlsConfig,
+		ReadHeaderTimeout: time.Duration(s.config.ReadHeaderTimeout),
 	}
 
 	exited := make(chan error)
