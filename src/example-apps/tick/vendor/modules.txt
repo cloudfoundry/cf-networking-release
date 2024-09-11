@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.12.0
+# code.cloudfoundry.org/cf-networking-helpers v0.13.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.10.0
+# code.cloudfoundry.org/localip v0.11.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/localip
 # github.com/go-logr/logr v1.4.2
