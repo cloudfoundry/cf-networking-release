@@ -35,7 +35,8 @@ config = {
     'pruning_interval_seconds' => route_emitter_interval_seconds,
     'metrics_emit_seconds' => 10,
     'resume_pruning_delay_seconds' => route_emitter_interval_seconds,
-    'warm_duration_seconds' => route_emitter_interval_seconds
+    'warm_duration_seconds' => route_emitter_interval_seconds,
+    'read_header_timeout' => "#{p('read_header_timeout')}"
 }
 
 config['nats'] = {}

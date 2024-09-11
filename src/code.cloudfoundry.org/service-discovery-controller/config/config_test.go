@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	. "code.cloudfoundry.org/service-discovery-controller/config"
 	testhelpers "code.cloudfoundry.org/test-helpers"
@@ -41,7 +42,8 @@ var _ = Describe("Config", func() {
 			"metrics_emit_seconds": 6,
 			"metron_port": 8080,
 			"resume_pruning_delay_seconds": 2,
-			"warm_duration_seconds": 5
+			"warm_duration_seconds": 5,
+			"read_header_timeout": "10s"
 		}`)
 	})
 
@@ -66,6 +68,7 @@ var _ = Describe("Config", func() {
 			Expect(parsedConfig.MetricsEmitSeconds).To(Equal(6))
 			Expect(parsedConfig.ResumePruningDelaySeconds).To(Equal(2))
 			Expect(parsedConfig.WarmDurationSeconds).To(Equal(5))
+			Expect(parsedConfig.ReadHeaderTimeout).To(Equal(DurationFlag(10 * time.Second)))
 		})
 	})
 
@@ -169,6 +172,29 @@ var _ = Describe("Config", func() {
 		Entry("invalid resume_pruning_delay_seconds", "resume_pruning_delay_seconds", -1, "ResumePruningDelaySeconds: less than min"),
 		Entry("invalid warm_duration_seconds", "warm_duration_seconds", -1, "WarmDurationSeconds: less than min"),
 	)
+
+	Context("when read_header_timeout is invalid", func() {
+		It("returns an error", func() {
+			cfg := cloneMap(requiredFields)
+			cfg["read_header_timeout"] = "invalid-duration"
+
+			cfgBytes, _ := json.Marshal(cfg)
+			_, err := NewConfig(cfgBytes)
+
+			Expect(err).To(MatchError(ContainSubstring("invalid-duration")))
+		})
+	})
+
+	Context("when read_header_timeout is not set", func() {
+		It("sets timeout to 0", func() {
+			cfg := cloneMap(requiredFields)
+			cfgBytes, _ := json.Marshal(cfg)
+			config, err := NewConfig(cfgBytes)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(config.ReadHeaderTimeout).To(Equal(DurationFlag(0)))
+		})
+	})
 })
 
 func cloneMap(original map[string]interface{}) map[string]interface{} {

@@ -51,6 +51,10 @@ properties:
     description: "Interval in seconds for which the route emitter is told to emit all routes. This value should be less than the staleness_threshold_seconds"
     default: 60
 
+  read_header_timeout:
+    description: "The amount of time allowed to read request headers"
+    default: 30s
+
   dnshttps.server.tls:
     description: "Server-side mutual TLS configuration for dns over http"
   dnshttps.client.ca:

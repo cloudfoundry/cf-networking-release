@@ -1,9 +1,11 @@
 package routes_test
 
 import (
+	"bufio"
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -33,6 +35,7 @@ var _ = Describe("Server", func() {
 		serverProc         ifrit.Process
 		testLogger         *lagertest.TestLogger
 		client             *http.Client
+		tlsConfig          *tls.Config
 		server             *Server
 		port               int
 	)
@@ -44,17 +47,65 @@ var _ = Describe("Server", func() {
 
 		testLogger = lagertest.NewTestLogger("test")
 		config := &config.Config{
-			Port:       strconv.Itoa(port),
-			Address:    "127.0.0.1",
-			CACert:     caFile,
-			ServerCert: serverCert,
-			ServerKey:  serverKey,
+			Port:              strconv.Itoa(port),
+			Address:           "127.0.0.1",
+			CACert:            caFile,
+			ServerCert:        serverCert,
+			ServerKey:         serverKey,
+			ReadHeaderTimeout: config.DurationFlag(200 * time.Millisecond),
 		}
 		addressTable = &fakes.AddressTable{}
 		dnsRequestRecorder = &fakes.DNSRequestRecorder{}
 		metricsSender = &fakes.MetricsSender{}
 		server = NewServer(addressTable, config, dnsRequestRecorder, metricsSender, testLogger)
-		client = testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert)
+		certPool := testhelpers.CertPool(caFile)
+		client = testhelpers.NewClient(certPool, clientCert)
+		tlsConfig = testhelpers.TLSClientConfig(certPool, clientCert)
+	})
+
+	Context("when request header write times out", func() {
+		It("closes the request", func() {
+			serverProc = ifrit.Invoke(server)
+			addressTable.LookupStub = func(hostname string) []string {
+				if hostname == "app-id.internal.local." {
+					return []string{"192.168.0.2"}
+				}
+				return []string{}
+			}
+			addressTable.IsWarmReturns(true)
+
+			var conn net.Conn
+			var err error
+			Eventually(func() error {
+				conn, err = tls.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port), tlsConfig)
+				return err
+			}).Should(BeNil())
+			defer conn.Close()
+
+			writer := bufio.NewWriter(conn)
+
+			fmt.Fprintf(writer, "GET /v1/registration/app-id.internal.local. HTTP/1.1\r\n")
+
+			// started writing headers
+			fmt.Fprintf(writer, "Host: localhost\r\n")
+			writer.Flush()
+
+			time.Sleep(300 * time.Millisecond)
+
+			fmt.Fprintf(writer, "User-Agent: CustomClient/1.0\r\n")
+			writer.Flush()
+
+			time.Sleep(300 * time.Millisecond)
+
+			// done
+			fmt.Fprintf(writer, "\r\n")
+			writer.Flush()
+
+			resp := bufio.NewReader(conn)
+			_, err = resp.ReadString('\n')
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("EOF"))
+		})
 	})
 
 	Context("when the lookup succeeds", func() {
