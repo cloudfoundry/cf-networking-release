@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"code.cloudfoundry.org/cf-networking-helpers/flags"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
@@ -52,7 +53,7 @@ var _ = Describe("Server", func() {
 			CACert:            caFile,
 			ServerCert:        serverCert,
 			ServerKey:         serverKey,
-			ReadHeaderTimeout: config.DurationFlag(200 * time.Millisecond),
+			ReadHeaderTimeout: flags.DurationFlag(200 * time.Millisecond),
 		}
 		addressTable = &fakes.AddressTable{}
 		dnsRequestRecorder = &fakes.DNSRequestRecorder{}

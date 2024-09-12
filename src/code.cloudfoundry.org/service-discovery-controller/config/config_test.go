@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.cloudfoundry.org/cf-networking-helpers/flags"
 	. "code.cloudfoundry.org/service-discovery-controller/config"
 	testhelpers "code.cloudfoundry.org/test-helpers"
 	. "github.com/onsi/ginkgo/v2"
@@ -68,7 +69,7 @@ var _ = Describe("Config", func() {
 			Expect(parsedConfig.MetricsEmitSeconds).To(Equal(6))
 			Expect(parsedConfig.ResumePruningDelaySeconds).To(Equal(2))
 			Expect(parsedConfig.WarmDurationSeconds).To(Equal(5))
-			Expect(parsedConfig.ReadHeaderTimeout).To(Equal(DurationFlag(10 * time.Second)))
+			Expect(parsedConfig.ReadHeaderTimeout).To(Equal(flags.DurationFlag(10 * time.Second)))
 		})
 	})
 
@@ -192,7 +193,7 @@ var _ = Describe("Config", func() {
 			config, err := NewConfig(cfgBytes)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(config.ReadHeaderTimeout).To(Equal(DurationFlag(0)))
+			Expect(config.ReadHeaderTimeout).To(Equal(flags.DurationFlag(0)))
 		})
 	})
 })
