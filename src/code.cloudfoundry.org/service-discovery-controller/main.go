@@ -100,6 +100,7 @@ func mainWithError() error {
 	logLevelServer := lagerlevel.NewServer(
 		conf.LogLevelAddress,
 		conf.LogLevelPort,
+		time.Duration(conf.ReadHeaderTimeout),
 		sink,
 		logger.Session("log-level-server"),
 	)

@@ -5,23 +5,25 @@ import (
 	"fmt"
 	"net"
 
+	"code.cloudfoundry.org/cf-networking-helpers/flags"
 	"gopkg.in/validator.v2"
 )
 
 type Config struct {
-	Address                           string   `json:"address" validate:"nonzero"`
-	Port                              string   `json:"port" validate:"nonzero"`
-	ServiceDiscoveryControllerAddress string   `json:"service_discovery_controller_address" validate:"nonzero"`
-	ServiceDiscoveryControllerPort    string   `json:"service_discovery_controller_port" validate:"nonzero"`
-	ClientCert                        string   `json:"client_cert" validate:"nonzero"`
-	ClientKey                         string   `json:"client_key" validate:"nonzero"`
-	CACert                            string   `json:"ca_cert" validate:"nonzero"`
-	MetronPort                        int      `json:"metron_port" validate:"min=1"`
-	MetricsEmitSeconds                int      `json:"metrics_emit_seconds" validate:"min=1"`
-	LogLevelAddress                   string   `json:"log_level_address" validate:"nonzero"`
-	LogLevelPort                      int      `json:"log_level_port" validate:"min=1"`
-	InternalServiceMeshDomains        []string `json:"internal_service_mesh_domains"`
-	InternalRouteVIPRange             string   `json:"internal_route_vip_range" validate:"cidr"`
+	Address                           string             `json:"address" validate:"nonzero"`
+	Port                              string             `json:"port" validate:"nonzero"`
+	ReadHeaderTimeout                 flags.DurationFlag `json:"read_header_timeout"`
+	ServiceDiscoveryControllerAddress string             `json:"service_discovery_controller_address" validate:"nonzero"`
+	ServiceDiscoveryControllerPort    string             `json:"service_discovery_controller_port" validate:"nonzero"`
+	ClientCert                        string             `json:"client_cert" validate:"nonzero"`
+	ClientKey                         string             `json:"client_key" validate:"nonzero"`
+	CACert                            string             `json:"ca_cert" validate:"nonzero"`
+	MetronPort                        int                `json:"metron_port" validate:"min=1"`
+	MetricsEmitSeconds                int                `json:"metrics_emit_seconds" validate:"min=1"`
+	LogLevelAddress                   string             `json:"log_level_address" validate:"nonzero"`
+	LogLevelPort                      int                `json:"log_level_port" validate:"min=1"`
+	InternalServiceMeshDomains        []string           `json:"internal_service_mesh_domains"`
+	InternalRouteVIPRange             string             `json:"internal_route_vip_range" validate:"cidr"`
 }
 
 func init() {
