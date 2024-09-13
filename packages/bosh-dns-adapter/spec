@@ -15,6 +15,7 @@ files:
   - code.cloudfoundry.org/bosh-dns-adapter/sdcclient/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/monitor/*.go # gosub
+  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/flags/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
