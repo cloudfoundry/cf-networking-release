@@ -12,18 +12,20 @@ import (
 )
 
 type Server struct {
-	address string
-	port    int
-	sink    *lager.ReconfigurableSink
-	logger  lager.Logger
+	address           string
+	port              int
+	readHeaderTimeout time.Duration
+	sink              *lager.ReconfigurableSink
+	logger            lager.Logger
 }
 
-func NewServer(address string, port int, sink *lager.ReconfigurableSink, logger lager.Logger) *Server {
+func NewServer(address string, port int, readHeaderTimeout time.Duration, sink *lager.ReconfigurableSink, logger lager.Logger) *Server {
 	return &Server{
-		address: address,
-		port:    port,
-		sink:    sink,
-		logger:  logger,
+		address:           address,
+		port:              port,
+		readHeaderTimeout: readHeaderTimeout,
+		sink:              sink,
+		logger:            logger,
 	}
 }
 
@@ -33,8 +35,9 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 	address := fmt.Sprintf("%s:%d", s.address, s.port)
 	httpServer := &http.Server{
-		Addr:    address,
-		Handler: mux,
+		Addr:              address,
+		ReadHeaderTimeout: s.readHeaderTimeout,
+		Handler:           mux,
 	}
 	httpServer.SetKeepAlivesEnabled(false)
 
