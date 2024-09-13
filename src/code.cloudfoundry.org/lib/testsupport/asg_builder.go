@@ -23,7 +23,7 @@ func CreateTempFile(content string) (string, error) {
 	}
 
 	path := tmpFile.Name()
-	err = os.WriteFile(path, []byte(content), os.ModePerm)
+	err = os.WriteFile(path, []byte(content), 0644)
 	if err != nil {
 		return "", err
 	}

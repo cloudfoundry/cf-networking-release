@@ -252,7 +252,7 @@ func WriteConfigFile(policyServerConfig interface{}) string {
 	configBytes, err := json.Marshal(policyServerConfig)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = os.WriteFile(configFile.Name(), configBytes, os.ModePerm)
+	err = os.WriteFile(configFile.Name(), configBytes, 0644)
 	Expect(err).NotTo(HaveOccurred())
 
 	return configFile.Name()
