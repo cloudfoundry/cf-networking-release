@@ -592,8 +592,8 @@ cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoIS
 cloud.google.com/go/workflows v1.8.0/go.mod h1:ysGhmEajwZxGn1OhGOGKsTXc5PyxOc0vfKf5Af+to4M=
 cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT3ujaO/WwSA=
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
-code.cloudfoundry.org/cf-networking-helpers v0.13.0 h1:goVdjqvBcU7Md3iqxpxEr2BNGwTB4k4VuvmX27XRcDQ=
-code.cloudfoundry.org/cf-networking-helpers v0.13.0/go.mod h1:1oQViGHVA7UbWOv/G/7rTv5hqlYedYCE8lZRoQb6NjE=
+code.cloudfoundry.org/cf-networking-helpers v0.15.0 h1:bpu0jIMsO2Fj5VHijPizNsWjkVgI8OT/i1hVJ/bGwPc=
+code.cloudfoundry.org/cf-networking-helpers v0.15.0/go.mod h1:/kcrJWmt3LAi5XV4tZEyNVSwhIDyhiJE8tHg38ap8rU=
 code.cloudfoundry.org/localip v0.11.0 h1:8jGGrlxWk//vZSfh7FALJmmAPx06VJZUrWdJ2i9O3F0=
 code.cloudfoundry.org/localip v0.11.0/go.mod h1:RZucd4hjXCGu/HBRnuNicZuBdvBV4xer514vpeWS6Fo=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
