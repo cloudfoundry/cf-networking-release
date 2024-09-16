@@ -131,7 +131,10 @@ func (s *Subscriber) RunOnce() error {
 
 				s.table.ResumePruning()
 
-				s.sendStartMessage()
+				err = s.sendStartMessage()
+				if err != nil {
+					s.logger.Error("error sending start message after reconnecting to nats server", err)
+				}
 			})),
 			nats.DisconnectHandler(nats.ConnHandler(func(conn *nats.Conn) {
 				s.logger.Info(

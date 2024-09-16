@@ -27,6 +27,7 @@ type Config struct {
 }
 
 func init() {
+	// #nosec G104 - don't handle error here - only thing that would be returned is if we had an empty name passed in, and we're in an init block with limitid handling capability
 	validator.SetValidationFunc("cidr", func(v interface{}, param string) error {
 		cidr, ok := v.(string)
 		if !ok {

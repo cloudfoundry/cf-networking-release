@@ -34,5 +34,6 @@ func (h *PoliciesLastUpdatedInternal) ServeHTTP(w http.ResponseWriter, req *http
 	}
 
 	w.WriteHeader(http.StatusOK)
+	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 	w.Write([]byte(strconv.Itoa(lastUpdated)))
 }

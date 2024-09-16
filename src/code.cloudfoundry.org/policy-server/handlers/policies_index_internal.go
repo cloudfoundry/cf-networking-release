@@ -54,6 +54,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	w.WriteHeader(http.StatusOK)
+	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 	w.Write(bytes)
 }
 

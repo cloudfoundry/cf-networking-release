@@ -32,5 +32,6 @@ func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 	w.Write(responseJSON)
 }

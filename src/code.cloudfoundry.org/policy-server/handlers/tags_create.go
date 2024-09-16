@@ -55,5 +55,6 @@ func (h *TagsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 	w.Write(tagJSON)
 }

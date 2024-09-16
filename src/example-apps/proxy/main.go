@@ -40,7 +40,8 @@ func main() {
 	mux.Handle("/signal/", &handlers.SignalHandler{})
 	mux.Handle("/sleepy/", &handlers.SleepyHandler{SleepyInterval: sleepyInterval})
 
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	log.Printf("http server exited: %s", err)
 }
 
 func getEnvVar(key string, defaultValue int, failIfDNE bool) int {

@@ -86,7 +86,9 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 		}
 
 		defer func(httpResp *http.Response) {
+			// #nosec G104 - ignore errors in the defer block, this response was bad anyway and we just want to best-effort clean it up
 			io.Copy(io.Discard, httpResp.Body)
+			// #nosec G104 - ignore errors in the defer block, this response was bad anyway and we just want to best-effort clean it up
 			httpResp.Body.Close()
 		}(httpResp)
 
@@ -102,6 +104,7 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 	}
 
 	bytes, err := io.ReadAll(httpResp.Body)
+	// #nosec G104 - ignore closing body errors. we either have all the data and can keep going
 	httpResp.Body.Close()
 	if err != nil {
 		return []string{}, err

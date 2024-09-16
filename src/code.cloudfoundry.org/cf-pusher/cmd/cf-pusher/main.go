@@ -231,8 +231,13 @@ func main() {
 	if err := apiConnector.Connect(); err != nil {
 		log.Fatalf("connecting to api: %s", err)
 	}
-	adapter.TargetOrg(scaleGroup.Org)
-	adapter.TargetSpace(scaleGroup.Space)
+	if err := adapter.TargetOrg(scaleGroup.Org); err != nil {
+		log.Fatalf("targeting org %s: %s", scaleGroup.Org, err)
+	}
+
+	if err := adapter.TargetSpace(scaleGroup.Space); err != nil {
+		log.Fatalf("targeting space %s: %s", scaleGroup.Space, err)
+	}
 
 	// declare what apps we expect
 	expectedApps := map[string]int{

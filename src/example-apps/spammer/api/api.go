@@ -116,5 +116,6 @@ func writeResp(w http.ResponseWriter, resp interface{}) {
 	}
 
 	fmt.Println(string(rawResp))
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	w.Write(rawResp)
 }

@@ -63,5 +63,6 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	logger.Info("deleted-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
+	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 	w.Write([]byte(`{}`))
 }

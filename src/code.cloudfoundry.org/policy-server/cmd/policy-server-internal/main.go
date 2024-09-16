@@ -202,7 +202,10 @@ func main() {
 
 	err = <-monitor.Wait()
 	if connectionPool != nil {
-		connectionPool.Close()
+		closeErr := connectionPool.Close()
+		if closeErr != nil {
+			logger.Error("error-closing-connection-pool", err)
+		}
 	}
 	if err != nil {
 		logger.Error("exited-with-failure", err)

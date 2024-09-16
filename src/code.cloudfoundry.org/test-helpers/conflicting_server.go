@@ -11,7 +11,12 @@ import (
 func LaunchConflictingServer(port int) *http.Server {
 	address := fmt.Sprintf("127.0.0.1:%d", port)
 	conflictingServer := &http.Server{Addr: address, ReadHeaderTimeout: 5 * time.Second}
-	go func() { conflictingServer.ListenAndServe() }()
+	go func() {
+		err := conflictingServer.ListenAndServe()
+		if err != nil {
+			fmt.Printf("conflictingServer closed with error: %s\n", err)
+		}
+	}()
 	client := &http.Client{}
 	Eventually(func() bool {
 		resp, err := client.Get(fmt.Sprintf("http://%s", address))

@@ -93,7 +93,8 @@ func main() {
 	}
 
 	go func() {
-		http.Serve(l, metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)))
+		err = http.Serve(l, metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)))
+		logger.Info("http-server-returned", lager.Data{"error": err})
 	}()
 
 	uptimeSource := metrics.NewUptimeSource()
@@ -122,6 +123,9 @@ func main() {
 	logger.Info("server-started")
 	sig := <-signalChannel
 	monitor.Signal(sig)
-	l.Close()
+	err = l.Close()
+	if err != nil {
+		logger.Error("erro-closing-server", err)
+	}
 	logger.Info("server-stopped")
 }

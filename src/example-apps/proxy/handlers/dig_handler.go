@@ -34,6 +34,7 @@ func (h *DigHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write(ip4Json)
 }
 
@@ -41,5 +42,6 @@ func handleDigError(err error, destination string, resp http.ResponseWriter) {
 	msg := fmt.Sprintf("Failed to dig: %s: %s", destination, err)
 	fmt.Fprint(os.Stderr, msg)
 	resp.WriteHeader(http.StatusInternalServerError)
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write([]byte(msg))
 }

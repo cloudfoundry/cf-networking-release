@@ -45,5 +45,6 @@ func (h *TimedDigHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write(responseBody)
 }
