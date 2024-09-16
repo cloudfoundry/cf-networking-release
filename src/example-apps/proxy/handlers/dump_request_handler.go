@@ -28,5 +28,6 @@ func (h *DumpRequestHandler) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 		resp.Header().Set("X-Proxy-Immutable-Debug-Header", "default-immutable-value-from-within-proxy-src-code")
 	}
 
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write(reqBytes)
 }

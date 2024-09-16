@@ -17,6 +17,7 @@ func handleError(err error, destination string, resp http.ResponseWriter) {
 	msg := fmt.Sprintf("Ping failed to destination: %s: %s", destination, err)
 	fmt.Fprint(os.Stderr, msg)
 	resp.WriteHeader(http.StatusInternalServerError)
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write([]byte(msg))
 }
 
@@ -56,5 +57,6 @@ func (h *PingHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write([]byte(fmt.Sprintf("Ping succeeded to destination: %s", destination)))
 }

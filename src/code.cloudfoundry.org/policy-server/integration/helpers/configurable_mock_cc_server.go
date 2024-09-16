@@ -81,24 +81,28 @@ func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 	if r.URL.Path == "/v3/apps" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(buildCCGuidsResponse(c.apps)))
 		return
 	}
 
 	if r.URL.Path == "/v3/spaces" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(buildCCGuidsResponse(c.spaces)))
 		return
 	}
 
 	if r.URL.Path == "/v3/security_groups" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(buildCCSecurityGroupsResponse(c.securityGroups)))
 		return
 	}
 
 	if r.URL.Path == "/internal/v4/asg_latest_update" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(buildCCASGLatestUpdateResponse(c.asgLatestUpdate)))
 	}
 

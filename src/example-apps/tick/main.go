@@ -129,6 +129,7 @@ type InfoHandler struct {
 }
 
 func (h *InfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// #nosec G104 - Ignore errors when writing http response
 	json.NewEncoder(w).Encode(h.InfoData)
 }
 

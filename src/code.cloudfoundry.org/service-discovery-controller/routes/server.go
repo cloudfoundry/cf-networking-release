@@ -125,11 +125,17 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	for {
 		select {
 		case err := <-exited:
-			httpServer.Close()
+			closeErr := httpServer.Close()
+			if closeErr != nil {
+				s.logger.Error("Error closing SDC http server: %s", err)
+			}
 			s.logger.Info(fmt.Sprintf("SDC http server exiting with: %v", err))
 			return err
 		case signal := <-signals:
-			httpServer.Close()
+			err := httpServer.Close()
+			if err != nil {
+				s.logger.Error("Error closing SDC http server: %s", err)
+			}
 			s.logger.Info(fmt.Sprintf("SDC http server exiting with signal: %v", signal))
 			return nil
 		}

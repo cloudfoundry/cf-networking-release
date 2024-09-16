@@ -13,6 +13,7 @@ import (
 func launchServer(port int) {
 	helloHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses
 		w.Write([]byte("hello"))
 	})
 
@@ -34,7 +35,8 @@ func launchServer(port int) {
 	mux := http.NewServeMux()
 	mux.Handle("/selfproxy", selfProxyHandler)
 	mux.Handle("/", helloHandler)
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	log.Printf("http server exited: %s\n", err)
 }
 
 func main() {
@@ -68,6 +70,7 @@ func (h *SelfProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "request failed: %s", err)
 		resp.WriteHeader(http.StatusInternalServerError)
+		// #nosec G104 - ignore errors writing http responses
 		resp.Write([]byte(fmt.Sprintf("request failed: %s", err)))
 		return
 	}
@@ -76,8 +79,10 @@ func (h *SelfProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request
 	resp.WriteHeader(getResp.StatusCode)
 	switch getResp.StatusCode {
 	case http.StatusOK:
+		// #nosec G104 - ignore errors writing http responses
 		resp.Write([]byte("OK"))
 	default:
+		// #nosec G104 - ignore errors writing http responses
 		resp.Write([]byte("FAILED"))
 	}
 }

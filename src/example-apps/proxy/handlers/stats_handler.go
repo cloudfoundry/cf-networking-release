@@ -44,5 +44,6 @@ func (h *StatsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write(respBytes)
 }

@@ -35,42 +35,50 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	if r.URL.Path == "/v3/apps" {
 		if strings.Contains(r.URL.RawQuery, "app-guid-not-in-my-spaces") {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(fixtures.AppsV3TwoSpaces))
 			return
 		}
 		if strings.Contains(r.URL.RawQuery, "live-app-1-guid") {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(fixtures.AppsV3LiveApp1GUID))
 			return
 		}
 		if strings.Contains(r.URL.RawQuery, "live-app-2-guid") {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(fixtures.AppsV3LiveApp2GUID))
 			return
 		}
 		if strings.Contains(r.URL.RawQuery, "live-app-3-guid") {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(fixtures.AppsV3LiveApp3GUID))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.AppsV3OneSpace))
 		return
 	}
 
 	if r.URL.Path == "/v3/spaces" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.SpaceV3LiveSpaces))
 		return
 	}
 
 	if r.URL.Path == "/v2/spaces/space-1-guid" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.Space1))
 		return
 	}
 	if r.URL.Path == "/v2/spaces/space-2-guid" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.Space2))
 		return
 	}
@@ -78,11 +86,13 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	if r.URL.Path == "/v2/spaces" {
 		if strings.Contains(r.URL.RawQuery, "space-1") {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(fixtures.SubjectSpace))
 			return
 		}
 		if strings.Contains(r.URL.RawQuery, "space-2") {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(fixtures.SubjectSpaceEmpty))
 			return
 		}
@@ -90,6 +100,7 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 
 	if r.URL.Path == "/v2/users/some-user-or-client-id/spaces" {
 		w.WriteHeader(http.StatusOK)
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.SubjectSpaces))
 		return
 	}
@@ -109,18 +120,23 @@ var MockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 			switch token {
 			case "valid-token":
 				w.WriteHeader(http.StatusOK)
+				// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
 			case "valid-client-token":
 				w.WriteHeader(http.StatusOK)
+				// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 				w.Write([]byte(`{"scope":["network.admin"], "sub": "some-client-id"}`))
 			case "space-dev-with-network-write-token":
 				w.WriteHeader(http.StatusOK)
+				// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
 			case "space-dev-token":
 				w.WriteHeader(http.StatusOK)
+				// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 				w.Write([]byte(`{"scope":[], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
 			default:
 				w.WriteHeader(http.StatusBadRequest)
+				// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 				w.Write([]byte(`{"error_description":"banana"}`))
 			}
 		} else {
@@ -142,6 +158,7 @@ var MockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 		`
 		if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
 			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 			w.Write([]byte(token))
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -263,7 +280,10 @@ func VerifyTCPConnection(address string) error {
 	if err != nil {
 		return err
 	}
-	conn.Close()
+	err = conn.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

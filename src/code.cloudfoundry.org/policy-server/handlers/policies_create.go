@@ -96,5 +96,6 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	logger.Info("created-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	w.Write([]byte("{}"))
 }

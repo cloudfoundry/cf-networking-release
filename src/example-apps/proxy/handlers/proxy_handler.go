@@ -40,6 +40,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "request failed: %s", err)
 		resp.WriteHeader(http.StatusInternalServerError)
+		// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 		resp.Write([]byte(fmt.Sprintf("request failed: %s", err)))
 		return
 	}
@@ -49,9 +50,11 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	readBytes, err := io.ReadAll(getResp.Body)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
+		// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 		resp.Write([]byte(fmt.Sprintf("read body failed: %s", err)))
 		return
 	}
 
+	// #nosec G104 - ignore error writing http response to avoid spamming logs on a DoS
 	resp.Write(readBytes)
 }

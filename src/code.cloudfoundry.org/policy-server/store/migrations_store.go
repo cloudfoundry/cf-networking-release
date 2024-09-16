@@ -55,6 +55,7 @@ func (m *MigrationsStore) HasV2MigrationOccurred() (bool, error) {
 	rows, err := m.DBConn.Query(query)
 	defer func() {
 		if rows != nil {
+			// #nosec G104 - don't override the return value in the defer block because our close failed
 			rows.Close()
 		}
 	}()
@@ -103,8 +104,9 @@ func (m *MigrationsStore) tableExists(tableName string) bool {
 	if err != nil {
 		return false
 	}
-	rows.Close()
-	return true
+	err = rows.Close()
+	// if Query() fails, we return false (including if there are failures not related to the table existing). do the same here
+	return err == nil
 }
 
 func (m *MigrationsStore) migrationIDExists(ids ...string) (bool, error) {
