@@ -15,8 +15,8 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.15.0
 	code.cloudfoundry.org/clock v1.13.0
 	code.cloudfoundry.org/debugserver v0.14.0
-	code.cloudfoundry.org/filelock v0.10.0
-	code.cloudfoundry.org/garden v0.0.0-20240910210657-fba22f3dc9f0
+	code.cloudfoundry.org/filelock v0.11.0
+	code.cloudfoundry.org/garden v0.0.0-20240916141541-4995881dc952
 	code.cloudfoundry.org/lager/v3 v3.6.0
 	code.cloudfoundry.org/locket v0.0.0-20240521151413-b344fdd15d03
 	code.cloudfoundry.org/policy_client v0.18.0
@@ -77,7 +77,7 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
-	github.com/nats-io/jwt/v2 v2.6.0 // indirect
+	github.com/nats-io/jwt/v2 v2.7.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
