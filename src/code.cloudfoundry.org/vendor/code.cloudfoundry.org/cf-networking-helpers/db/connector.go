@@ -35,6 +35,7 @@ func GetConnectionPool(dbConfig Config, ctx context.Context) (*ConnWrapper, erro
 	dbConn := sqlx.NewDb(nativeDBConn, dbConfig.Type)
 
 	if err = dbConn.PingContext(ctx); err != nil {
+		// #nosec G104 - ignore errors closing a connection that failed to ping, prefer the ping error
 		dbConn.Close()
 		if netErr, ok := err.(*net.OpError); ok {
 			return nil, RetriableError{

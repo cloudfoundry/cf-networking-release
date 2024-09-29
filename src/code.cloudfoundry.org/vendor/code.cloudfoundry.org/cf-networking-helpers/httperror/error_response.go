@@ -75,8 +75,10 @@ func (e *ErrorResponse) respondWithCode(statusCode int, logger lager.Logger, w h
 	w.WriteHeader(statusCode)
 	if metadataError, ok := err.(MetadataError); ok {
 		j, _ := json.Marshal(metadataError.Metadata())
+		// #nosec G104 - ignore write error generated while writing out the error handling response to an http connection. it's already handling a more important error
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s", "metadata": %s}`, description, j)))
 	} else {
+		// #nosec G104 - ignore write error generated while writing out the error handling response to an http connection. it's already handling a more important error
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, description)))
 	}
 	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)

@@ -61,6 +61,7 @@ func (tx *monitoredTx) Rollback() error {
 
 func (tx *monitoredTx) Rebind(query string) string {
 	var result string
+	// #nosec G104 - the Monitor function  only returns an error if the passed function errors, which this doesn't. we just want to log queries in our counters here
 	tx.monitor.Monitor(func() error {
 		result = tx.tx.Rebind(query)
 		return nil
@@ -70,6 +71,7 @@ func (tx *monitoredTx) Rebind(query string) string {
 
 func (tx *monitoredTx) DriverName() string {
 	var result string
+	// #nosec G104 - the Monitor function  only returns an error if the passed function errors, which this doesn't. we just want to log queries in our counters here
 	tx.monitor.Monitor(func() error {
 		result = tx.tx.DriverName()
 		return nil

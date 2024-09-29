@@ -40,6 +40,7 @@ func (c *ConnWrapper) Query(query string, args ...interface{}) (*sql.Rows, error
 
 func (c *ConnWrapper) QueryRow(query string, args ...interface{}) *sql.Row {
 	var result *sql.Row
+	// #nosec G104 - the Monitor function  only returns an error if the passed function errors, which this doesn't. we just want to log queries in our counters here
 	c.Monitor.Monitor(func() error {
 		result = c.DB.QueryRow(query, args...)
 		return nil

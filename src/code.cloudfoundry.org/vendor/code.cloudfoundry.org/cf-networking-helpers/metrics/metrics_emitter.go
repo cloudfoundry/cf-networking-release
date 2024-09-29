@@ -51,7 +51,10 @@ func (m *MetricsEmitter) emitMetrics() {
 			continue
 		}
 
-		dropsondemetrics.SendValue(source.Name, value, source.Unit)
+		err = dropsondemetrics.SendValue(source.Name, value, source.Unit)
+		if err != nil {
+			m.logger.Error("metric-send", err, lager.Data{"source": source.Name})
+		}
 	}
 }
 

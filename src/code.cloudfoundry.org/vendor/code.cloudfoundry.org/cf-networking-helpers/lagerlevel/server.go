@@ -61,7 +61,10 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			break
 		}
 		if time.Now().After(timeOut) {
-			httpServer.Close()
+			cErr := httpServer.Close()
+			if cErr != nil {
+				s.logger.Error("failed to close http server", cErr)
+			}
 			return errors.New("failed to successfully connect to http server")
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -74,10 +77,16 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	for {
 		select {
 		case err := <-exited:
-			httpServer.Close()
+			cErr := httpServer.Close()
+			if cErr != nil {
+				s.logger.Error("failed to close http server", cErr)
+			}
 			return err
 		case <-signals:
-			httpServer.Close()
+			cErr := httpServer.Close()
+			if cErr != nil {
+				s.logger.Error("failed to close http server", cErr)
+			}
 			return nil
 		}
 	}
