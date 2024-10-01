@@ -7,4 +7,4 @@ applications:
     instances: 1
     env:
       GOPACKAGENAME: registry
-      GOVERSION: go1.21
+      GOVERSION: go1.23
