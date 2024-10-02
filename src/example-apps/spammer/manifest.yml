@@ -6,4 +6,4 @@ applications:
   buildpacks: [go_buildpack]
   env:
     GOPACKAGENAME: example-apps/spammer
-    GOVERSION: go1.21
+    GOVERSION: go1.23

@@ -7,7 +7,7 @@ applications:
     instances: 3
     env:
       GOPACKAGENAME: tick
-      GOVERSION: go1.21
+      GOVERSION: go1.23
       REGISTRY_BASE_URL: http://registry.some-cf-deployment.example.com
       START_PORT: 7000
       LISTEN_PORTS: 3
