@@ -11,16 +11,16 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20240926175252-155fe390caad
-	code.cloudfoundry.org/cf-networking-helpers v0.17.0
-	code.cloudfoundry.org/clock v1.13.0
-	code.cloudfoundry.org/debugserver v0.15.0
-	code.cloudfoundry.org/filelock v0.11.0
-	code.cloudfoundry.org/garden v0.0.0-20240925195854-5948a5d99b4a
-	code.cloudfoundry.org/lager/v3 v3.6.0
-	code.cloudfoundry.org/locket v0.0.0-20240925200640-9ed239545eb0
-	code.cloudfoundry.org/policy_client v0.20.0
-	code.cloudfoundry.org/tlsconfig v0.5.0
+	code.cloudfoundry.org/bbs v0.0.0-20241001172757-d12ace583d1e
+	code.cloudfoundry.org/cf-networking-helpers v0.18.0
+	code.cloudfoundry.org/clock v1.14.0
+	code.cloudfoundry.org/debugserver v0.16.0
+	code.cloudfoundry.org/filelock v0.12.0
+	code.cloudfoundry.org/garden v0.0.0-20241004152259-c4dc08eba51f
+	code.cloudfoundry.org/lager/v3 v3.8.0
+	code.cloudfoundry.org/locket v0.0.0-20241001203350-5e3ea80dea40
+	code.cloudfoundry.org/policy_client v0.21.0
+	code.cloudfoundry.org/tlsconfig v0.6.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -46,15 +46,15 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.29.0
-	golang.org/x/sys v0.25.0
+	golang.org/x/net v0.30.0
+	golang.org/x/sys v0.26.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.21.0 // indirect
-	code.cloudfoundry.org/durationjson v0.11.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.22.0 // indirect
+	code.cloudfoundry.org/durationjson v0.12.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20240911205836-e7f77fdf9650 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20240927233043-f3f46ee36851 // indirect
+	github.com/google/pprof v0.0.0-20241001023024-f4c0cfd0cf1d // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -85,14 +85,14 @@ require (
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.53.0 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
-	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.25.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
-	google.golang.org/grpc v1.67.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
+	golang.org/x/time v0.7.0 // indirect
+	golang.org/x/tools v0.26.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
+	google.golang.org/grpc v1.67.1 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
