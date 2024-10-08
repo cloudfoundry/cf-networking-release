@@ -366,7 +366,7 @@ When [Diego](https://github.com/cloudfoundry/diego-release) calls Garden, it
 sets that equal to the [`ActualLRP`
 `InstanceGuid`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey).
 In this way, a 3rd-party system can relate data from CNI with data in the [Diego
-BBS](https://github.com/cloudfoundry/bbs/tree/master/doc).
+BBS](https://github.com/cloudfoundry/bbs/tree/main/docs).
 
 ### Information from Internal Policy Server
 
