@@ -58,7 +58,7 @@ to itself. When a request for an internal domain hits BOSH DNS it looks at the
 domain name. If it's internal it directs the request to the BOSH-DNS Adapter.
 BOSH DNS communicates to the BOSH DNS Adapter via http (following the [Google
 DNS over
-HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https)
+HTTPS](https://developers.google.com/speed/public-dns/docs/doh/json)
 schema).
 
 The BOSH DNS adapter in turn makes a request to the SDC. This HTTP connection is
@@ -303,7 +303,7 @@ deployment and what tests to run.
 
 The following can be pasted into a terminal and will set up a sufficient
 `$CONFIG` to run the core test suites against a
-[BOSH-Lite](https://github.com/cloudfoundry/bosh-lite) deployment of CF.
+[BOSH-Lite](https://bosh.io/docs/bosh-lite/) deployment of CF.
 `admin-password` and `admin-secret` need to be replaced with proper values.
 
 ```bash
@@ -383,9 +383,7 @@ ginkgo -r ./src/code.cloudfoundry.org/test/smoke-sd
 
 ### Configuring Custom Internal Domains
 
-Creating your own internal domain requires [enable-service-discovery
-opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/enable-service-discovery.yml)
-and the following two operations:
+Now that service-discovery is enabled by default in cf-deployment, creating your own internal domain requires an ops file with the following two operations:
 1. Add the custom internal domain name(s) to the `internal_domains` property on
    the `bosh-dns-adapter` job.
 
