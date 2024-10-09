@@ -8,6 +8,10 @@ cd $THIS_DIR
 export CONFIG=/tmp/test-config.json
 export APPS_DIR=../../../example-apps
 
+# Total rules = 
+#    global_asgs * asg_size * total_spaces * apps_per_space + 
+#    spaces_with_one_asg * asg_size * 1 * apps_per_space +
+#    (total_spaces - spaces_with_one_asg) * asg_size * how_many_asgs_is_many * apps_per_space
 echo "
 {
   \"api\": \"api.sys.pacificblue.cf-app.com\",
@@ -26,6 +30,12 @@ echo "
 }
 " > $CONFIG
 
+rules=$(jq ' .global_asgs * .asg_size * .total_spaces * .apps_per_space + .spaces_with_one_asg * .asg_size * .apps_per_space + (.total_spaces - .spaces_with_one_asg) * .asg_size * .how_many_asgs_is_many * .apps_per_space' < $CONFIG)
+cells=$(bosh vms | grep -iE 'compute|cell' | wc -l)
+rules_per_cell=$(expr $rules / $cells)
+echo "Targeting ~$rules_per_cell rules per cell ($rules total rules / $cells cells)."
+echo "Sleeping for 10s to let you cancel before getting started..."
+sleep 10
 go run ../../cf-pusher/cmd/multispace-pusher/main.go --config "${CONFIG}"
 
 

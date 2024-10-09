@@ -146,10 +146,16 @@
   path: /instance_groups/name=nginx/jobs/name=route_registrar/properties/nats?/tls
   value:
     enabled: true
-    client_cert: ((/opsmgr/cf-a93c59fba8ad2b7000c4/nats_client_cert.cert_pem))
-    client_key: ((/opsmgr/cf-a93c59fba8ad2b7000c4/nats_client_cert.private_key_pem))
+    client_cert: ((/opsmgr/((cf_deployment_name))/nats_client_cert.cert_pem))
+    client_key: ((/opsmgr/((cf_deployment_name))/nats_client_cert.private_key_pem))
 
 # override the bosh_exporter_client_id
 - type: replace
   path: /instance_groups/name=prometheus2/jobs/name=bosh_exporter/properties/bosh_exporter/bosh/uaa/client_id
   value: ((uaa_bosh_exporter_client_id))
+
+# firehose exporter link
+- type: replace
+  path: /instance_groups/name=firehose/jobs/name=firehose_exporter/consumes/reverse_log_proxy/deployment
+  value: ((cf_deployment_name))
+

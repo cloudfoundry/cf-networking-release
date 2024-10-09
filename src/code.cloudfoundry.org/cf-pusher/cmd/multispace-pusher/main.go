@@ -199,12 +199,6 @@ func generateAppManifest(appsDir string) string {
 }
 
 func createGlobalASGs(config Config) {
-	asgContent := testsupport.BuildASG(config.ASGSize)
-	asgFile, err := testsupport.CreateTempFile(asgContent)
-	if err != nil {
-		log.Fatalf("creating asg file: %s", err)
-	}
-
 	sem := make(chan bool, config.Concurrency)
 	for index := 0; index < config.GlobalAGGs; index++ {
 		sem <- true
@@ -212,6 +206,11 @@ func createGlobalASGs(config Config) {
 			defer func() { <-sem }()
 			adapter := generateAdapterWithHome(p)
 			asgName := fmt.Sprintf("%s-global-%d-asg", p, i)
+			asgContent := testsupport.BuildASG(config.ASGSize)
+			asgFile, err := testsupport.CreateTempFile(asgContent)
+			if err != nil {
+				log.Fatalf("creating asg file: %s", err)
+			}
 
 			// check ASG and install if not OK
 			apiConnector := &cf_command.ApiConnector{
