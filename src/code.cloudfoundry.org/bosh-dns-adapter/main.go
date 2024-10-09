@@ -49,7 +49,7 @@ func main() {
 	}
 
 	address := fmt.Sprintf("%s:%s", config.Address, config.Port)
-	l, err := net.Listen("tcp", address)
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Address (%s) not available", address), err)
 		os.Exit(1)
@@ -93,7 +93,10 @@ func main() {
 	}
 
 	go func() {
-		err = http.Serve(l, metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)))
+		server := &http.Server{
+			Handler: metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)),
+		}
+		err = server.Serve(listener)
 		logger.Info("http-server-returned", lager.Data{"error": err})
 	}()
 
@@ -123,9 +126,9 @@ func main() {
 	logger.Info("server-started")
 	sig := <-signalChannel
 	monitor.Signal(sig)
-	err = l.Close()
+	err = listener.Close()
 	if err != nil {
-		logger.Error("erro-closing-server", err)
+		logger.Error("error-closing-server", err)
 	}
 	logger.Info("server-stopped")
 }

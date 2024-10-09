@@ -10,7 +10,10 @@ import (
 func main() {
 	http.HandleFunc(api.SpamPath, api.SpamHandler)
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("An error occured during serving: %s", err)
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: nil,
 	}
+	err := server.ListenAndServe()
+	log.Fatalf("An error occured during serving: %s", err)
 }
