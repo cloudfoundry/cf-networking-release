@@ -5,6 +5,6 @@ To use:
 1. Look up the values in credhub for the created clients:
     1. `credhub find -n uaa_clients_cf_exporter_secret`
     1. `credhub get -n <path from above>`
-    1.  repeat for `uaa_clients_firehose_exporter_secret`
 1. Fill empty values in `./change-me-deployment-vars.yml` (Note that bosh client/secret doesn't work for username/password)
+1. Update the dashboard.json file to replace CF_DEPLOYMANT_NAME with the name of the BOSH cf deployment
 1. Run `./deploy.sh` to deploy prometheus and grafana that scrapes from your cf/bosh

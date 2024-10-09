@@ -99,6 +99,106 @@
       "targets": [
         {
           "exemplar": true,
+          "expr": "max(firehose_value_metric_vxlan_policy_agent_total_poll_time)/1000",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "asg retrieval",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "max(firehose_value_metric_vxlan_policy_agent_iptables_enforce_time)/1000",
+          "interval": "",
+          "legendFormat": "iptables enforce",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Vxlan Policy Agent C2C Sync Timings (seconds)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1166",
+          "format": "short",
+          "logBase": 1,
+          "max": "1",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1167",
+          "format": "short",
+          "logBase": 1,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.15",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
           "expr": "max(firehose_value_metric_vxlan_policy_agent_asg_total_poll_time)/1000",
           "hide": false,
           "interval": "",
@@ -125,7 +225,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Vxlan Policy Agent Timings (seconds)",
+      "title": "Vxlan Policy Agent ASG Sync Timings (seconds)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -180,7 +280,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 11
       },
       "hiddenSeries": false,
       "id": 14,
@@ -297,7 +397,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 16
       },
       "hiddenSeries": false,
       "id": 15,
@@ -406,7 +506,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 21
       },
       "hiddenSeries": false,
       "id": 4,
@@ -508,7 +608,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 21
       },
       "hiddenSeries": false,
       "id": 5,
@@ -595,17 +695,202 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "hiddenSeries": false,
+      "id": 17,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "10.4.7",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": null,
+          "disableTextWrap": false,
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "avg by(bosh_job_ip) (bosh_job_cpu_sys{environment=~\"$environment\", bosh_deployment=~\"${bosh_deployment}[-0-9a-f]*\", bosh_job_name=~\"compute|cell\"}) + avg by(bosh_job_ip) (bosh_job_cpu_wait{environment=~\"$environment\", bosh_deployment=~\"${bosh_deployment}[-0-9a-f]*\", bosh_job_name=~\"compute|cell\"}) + avg by(bosh_job_ip) (bosh_job_cpu_user{environment=~\"$environment\", bosh_deployment=~\"${bosh_deployment}[-0-9a-f]*\", bosh_job_name=~\"compute|cell\"})",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "interval": "",
+          "legendFormat": "{{bosh_job_ip}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Cell CPU %",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:457",
+          "format": "percent",
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:458",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "description": "",
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "unit": "short"
+        },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "hiddenSeries": false,
+      "id": 18,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "max": true,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "10.4.7",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": null,
+          "disableTextWrap": false,
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "avg by(bosh_job_ip) (bosh_job_mem_kb{environment=~\"$environment\", bosh_deployment=~\"${bosh_deployment}[-0-9a-f]*\", bosh_job_name=~\"compute|cell\"}) / 1024",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "interval": "",
+          "legendFormat": "{{bosh_job_process_name}}",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Cell Memory (mb)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2130",
+          "format": "short",
+          "logBase": 1,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2131",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 13,
@@ -707,7 +992,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 12,
@@ -831,8 +1116,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "cf-a93c59fba8ad2b7000c4",
-          "value": "cf-a93c59fba8ad2b7000c4"
+          "text": "CF_DEPLOYMENT_NAME",
+          "value": "CF_DEPLOYMENT_NAME"
         },
         "datasource": null,
         "definition": "label_values(firehose_value_metric_cc_job_queue_length_total{environment=~\"$environment\"}, bosh_deployment)",
