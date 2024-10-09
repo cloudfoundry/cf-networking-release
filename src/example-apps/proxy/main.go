@@ -40,7 +40,11 @@ func main() {
 	mux.Handle("/signal/", &handlers.SignalHandler{})
 	mux.Handle("/sleepy/", &handlers.SleepyHandler{SleepyInterval: sleepyInterval})
 
-	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	server := &http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", port),
+		Handler: mux,
+	}
+	err := server.ListenAndServe()
 	log.Printf("http server exited: %s", err)
 }
 

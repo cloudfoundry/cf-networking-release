@@ -35,7 +35,11 @@ func launchServer(port int) {
 	mux := http.NewServeMux()
 	mux.Handle("/selfproxy", selfProxyHandler)
 	mux.Handle("/", helloHandler)
-	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+	server := &http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", port),
+		Handler: mux,
+	}
+	err := server.ListenAndServe()
 	log.Printf("http server exited: %s\n", err)
 }
 
