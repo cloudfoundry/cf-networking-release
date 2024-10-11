@@ -8,6 +8,17 @@ Cloud Foundry.
 For information on getting started with Cloud Foundry look at the docs
 for [CF Deployment](https://github.com/cloudfoundry/cf-deployment).
 
+# Contributing
+
+See the [Contributing.md](./.github/CONTRIBUTING.md) for more
+information on how to contribute.
+
+# Working Group Charter
+
+This repository is maintained by [App Runtime
+Platform](https://github.com/cloudfoundry/community/blob/main/toc/working-groups/app-runtime-platform.md)
+under `Networking` area.
+
 # Docs
 
 -   [Sub Projects](./docs/01-subprojects.md)
@@ -25,17 +36,6 @@ for [CF Deployment](https://github.com/cloudfoundry/cf-deployment).
 -   [Example Apps Overview](./docs/10-example-apps.md)
 -   [3rd Party Plugin Development for Container
     Networking](./docs/11-3rd-party.md)
-
-# Contributing
-
-See the [Contributing.md](./.github/CONTRIBUTING.md) for more
-information on how to contribute.
-
-# Working Group Charter
-
-This repository is maintained by [App Runtime
-Platform](https://github.com/cloudfoundry/community/blob/main/toc/working-groups/app-runtime-platform.md)
-under `Networking` area.
 
 > \[!IMPORTANT\]
 >
