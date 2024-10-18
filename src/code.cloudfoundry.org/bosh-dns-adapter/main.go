@@ -94,7 +94,8 @@ func main() {
 
 	go func() {
 		server := &http.Server{
-			Handler: metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)),
+			Handler:           metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)),
+			ReadHeaderTimeout: 5 * time.Second,
 		}
 		err = server.Serve(listener)
 		logger.Info("http-server-returned", lager.Data{"error": err})
