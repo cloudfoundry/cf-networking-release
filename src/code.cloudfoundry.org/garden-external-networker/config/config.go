@@ -11,8 +11,8 @@ type Config struct {
 	CniConfigDir               string   `json:"cni_config_dir"`
 	BindMountDir               string   `json:"bind_mount_dir"`
 	StateFilePath              string   `json:"state_file"`
-	StartPort                  int      `json:"start_port"`
-	TotalPorts                 int      `json:"total_ports"`
+	StartPort                  uint32   `json:"start_port"`
+	TotalPorts                 uint32   `json:"total_ports"`
 	LogPrefix                  string   `json:"log_prefix"`
 	SearchDomains              []string `json:"search_domains"`
 	IPTablesLockFile           string   `json:"iptables_lock_file"`

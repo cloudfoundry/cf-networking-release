@@ -276,7 +276,7 @@ var _ = Describe("Manager", func() {
 				Expect(portAllocator.AllocatePortCallCount()).To(Equal(1))
 				handle, port := portAllocator.AllocatePortArgsForCall(0)
 				Expect(handle).To(Equal("some-container-handle"))
-				Expect(port).To(Equal(0))
+				Expect(port).To(Equal(uint32(0)))
 
 				Expect(cniController.UpCallCount()).To(Equal(1))
 				_, handle, _, legacyNetConf := cniController.UpArgsForCall(0)

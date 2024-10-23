@@ -8,14 +8,14 @@ import (
 var ErrorPortPoolExhausted = errors.New("port pool exhausted")
 
 type Pool struct {
-	AcquiredPorts map[int]string
+	AcquiredPorts map[uint32]string
 }
 
 func (p *Pool) MarshalJSON() ([]byte, error) {
 	var jsonData struct {
-		AcquiredPorts map[string][]int `json:"acquired_ports"`
+		AcquiredPorts map[string][]uint32 `json:"acquired_ports"`
 	}
-	jsonData.AcquiredPorts = make(map[string][]int)
+	jsonData.AcquiredPorts = make(map[string][]uint32)
 
 	for port, handle := range p.AcquiredPorts {
 		jsonData.AcquiredPorts[handle] = append(jsonData.AcquiredPorts[handle], port)
@@ -25,14 +25,14 @@ func (p *Pool) MarshalJSON() ([]byte, error) {
 
 func (p *Pool) UnmarshalJSON(bytes []byte) error {
 	var jsonData struct {
-		AcquiredPorts map[string][]int `json:"acquired_ports"`
+		AcquiredPorts map[string][]uint32 `json:"acquired_ports"`
 	}
 	err := json.Unmarshal(bytes, &jsonData)
 	if err != nil {
 		return err
 	}
 
-	p.AcquiredPorts = make(map[int]string)
+	p.AcquiredPorts = make(map[uint32]string)
 	for handle, ports := range jsonData.AcquiredPorts {
 		for _, port := range ports {
 			p.AcquiredPorts[port] = handle
@@ -42,27 +42,27 @@ func (p *Pool) UnmarshalJSON(bytes []byte) error {
 }
 
 type Tracker struct {
-	StartPort int
-	Capacity  int
+	StartPort uint32
+	Capacity  uint32
 }
 
-func (t *Tracker) InRange(port int) bool {
+func (t *Tracker) InRange(port uint32) bool {
 	return port >= t.StartPort && port < t.StartPort+t.Capacity
 }
 
-func (t *Tracker) AcquireOne(pool *Pool, handler string) (int, error) {
+func (t *Tracker) AcquireOne(pool *Pool, handler string) (uint32, error) {
 	if pool.AcquiredPorts == nil {
-		pool.AcquiredPorts = make(map[int]string)
+		pool.AcquiredPorts = make(map[uint32]string)
 	}
 
-	for i := 0; i < t.Capacity; i++ {
+	for i := uint32(0); i < t.Capacity; i++ {
 		candidatePort := t.StartPort + i
 		if !contains(pool.AcquiredPorts, candidatePort) {
 			pool.AcquiredPorts[candidatePort] = handler
 			return candidatePort, nil
 		}
 	}
-	return -1, ErrorPortPoolExhausted
+	return 0, ErrorPortPoolExhausted
 }
 
 func (t *Tracker) ReleaseAll(pool *Pool, handle string) error {
@@ -74,7 +74,7 @@ func (t *Tracker) ReleaseAll(pool *Pool, handle string) error {
 	return nil
 }
 
-func contains(list map[int]string, candidate int) bool {
+func contains(list map[uint32]string, candidate uint32) bool {
 	_, ok := list[candidate]
 	return ok
 }

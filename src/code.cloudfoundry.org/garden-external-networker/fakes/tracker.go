@@ -8,24 +8,24 @@ import (
 )
 
 type Tracker struct {
-	AcquireOneStub        func(*port_allocator.Pool, string) (int, error)
+	AcquireOneStub        func(*port_allocator.Pool, string) (uint32, error)
 	acquireOneMutex       sync.RWMutex
 	acquireOneArgsForCall []struct {
 		arg1 *port_allocator.Pool
 		arg2 string
 	}
 	acquireOneReturns struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}
 	acquireOneReturnsOnCall map[int]struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}
-	InRangeStub        func(int) bool
+	InRangeStub        func(uint32) bool
 	inRangeMutex       sync.RWMutex
 	inRangeArgsForCall []struct {
-		arg1 int
+		arg1 uint32
 	}
 	inRangeReturns struct {
 		result1 bool
@@ -49,7 +49,7 @@ type Tracker struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Tracker) AcquireOne(arg1 *port_allocator.Pool, arg2 string) (int, error) {
+func (fake *Tracker) AcquireOne(arg1 *port_allocator.Pool, arg2 string) (uint32, error) {
 	fake.acquireOneMutex.Lock()
 	ret, specificReturn := fake.acquireOneReturnsOnCall[len(fake.acquireOneArgsForCall)]
 	fake.acquireOneArgsForCall = append(fake.acquireOneArgsForCall, struct {
@@ -75,7 +75,7 @@ func (fake *Tracker) AcquireOneCallCount() int {
 	return len(fake.acquireOneArgsForCall)
 }
 
-func (fake *Tracker) AcquireOneCalls(stub func(*port_allocator.Pool, string) (int, error)) {
+func (fake *Tracker) AcquireOneCalls(stub func(*port_allocator.Pool, string) (uint32, error)) {
 	fake.acquireOneMutex.Lock()
 	defer fake.acquireOneMutex.Unlock()
 	fake.AcquireOneStub = stub
@@ -88,37 +88,37 @@ func (fake *Tracker) AcquireOneArgsForCall(i int) (*port_allocator.Pool, string)
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *Tracker) AcquireOneReturns(result1 int, result2 error) {
+func (fake *Tracker) AcquireOneReturns(result1 uint32, result2 error) {
 	fake.acquireOneMutex.Lock()
 	defer fake.acquireOneMutex.Unlock()
 	fake.AcquireOneStub = nil
 	fake.acquireOneReturns = struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *Tracker) AcquireOneReturnsOnCall(i int, result1 int, result2 error) {
+func (fake *Tracker) AcquireOneReturnsOnCall(i int, result1 uint32, result2 error) {
 	fake.acquireOneMutex.Lock()
 	defer fake.acquireOneMutex.Unlock()
 	fake.AcquireOneStub = nil
 	if fake.acquireOneReturnsOnCall == nil {
 		fake.acquireOneReturnsOnCall = make(map[int]struct {
-			result1 int
+			result1 uint32
 			result2 error
 		})
 	}
 	fake.acquireOneReturnsOnCall[i] = struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *Tracker) InRange(arg1 int) bool {
+func (fake *Tracker) InRange(arg1 uint32) bool {
 	fake.inRangeMutex.Lock()
 	ret, specificReturn := fake.inRangeReturnsOnCall[len(fake.inRangeArgsForCall)]
 	fake.inRangeArgsForCall = append(fake.inRangeArgsForCall, struct {
-		arg1 int
+		arg1 uint32
 	}{arg1})
 	stub := fake.InRangeStub
 	fakeReturns := fake.inRangeReturns
@@ -139,13 +139,13 @@ func (fake *Tracker) InRangeCallCount() int {
 	return len(fake.inRangeArgsForCall)
 }
 
-func (fake *Tracker) InRangeCalls(stub func(int) bool) {
+func (fake *Tracker) InRangeCalls(stub func(uint32) bool) {
 	fake.inRangeMutex.Lock()
 	defer fake.inRangeMutex.Unlock()
 	fake.InRangeStub = stub
 }
 
-func (fake *Tracker) InRangeArgsForCall(i int) int {
+func (fake *Tracker) InRangeArgsForCall(i int) uint32 {
 	fake.inRangeMutex.RLock()
 	defer fake.inRangeMutex.RUnlock()
 	argsForCall := fake.inRangeArgsForCall[i]
