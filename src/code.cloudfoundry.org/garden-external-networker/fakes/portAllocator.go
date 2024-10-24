@@ -6,18 +6,18 @@ import (
 )
 
 type PortAllocator struct {
-	AllocatePortStub        func(string, int) (int, error)
+	AllocatePortStub        func(string, uint32) (uint32, error)
 	allocatePortMutex       sync.RWMutex
 	allocatePortArgsForCall []struct {
 		arg1 string
-		arg2 int
+		arg2 uint32
 	}
 	allocatePortReturns struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}
 	allocatePortReturnsOnCall map[int]struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}
 	ReleaseAllPortsStub        func(string) error
@@ -35,12 +35,12 @@ type PortAllocator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PortAllocator) AllocatePort(arg1 string, arg2 int) (int, error) {
+func (fake *PortAllocator) AllocatePort(arg1 string, arg2 uint32) (uint32, error) {
 	fake.allocatePortMutex.Lock()
 	ret, specificReturn := fake.allocatePortReturnsOnCall[len(fake.allocatePortArgsForCall)]
 	fake.allocatePortArgsForCall = append(fake.allocatePortArgsForCall, struct {
 		arg1 string
-		arg2 int
+		arg2 uint32
 	}{arg1, arg2})
 	stub := fake.AllocatePortStub
 	fakeReturns := fake.allocatePortReturns
@@ -61,41 +61,41 @@ func (fake *PortAllocator) AllocatePortCallCount() int {
 	return len(fake.allocatePortArgsForCall)
 }
 
-func (fake *PortAllocator) AllocatePortCalls(stub func(string, int) (int, error)) {
+func (fake *PortAllocator) AllocatePortCalls(stub func(string, uint32) (uint32, error)) {
 	fake.allocatePortMutex.Lock()
 	defer fake.allocatePortMutex.Unlock()
 	fake.AllocatePortStub = stub
 }
 
-func (fake *PortAllocator) AllocatePortArgsForCall(i int) (string, int) {
+func (fake *PortAllocator) AllocatePortArgsForCall(i int) (string, uint32) {
 	fake.allocatePortMutex.RLock()
 	defer fake.allocatePortMutex.RUnlock()
 	argsForCall := fake.allocatePortArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *PortAllocator) AllocatePortReturns(result1 int, result2 error) {
+func (fake *PortAllocator) AllocatePortReturns(result1 uint32, result2 error) {
 	fake.allocatePortMutex.Lock()
 	defer fake.allocatePortMutex.Unlock()
 	fake.AllocatePortStub = nil
 	fake.allocatePortReturns = struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *PortAllocator) AllocatePortReturnsOnCall(i int, result1 int, result2 error) {
+func (fake *PortAllocator) AllocatePortReturnsOnCall(i int, result1 uint32, result2 error) {
 	fake.allocatePortMutex.Lock()
 	defer fake.allocatePortMutex.Unlock()
 	fake.AllocatePortStub = nil
 	if fake.allocatePortReturnsOnCall == nil {
 		fake.allocatePortReturnsOnCall = make(map[int]struct {
-			result1 int
+			result1 uint32
 			result2 error
 		})
 	}
 	fake.allocatePortReturnsOnCall[i] = struct {
-		result1 int
+		result1 uint32
 		result2 error
 	}{result1, result2}
 }

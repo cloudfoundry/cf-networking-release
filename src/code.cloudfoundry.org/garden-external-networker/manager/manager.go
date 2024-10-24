@@ -31,7 +31,7 @@ type mounter interface {
 
 //go:generate counterfeiter -o ../fakes/portAllocator.go --fake-name PortAllocator . portAllocator
 type portAllocator interface {
-	AllocatePort(handle string, port int) (int, error)
+	AllocatePort(handle string, port uint32) (uint32, error)
 	ReleaseAllPorts(handle string) error
 }
 
@@ -82,11 +82,11 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	mappedPorts := []garden.PortMapping{}
 	for i := range inputs.NetIn {
 		if inputs.NetIn[i].HostPort == 0 {
-			hostPort, err := m.PortAllocator.AllocatePort(containerHandle, int(inputs.NetIn[i].HostPort))
+			hostPort, err := m.PortAllocator.AllocatePort(containerHandle, inputs.NetIn[i].HostPort)
 			if err != nil {
 				return nil, fmt.Errorf("allocating port: %s", err)
 			}
-			inputs.NetIn[i].HostPort = uint32(hostPort)
+			inputs.NetIn[i].HostPort = hostPort
 		}
 
 		mappedPorts = append(mappedPorts, garden.PortMapping{
