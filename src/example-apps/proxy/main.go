@@ -40,6 +40,7 @@ func main() {
 	mux.Handle("/flap", &handlers.FlapHandler{FlapInterval: flapInterval})
 	mux.Handle("/signal/", &handlers.SignalHandler{})
 	mux.Handle("/sleepy/", &handlers.SleepyHandler{SleepyInterval: sleepyInterval})
+	mux.Handle("/extraresponseheaders/", &handlers.ExtraResponseHeadersHandler{})
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf("0.0.0.0:%d", port),

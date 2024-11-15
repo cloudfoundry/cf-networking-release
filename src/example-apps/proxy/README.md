@@ -195,6 +195,37 @@ with a 200 status code. You can configure how many times the endpoint should
 fail before succeeding by setting the `EVENTUALLY_SUCCEED_AFTER_COUNT` env var.
 This endpoint was created to test app healthchecks.
 
+## `/extraresponseheaders/${extra_number_of_response_headers}`
+
+[Extra Response Headers handler](./handlers/extra_response_headers.go) adds the desired
+number of extra headers to your response.
+
+```bash
+$ curl https://proxy.mydomain.com/extraresponseheaders/10 -v
+
+> GET /extraresponseheaders/10 HTTP/1.1
+> Host: proxy.mydomain.com
+> User-Agent: curl/7.81.0
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Content-Length: 0
+< Date: Fri, 15 Nov 2024 21:24:05 GMT
+< Meow-0: meow-0
+< Meow-1: meow-1
+< Meow-2: meow-2
+< Meow-3: meow-3
+< Meow-4: meow-4
+< Meow-5: meow-5
+< Meow-6: meow-6
+< Meow-7: meow-7
+< Meow-8: meow-8
+< Meow-9: meow-9
+< X-Vcap-Request-Id: 1fc41493-5fd1-4477-4582-d7ff1b715df2
+<
+```
+
 ## `/flap`
 
 [Flap handler](./handlers/flap_handler.go) responds to the first 5 requests
