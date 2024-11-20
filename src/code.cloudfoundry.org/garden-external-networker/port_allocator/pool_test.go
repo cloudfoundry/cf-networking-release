@@ -90,7 +90,7 @@ var _ = Describe("Tracker", func() {
 				tracker.Capacity = sampleSize
 				exp.Sample(func(idx int) {
 					if idx%1_000 == 0 {
-						fmt.Printf("Iteration %d\n", idx)
+						fmt.Fprintf(GinkgoWriter, "Iteration %d\n", idx)
 					}
 
 					exp.MeasureDuration("runtime", func() {

@@ -80,7 +80,7 @@ var _ = Describe("Store", func() {
 				if err == nil {
 					break
 				} else {
-					fmt.Printf("Error on %s attempt. Retrying %d of %d: %s", crud, attempt, NumAttempts, err)
+					fmt.Fprintf(GinkgoWriter, "Error on %s attempt. Retrying %d of %d: %s", crud, attempt, NumAttempts, err)
 				}
 			}
 			return err

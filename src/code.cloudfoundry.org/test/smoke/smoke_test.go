@@ -49,7 +49,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appProxy = prefix + "proxy"
 			appSmoke = prefix + "smoke"
 
-			cfCli = cf_cli_adapter.NewAdapter()
+			cfCli = cf_cli_adapter.NewAdapterWithLogWriter(GinkgoWriter)
 		})
 
 		AfterEach(func() {
@@ -120,14 +120,14 @@ func runWithTimeout(operation string, timeout time.Duration, work func()) {
 	done := make(chan bool)
 	go func() {
 		defer GinkgoRecover()
-		fmt.Printf("starting %s\n", operation)
+		fmt.Fprintf(GinkgoWriter, "starting %s\n", operation)
 		work()
 		done <- true
 	}()
 
 	select {
 	case <-done:
-		fmt.Printf("completed %s\n", operation)
+		fmt.Fprintf(GinkgoWriter, "completed %s\n", operation)
 		return
 	case <-time.After(timeout):
 		Fail("timeout on " + operation)

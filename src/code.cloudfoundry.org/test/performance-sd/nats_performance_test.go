@@ -50,7 +50,7 @@ var _ = Describe("NatsPerformance", func() {
 		i := 0
 		exp.Sample(func(idx int) {
 			i++
-			fmt.Printf("Iteration %d\n", i)
+			fmt.Fprintf(GinkgoWriter, "Iteration %d\n", i)
 
 			By("building a benchmark of subscribers listening on service-discovery.register")
 			benchMarkNatsSubMap := collectNatsSubscriberConnectionInfo(SdcRegisterTopic)
@@ -84,7 +84,7 @@ var _ = Describe("NatsPerformance", func() {
 		i := 0
 		exp.Sample(func(idx int) {
 			i++
-			fmt.Printf("Iteration %d\n", i)
+			fmt.Fprintf(GinkgoWriter, "Iteration %d\n", i)
 
 			medianJustExternalRoutes, meanJustExternalRoutes = runCpuAndMemProfle(exp, "External Routes", NatsRun{2, "router.register"})
 			medianExternalAndInternalRoutes, meanExternalAndInternalRoutes = runCpuAndMemProfle(exp, "Both External and Internal Routes", NatsRun{2, "router.register"}, NatsRun{0, "service-discovery.register"})

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
@@ -14,7 +15,7 @@ func LaunchConflictingServer(port int) *http.Server {
 	go func() {
 		err := conflictingServer.ListenAndServe()
 		if err != nil {
-			fmt.Printf("conflictingServer closed with error: %s\n", err)
+			fmt.Fprintf(GinkgoWriter, "conflictingServer closed with error: %s\n", err)
 		}
 	}()
 	client := &http.Client{}

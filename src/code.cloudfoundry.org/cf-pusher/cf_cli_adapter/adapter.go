@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
@@ -16,6 +17,7 @@ type Adapter struct {
 	cfCliPath    string
 	majorVersion int
 	cfHomePath   string
+	logWriter    io.Writer
 }
 
 func NewAdapter() *Adapter {
@@ -35,7 +37,7 @@ func NewAdapter() *Adapter {
 		panic(err)
 	}
 
-	return &Adapter{cfCliPath: "cf", majorVersion: majorVersion}
+	return &Adapter{cfCliPath: "cf", majorVersion: majorVersion, logWriter: os.Stdout}
 }
 
 func NewAdapterWithHome(home string) *Adapter {
@@ -45,92 +47,112 @@ func NewAdapterWithHome(home string) *Adapter {
 	return adapter
 }
 
+func NewAdapterWithLogWriter(logWriter io.Writer) *Adapter {
+	adapter := NewAdapter()
+	adapter.logWriter = logWriter
+
+	return adapter
+}
+
 func (a *Adapter) CfCliV6() bool {
 	return a.majorVersion < 7
 }
 
+func (a *Adapter) LogCommand(commandArgs []string) {
+	fmt.Fprintf(a.logWriter, "running: %s %v\n", a.cfCliPath, commandArgs)
+}
+
 func (a *Adapter) CreateOrg(name string) error {
-	fmt.Printf("running: %s create-org %s\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "create-org", name)
+	commandArgs := []string{"create-org", name}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteOrg(name string) error {
-	fmt.Printf("running: %s delete-org -f %s\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "delete-org", "-f", name)
+	commandArgs := []string{"delete-org", "-f", name}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateSpace(spaceName, orgName string) error {
-	fmt.Printf("running: %s create-space %s -o %s\n", a.cfCliPath, spaceName, orgName)
-	cmd := exec.Command(a.cfCliPath, "create-space", spaceName, "-o", orgName)
+	commandArgs := []string{"create-space", spaceName, "-o", orgName}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) TargetOrg(name string) error {
-	fmt.Printf("running: %s target -o  %s\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "target", "-o", name)
+	commandArgs := []string{"target", "-o", name}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) TargetSpace(name string) error {
-	fmt.Printf("running: %s target -s  %s\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "target", "-s", name)
+	commandArgs := []string{"target", "-s", name}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetApiWithSsl(api string) error {
-	fmt.Printf("running: %s api  %s\n", a.cfCliPath, api)
-	cmd := exec.Command(a.cfCliPath, "api", api)
+	commandArgs := []string{"api", api}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetApiWithoutSsl(api string) error {
-	fmt.Printf("running: %s api  %s --skip-ssl-validation\n", a.cfCliPath, api)
-	cmd := exec.Command(a.cfCliPath, "api", api, "--skip-ssl-validation")
+	commandArgs := []string{"api", api, "--skip-ssl-validation"}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Auth(user, password string) error {
-	fmt.Printf("running: %s auth <user> <pass> \n", a.cfCliPath)
+	a.LogCommand([]string{"auth", "<user>", "<pass>"})
 	cmd := exec.Command(a.cfCliPath, "auth", user, password)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Push(name, directory, manifestFile string) error {
-	fmt.Printf("running: %s push %s -p %s -f %s\n", a.cfCliPath, name, directory, manifestFile)
-	cmd := exec.Command(a.cfCliPath,
-		"push", name,
-		"-p", directory,
-		"-f", manifestFile)
+	commandArgs := []string{"push", name, "-p", directory, "-f", manifestFile}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, err := a.runCombinedOutput(cmd)
-	fmt.Printf("output: %s\n", string(bytes))
+	fmt.Fprintf(a.logWriter, "output: %s\n", string(bytes))
 	return err
 }
 
 func (a *Adapter) Delete(appName string) error {
-	fmt.Printf("running: %s delete -f %s\n", a.cfCliPath, appName)
-	cmd := exec.Command(a.cfCliPath, "delete", "-f", appName)
+	commandArgs := []string{"delete", "-f", appName}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Scale(name string, instances int) error {
 	instancesStr := fmt.Sprintf("%d", instances)
-	fmt.Printf("running: %s scale %s -i %s\n", a.cfCliPath, name, instancesStr)
-	cmd := exec.Command(a.cfCliPath, "scale", name, "-i", instancesStr)
+	commandArgs := []string{"scale", name, "-i", instancesStr}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) AppGuid(name string) (string, error) {
-	fmt.Printf("running: %s app %s --guid\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "app", name, "--guid")
+	commandArgs := []string{"app", name, "--guid"}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, err := a.runCombinedOutput(cmd)
 	return strings.TrimSpace(string(bytes)), err
 }
 
 func (a *Adapter) SpaceGuid(name string) (string, error) {
-	fmt.Printf("running: %s space %s --guid\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "space", name, "--guid")
+	commandArgs := []string{"space", name, "--guid"}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, err := a.runCombinedOutput(cmd)
 	return strings.TrimSpace(string(bytes)), err
 }
@@ -140,27 +162,32 @@ type Apps struct {
 }
 
 func (a *Adapter) OrgGuid(name string) (string, error) {
-	fmt.Printf("running: %s org %s --guid\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "org", name, "--guid")
+	commandArgs := []string{"org", name, "--guid"}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, err := a.runCombinedOutput(cmd)
 	return strings.TrimSpace(string(bytes)), err
 }
 
 func (a *Adapter) Curl(method, path, inputFile string) ([]byte, error) {
+	var commandArgs []string
 	if inputFile != "" {
-		fmt.Println("running:", a.cfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path)
-		cmd := exec.Command(a.cfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path)
+		commandArgs = []string{"curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path}
+		a.LogCommand(commandArgs)
+		cmd := exec.Command(a.cfCliPath, commandArgs...)
 		return a.runCombinedOutput(cmd)
 	}
 
-	fmt.Printf("running: %s curl -X %s \"%s\"\n", a.cfCliPath, method, path)
-	cmd := exec.Command(a.cfCliPath, "curl", "-X", method, path)
+	commandArgs = []string{"curl", "-X", method, path}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCombinedOutput(cmd)
 }
 
 func (a *Adapter) AppCount(orgGuid string) (int, error) {
-	fmt.Printf("running: %s curl \"/v2/apps?q=organization_guid%%20IN%%20%s\"\n", a.cfCliPath, orgGuid)
-	cmd := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/apps?q=organization_guid%%20IN%%20%s", orgGuid))
+	commandArgs := []string{"curl", fmt.Sprintf("/v2/apps?q=organization_guid%%20IN%%20%s", orgGuid)}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, err := a.runCombinedOutput(cmd)
 	apps := &Apps{}
 	if err := json.Unmarshal(bytes, apps); err != nil {
@@ -170,8 +197,9 @@ func (a *Adapter) AppCount(orgGuid string) (int, error) {
 }
 
 func (a *Adapter) CheckApp(guid string) ([]byte, error) {
-	fmt.Printf("running: %s curl \"/v2/apps/%s/summary\"\n", a.cfCliPath, guid)
-	cmd := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/apps/%s/summary", guid))
+	commandArgs := []string{"curl", fmt.Sprintf("/v2/apps/%s/summary", guid)}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCombinedOutput(cmd)
 }
 
@@ -183,8 +211,8 @@ func (a *Adapter) AddNetworkPolicy(sourceApp, destApp string, port int, protocol
 	} else {
 		commandArgs = []string{"add-network-policy", sourceApp, destApp, "--port", portStr, "--protocol", "tcp"}
 	}
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -196,8 +224,8 @@ func (a *Adapter) RemoveNetworkPolicy(sourceApp, destApp string, port int, proto
 	} else {
 		commandArgs = []string{"remove-network-policy", sourceApp, destApp, "--port", portStr, "--protocol", "tcp"}
 	}
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -217,8 +245,8 @@ func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, servi
 	} else {
 		commandArgs = []string{"create-org-quota", name, "-m", memory, "-i", instanceMemoryStr, "-r", routesStr, "-s", serviceInstancesStr, "-a", appInstancesStr, "--reserved-route-ports", routePortsStr}
 	}
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -230,14 +258,15 @@ func (a *Adapter) SetQuota(org, quota string) error {
 		commandArgs = []string{"set-org-quota", org, quota}
 	}
 
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateSecurityGroup(name, filepath string) error {
-	fmt.Printf("running cf create-security-group %s %s\n", name, filepath)
-	cmd := exec.Command("cf", "create-security-group", name, filepath)
+	commandArgs := []string{"create-security-group", name, filepath}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -254,8 +283,9 @@ type ASG struct {
 }
 
 func (a *Adapter) SecurityGroup(name string) (string, error) {
-	fmt.Printf("running: %s curl \"/v2/security_groups?q=name%%3A%s\n", a.cfCliPath, name)
-	cmd := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/security_groups?q=name%%3A%s", name))
+	commandArgs := []string{"curl", fmt.Sprintf("/v2/security_groups?q=name%%3A%s", name)}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, _ := a.runCombinedOutput(cmd)
 	asg := &ASG{}
 	if err := json.Unmarshal(bytes, asg); err != nil {
@@ -279,8 +309,8 @@ func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 		commandArgs = []string{"bind-security-group", name, org, "--space", space}
 	}
 
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -292,20 +322,22 @@ func (a *Adapter) BindGlobalRunningSecurityGroup(name string) error {
 		commandArgs = []string{"bind-running-security-group", name}
 	}
 
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) UnbindSecurityGroup(name, org, space string) error {
-	fmt.Printf("running cf unbind-security-group %s %s %s\n", name, org, space)
-	cmd := exec.Command("cf", "unbind-security-group", name, org, space)
+	commandArgs := []string{"unbind-security-group", name, org, space}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteSecurityGroup(name string) error {
-	fmt.Printf("running cf delete-security-group -f %s \n", name)
-	cmd := exec.Command("cf", "delete-security-group", "-f", name)
+	commandArgs := []string{"delete-security-group", "-f", name}
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -317,8 +349,8 @@ func (a *Adapter) DeleteQuota(quota string) error {
 		commandArgs = []string{"delete-org-quota", quota}
 	}
 
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 
@@ -330,8 +362,8 @@ func (a *Adapter) RunTask(appName, commandToRun string) error {
 		commandArgs = []string{"run-task", appName, "-c", commandToRun}
 	}
 
-	fmt.Printf("running: cf %v \n", commandArgs)
-	cmd := exec.Command("cf", commandArgs...)
+	a.LogCommand(commandArgs)
+	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCommandWithTimeout(cmd)
 }
 

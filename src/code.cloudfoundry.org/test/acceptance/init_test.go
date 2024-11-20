@@ -36,7 +36,7 @@ func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	BeforeSuite(func() {
-		cfCLI = cf_cli_adapter.NewAdapter()
+		cfCLI = cf_cli_adapter.NewAdapterWithLogWriter(GinkgoWriter)
 		config = helpers.LoadConfig()
 
 		configPath := helpers.ConfigPath()

@@ -116,20 +116,20 @@ var _ = Describe("how the container network performs at scale", func() {
 				var beforeCreateCount, afterCreateCount, afterDeleteCount int
 				for failure := range beforeCreatePolicies {
 					beforeCreateCount++
-					fmt.Printf("before creating policies failure: %s\n", failure)
+					fmt.Fprintf(GinkgoWriter, "before creating policies failure: %s\n", failure)
 				}
 				for failure := range afterCreatePolicies {
 					afterCreateCount++
-					fmt.Printf("after creating policies failure: %s\n", failure)
+					fmt.Fprintf(GinkgoWriter, "after creating policies failure: %s\n", failure)
 				}
 				for failure := range afterDeletePolicies {
 					afterDeleteCount++
-					fmt.Printf("after deleting policies failure: %s\n", failure)
+					fmt.Fprintf(GinkgoWriter, "after deleting policies failure: %s\n", failure)
 				}
 
-				fmt.Printf("before creating policies failure count: %d\n", beforeCreateCount)
-				fmt.Printf("after creating policies failure count: %d\n", afterCreateCount)
-				fmt.Printf("after deleting policies failure count: %d\n", afterDeleteCount)
+				fmt.Fprintf(GinkgoWriter, "before creating policies failure count: %d\n", beforeCreateCount)
+				fmt.Fprintf(GinkgoWriter, "after creating policies failure count: %d\n", afterCreateCount)
+				fmt.Fprintf(GinkgoWriter, "after deleting policies failure count: %d\n", afterDeleteCount)
 
 				Expect(beforeCreateCount).To(Equal(0))
 				Expect(afterCreateCount).To(Equal(0))
@@ -348,7 +348,7 @@ func checkRegistry(registry string, timeout, pollingInterval time.Duration, tota
 	Eventually(registeredInstances, timeout, pollingInterval).Should(BeNumerically("~", totalInstances, threshold))
 	actualInstances, _ := registeredInstances()
 	if actualInstances != totalInstances {
-		fmt.Printf("found %d of %d instances registered, within threshold of %d\n", actualInstances, totalInstances, threshold)
+		fmt.Fprintf(GinkgoWriter, "found %d of %d instances registered, within threshold of %d\n", actualInstances, totalInstances, threshold)
 	}
 }
 

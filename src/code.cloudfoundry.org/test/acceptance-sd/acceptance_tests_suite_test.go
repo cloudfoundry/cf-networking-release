@@ -75,7 +75,7 @@ func digForNumberOfIPs(hostName string, expectedLength int) []string {
 	Eventually(func() []string {
 		resp, err := http.Get(hostName)
 		if err != nil || resp.StatusCode != http.StatusOK {
-			fmt.Printf("proxy app request failed, error was: %s\nresponse: %v\n", err, resp)
+			fmt.Fprintf(GinkgoWriter, "proxy app request failed, error was: %s\nresponse: %v\n", err, resp)
 			return []string{}
 		}
 

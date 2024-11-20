@@ -80,9 +80,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			fmt.Println("\n----- cf-pusher start ------")
+			fmt.Fprintln(GinkgoWriter, "\n----- cf-pusher start ------")
 			err := cmd.Run()
-			fmt.Println("\n----- cf-pusher done -------")
+			fmt.Fprintln(GinkgoWriter, "\n----- cf-pusher done -------")
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that all test app instances have registered themselves")
