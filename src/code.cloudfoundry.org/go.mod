@@ -12,15 +12,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20241029001107-2bebce403fed
-	code.cloudfoundry.org/cf-networking-helpers v0.28.0
-	code.cloudfoundry.org/clock v1.22.0
-	code.cloudfoundry.org/debugserver v0.26.0
-	code.cloudfoundry.org/filelock v0.20.0
-	code.cloudfoundry.org/garden v0.0.0-20241127021034-06ec4d3844e0
-	code.cloudfoundry.org/lager/v3 v3.16.0
+	code.cloudfoundry.org/cf-networking-helpers v0.29.0
+	code.cloudfoundry.org/clock v1.23.0
+	code.cloudfoundry.org/debugserver v0.27.0
+	code.cloudfoundry.org/filelock v0.21.0
+	code.cloudfoundry.org/garden v0.0.0-20241204145308-c4f1fc9d4727
+	code.cloudfoundry.org/lager/v3 v3.17.0
 	code.cloudfoundry.org/locket v0.0.0-20241029002438-07ee8ada566a
-	code.cloudfoundry.org/policy_client v0.30.0
-	code.cloudfoundry.org/tlsconfig v0.10.0
+	code.cloudfoundry.org/policy_client v0.31.0
+	code.cloudfoundry.org/tlsconfig v0.11.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -28,7 +28,7 @@ require (
 	github.com/cloudfoundry/cf-test-helpers/v2 v2.10.0
 	github.com/cloudfoundry/dropsonde v1.1.0
 	github.com/containernetworking/cni v1.2.3
-	github.com/containernetworking/plugins v1.6.0
+	github.com/containernetworking/plugins v1.6.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/montanaflynn/stats v0.7.1
@@ -46,16 +46,16 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.31.0
-	golang.org/x/sys v0.27.0
+	golang.org/x/net v0.32.0
+	golang.org/x/sys v0.28.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.31.0 // indirect
-	code.cloudfoundry.org/durationjson v0.20.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20241125060457-612558937770 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.32.0 // indirect
+	code.cloudfoundry.org/durationjson v0.21.0 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20241202111822-779c0b5a3368 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20241128161848-dc51965c6481 // indirect
+	github.com/google/pprof v0.0.0-20241206021119-61a79c692802 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -86,15 +86,15 @@ require (
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	go.step.sm/crypto v0.54.2 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
+	go.step.sm/crypto v0.55.0 // indirect
+	golang.org/x/crypto v0.30.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
-	golang.org/x/tools v0.27.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241118233622-e639e219e697 // indirect
-	google.golang.org/grpc v1.68.0 // indirect
+	golang.org/x/tools v0.28.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241206012308-a4fef0638583 // indirect
+	google.golang.org/grpc v1.68.1 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
