@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.30.0
+# code.cloudfoundry.org/cf-networking-helpers v0.31.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -73,7 +73,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.32.0
+# code.cloudfoundry.org/policy_client v0.33.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.13.0
@@ -184,7 +184,7 @@ github.com/jackc/pgpassfile
 # github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
 ## explicit; go 1.14
 github.com/jackc/pgservicefile
-# github.com/jackc/pgx/v5 v5.7.1
+# github.com/jackc/pgx/v5 v5.7.2
 ## explicit; go 1.21
 github.com/jackc/pgx/v5
 github.com/jackc/pgx/v5/internal/iobufpool

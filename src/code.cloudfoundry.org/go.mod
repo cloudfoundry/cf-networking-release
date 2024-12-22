@@ -12,14 +12,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20241210011614-ee93cf60abbe
-	code.cloudfoundry.org/cf-networking-helpers v0.30.0
+	code.cloudfoundry.org/cf-networking-helpers v0.31.0
 	code.cloudfoundry.org/clock v1.25.0
 	code.cloudfoundry.org/debugserver v0.29.0
 	code.cloudfoundry.org/filelock v0.22.0
 	code.cloudfoundry.org/garden v0.0.0-20241220222956-8586d072bbe1
 	code.cloudfoundry.org/lager/v3 v3.19.0
 	code.cloudfoundry.org/locket v0.0.0-20241210012608-63e03b2bfad8
-	code.cloudfoundry.org/policy_client v0.32.0
+	code.cloudfoundry.org/policy_client v0.33.0
 	code.cloudfoundry.org/tlsconfig v0.13.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -73,7 +73,7 @@ require (
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.7.1 // indirect
+	github.com/jackc/pgx/v5 v5.7.2 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/lib/pq v1.10.9 // indirect
