@@ -12,14 +12,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20241210011614-ee93cf60abbe
-	code.cloudfoundry.org/cf-networking-helpers v0.31.0
-	code.cloudfoundry.org/clock v1.26.0
-	code.cloudfoundry.org/debugserver v0.30.0
-	code.cloudfoundry.org/filelock v0.23.0
-	code.cloudfoundry.org/garden v0.0.0-20241225021532-d08842acfc0b
-	code.cloudfoundry.org/lager/v3 v3.20.0
+	code.cloudfoundry.org/cf-networking-helpers v0.32.0
+	code.cloudfoundry.org/clock v1.27.0
+	code.cloudfoundry.org/debugserver v0.31.0
+	code.cloudfoundry.org/filelock v0.24.0
+	code.cloudfoundry.org/garden v0.0.0-20250101021540-bcee180fbf4d
+	code.cloudfoundry.org/lager/v3 v3.21.0
 	code.cloudfoundry.org/locket v0.0.0-20241210012608-63e03b2bfad8
-	code.cloudfoundry.org/policy_client v0.34.0
+	code.cloudfoundry.org/policy_client v0.35.0
 	code.cloudfoundry.org/tlsconfig v0.14.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -37,7 +37,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.10.24
 	github.com/nats-io/nats-top v0.6.3
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.22.1
+	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -47,14 +47,14 @@ require (
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.33.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/sys v0.29.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.35.0 // indirect
-	code.cloudfoundry.org/durationjson v0.24.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.36.0 // indirect
+	code.cloudfoundry.org/durationjson v0.25.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20241223074059-7f8c1f03edeb // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
@@ -88,12 +88,12 @@ require (
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.56.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/oauth2 v0.24.0 // indirect
+	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/time v0.8.0 // indirect
+	golang.org/x/time v0.9.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241223144023-3abc09e42ca8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250102185135-69823020774d // indirect
 	google.golang.org/grpc v1.69.2 // indirect
 	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
