@@ -1,17 +1,29 @@
 #!/bin/bash -u
 
 <%
-  network = nil
-  if_link('cf_network') { |cf_network_link| network = cf_network_link.p("network") }
-  unless network
-    network = p("cf_network.network")
+  def network_array
+    network = nil
+    if_link('cf_network') { |cf_network_link| network = cf_network_link.p("network") }
+    unless network
+      network = p("cf_network.network")
+    end
+
+    return [network] if network.class != Array
+    return network
   end
 %>
 
-sudo iptables -C INPUT -s <%= network %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
+<%
+  overlay_networks = network_array
+  overlay_networks.each do |cidr|
+%>
+sudo iptables -C INPUT -s <%= cidr %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
 if [ "$?" -eq 1 ]
 then
   set -e
-  sudo iptables -I INPUT 1 -s <%= network %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
+  sudo iptables -I INPUT 1 -s <%= cidr %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
 fi
 
+<%
+  end
+%>
