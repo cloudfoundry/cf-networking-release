@@ -1,9 +1,9 @@
-# code.cloudfoundry.org/bbs v0.0.0-20250130152952-053f2d6556f8
+# code.cloudfoundry.org/bbs v0.0.0-20250211151651-216775bc13e7
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.36.0
+# code.cloudfoundry.org/cf-networking-helpers v0.37.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -26,22 +26,22 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.22.0
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.36.0
+# code.cloudfoundry.org/debugserver v0.37.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.41.0
+# code.cloudfoundry.org/diego-logging-client v0.42.0
 ## explicit; go 1.22.7
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.29.0
+# code.cloudfoundry.org/durationjson v0.30.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.28.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20250204164024-2360009b9575
+# code.cloudfoundry.org/garden v0.0.0-20250212022216-de2fe4eea9a3
 ## explicit; go 1.22.0
 code.cloudfoundry.org/garden
-# code.cloudfoundry.org/go-diodes v0.0.0-20250120125122-6d632ec80998
+# code.cloudfoundry.org/go-diodes v0.0.0-20250211080108-4c71ef7b9a72
 ## explicit; go 1.22.0
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v9 v9.2.1
@@ -51,7 +51,7 @@ code.cloudfoundry.org/go-loggregator/v9/rpc/loggregator_v2
 code.cloudfoundry.org/go-loggregator/v9/runtimeemitter
 # code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953
 ## explicit
-# code.cloudfoundry.org/lager/v3 v3.25.0
+# code.cloudfoundry.org/lager/v3 v3.26.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
@@ -73,10 +73,10 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.40.0
+# code.cloudfoundry.org/policy_client v0.41.0
 ## explicit; go 1.22.0
 code.cloudfoundry.org/policy_client
-# code.cloudfoundry.org/tlsconfig v0.17.0
+# code.cloudfoundry.org/tlsconfig v0.18.0
 ## explicit; go 1.22
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
@@ -123,7 +123,7 @@ github.com/cloudfoundry/dropsonde/metric_sender
 github.com/cloudfoundry/dropsonde/metricbatcher
 github.com/cloudfoundry/dropsonde/metrics
 github.com/cloudfoundry/dropsonde/runtime_stats
-# github.com/cloudfoundry/sonde-go v0.0.0-20250127102140-78b0e7da13b3
+# github.com/cloudfoundry/sonde-go v0.0.0-20250211080004-ff2843c4063b
 ## explicit; go 1.18
 github.com/cloudfoundry/sonde-go/events
 # github.com/containernetworking/cni v1.2.3
@@ -254,7 +254,7 @@ github.com/nats-io/nats-server/v2/server/sysmem
 # github.com/nats-io/nats-top v0.6.3
 ## explicit; go 1.23
 github.com/nats-io/nats-top/util
-# github.com/nats-io/nkeys v0.4.9
+# github.com/nats-io/nkeys v0.4.10
 ## explicit; go 1.20
 github.com/nats-io/nkeys
 # github.com/nats-io/nuid v1.0.1
@@ -379,7 +379,7 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.34.0
+# golang.org/x/net v0.35.0
 ## explicit; go 1.18
 golang.org/x/net/context
 golang.org/x/net/dns/dnsmessage
@@ -390,6 +390,7 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
+golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
 # golang.org/x/oauth2 v0.26.0
@@ -439,11 +440,12 @@ golang.org/x/text/width
 # golang.org/x/time v0.10.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# golang.org/x/tools v0.29.0
+# golang.org/x/tools v0.30.0
 ## explicit; go 1.22.0
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20250207221924-e9438ea467c6
+golang.org/x/tools/internal/astutil/edge
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b
 ## explicit; go 1.22
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.70.0
