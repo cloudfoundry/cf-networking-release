@@ -69,7 +69,6 @@ files:
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/sonde-go/events/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/go-sql-driver/mysql/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/proto/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/*.go # gosub
