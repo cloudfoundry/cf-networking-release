@@ -175,7 +175,7 @@ func initASGLocker(logger lager.Logger, uuid string, lockTimeout time.Duration, 
 	lockIdentifier := &locketmodels.Resource{
 		Key:      "policy-server-asg-syncer",
 		Owner:    uuid,
-		TypeCode: locketmodels.LOCK,
+		TypeCode: locketmodels.TypeCode_LOCK,
 		Type:     locketmodels.LockType,
 	}
 	return lock.NewLockRunner(
