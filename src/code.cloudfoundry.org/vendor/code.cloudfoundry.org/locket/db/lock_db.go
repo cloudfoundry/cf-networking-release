@@ -58,9 +58,10 @@ func (db *SQLDB) Lock(ctx context.Context, logger lager.Logger, resource *models
 		if newLock {
 			_, err = db.helper.Insert(ctx, logger, tx, "locks",
 				helpers.SQLAttributes{
-					"path":           lock.Key,
-					"owner":          lock.Owner,
-					"value":          lock.Value,
+					"path":  lock.Key,
+					"owner": lock.Owner,
+					"value": lock.Value,
+					//lint:ignore SA1019 - backwards compatibility
 					"type":           lock.Type,
 					"modified_index": lock.ModifiedIndex,
 					"modified_id":    lock.ModifiedId,
@@ -70,8 +71,9 @@ func (db *SQLDB) Lock(ctx context.Context, logger lager.Logger, resource *models
 		} else {
 			_, err = db.helper.Update(ctx, logger, tx, "locks",
 				helpers.SQLAttributes{
-					"owner":          lock.Owner,
-					"value":          lock.Value,
+					"owner": lock.Owner,
+					"value": lock.Value,
+					//lint:ignore SA1019 - backwards compatibility
 					"type":           lock.Type,
 					"modified_index": lock.ModifiedIndex,
 					"modified_id":    lock.ModifiedId,

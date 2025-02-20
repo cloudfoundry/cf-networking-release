@@ -56,6 +56,7 @@ func (l lockPick) ExpirationCounts() (uint32, uint32) {
 }
 
 func (l lockPick) RegisterTTL(logger lager.Logger, lock *db.Lock) {
+	//lint:ignore SA1019 - backwards compatibility
 	logger = logger.Session("register-ttl", lager.Data{"key": lock.Key, "modified-index": lock.ModifiedIndex, "type": lock.Type})
 	logger.Debug("starting")
 	logger.Debug("completed")
@@ -107,6 +108,7 @@ func (l lockPick) checkExpiration(logger lager.Logger, lock *db.Lock, closeChan 
 		if expired {
 			logger.Info("lock-expired")
 			counter := l.locksExpiredCount
+			//lint:ignore SA1019 - backwards compatibility
 			if lock.Type == models.PresenceType {
 				counter = l.presencesExpiredCount
 			}

@@ -20,6 +20,7 @@ type locketHandler struct {
 	exitCh   chan<- struct{}
 	lockPick expiration.LockPick
 	metrics  metrics_helpers.RequestMetrics
+	models.UnimplementedLocketServer
 }
 
 func NewLocketHandler(logger lager.Logger, db db.LockDB, lockPick expiration.LockPick, requestMetrics metrics_helpers.RequestMetrics, exitCh chan<- struct{}) *locketHandler {
@@ -259,7 +260,7 @@ func validate(req interface{}) error {
 		return models.ErrInvalidType
 	}
 
-	if reqTypeCode == models.UNKNOWN {
+	if reqTypeCode == models.TypeCode_UNKNOWN {
 		return models.ErrInvalidType
 	}
 

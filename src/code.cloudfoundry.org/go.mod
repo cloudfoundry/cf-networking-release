@@ -18,7 +18,7 @@ require (
 	code.cloudfoundry.org/filelock v0.28.0
 	code.cloudfoundry.org/garden v0.0.0-20250212022216-de2fe4eea9a3
 	code.cloudfoundry.org/lager/v3 v3.26.0
-	code.cloudfoundry.org/locket v0.0.0-20241210012608-63e03b2bfad8
+	code.cloudfoundry.org/locket v0.0.0-20250214161435-aea6ad3c192f
 	code.cloudfoundry.org/policy_client v0.41.0
 	code.cloudfoundry.org/tlsconfig v0.18.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
@@ -66,7 +66,6 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20250208200701-d0013a598941 // indirect
 	github.com/gorilla/context v1.1.1 // indirect

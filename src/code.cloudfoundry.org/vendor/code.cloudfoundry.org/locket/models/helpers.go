@@ -2,7 +2,7 @@ package models
 
 func GetResource(resource *Resource) *Resource {
 	r := &Resource{Key: resource.Key, Owner: resource.Owner, Value: resource.Value}
-	if resource.TypeCode == UNKNOWN {
+	if resource.TypeCode == TypeCode_UNKNOWN {
 		r.TypeCode = GetTypeCode(resource.Type)
 		r.Type = resource.Type
 	} else {
@@ -15,19 +15,19 @@ func GetResource(resource *Resource) *Resource {
 func GetTypeCode(lockType string) TypeCode {
 	switch lockType {
 	case LockType:
-		return LOCK
+		return TypeCode_LOCK
 	case PresenceType:
-		return PRESENCE
+		return TypeCode_PRESENCE
 	default:
-		return UNKNOWN
+		return TypeCode_UNKNOWN
 	}
 }
 
 func GetType(resource *Resource) string {
 	switch resource.TypeCode {
-	case LOCK:
+	case TypeCode_LOCK:
 		return LockType
-	case PRESENCE:
+	case TypeCode_PRESENCE:
 		return PresenceType
 	default:
 		return resource.Type
