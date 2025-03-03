@@ -38,6 +38,7 @@ var _ = Describe("AppChecker", func() {
 			fakeAdapter.CheckAppReturns([]byte(str), nil)
 			fakeAdapter.OrgGuidReturns("some-org-guid", nil)
 			fakeAdapter.AppCountReturns(1, nil)
+			fakeAdapter.CheckAppReturns([]byte(`{"resources":[{"state":"RUNNING"},{"state":"RUNNING"}]}`), nil)
 		})
 		It("when the app is in state running", func() {
 			err := appChecker.CheckApps(appSpec)
@@ -58,6 +59,7 @@ var _ = Describe("AppChecker", func() {
 		Context("when an app is not running the specified number of instances", func() {
 			BeforeEach(func() {
 				appSpec["some-name-1"] = 1
+				fakeAdapter.CheckAppReturns([]byte(`{"resources":[{"state":"RUNNING"},{"state":"RUNNING"}]}`), nil)
 			})
 			It("returns an error", func() {
 				err := appChecker.CheckApps(appSpec)
@@ -71,6 +73,7 @@ var _ = Describe("AppChecker", func() {
 					Name: "banana",
 				})
 				fakeAdapter.AppCountReturns(2, nil)
+				fakeAdapter.CheckAppReturns([]byte(`{"resources":[{"state":"RUNNING"},{"state":"RUNNING"}]}`), nil)
 			})
 			It("returns a helpful error", func() {
 				err := appChecker.CheckApps(appSpec)
@@ -166,8 +169,7 @@ var _ = Describe("AppChecker", func() {
 
 		Context("when one app is not running", func() {
 			BeforeEach(func() {
-				str := `{ "guid": "some-guid-1", "name": "scale-tick-1", "running_instances": 1, "instances": 2, "state": "STARTED"}`
-				fakeAdapter.CheckAppReturns([]byte(str), nil)
+				fakeAdapter.CheckAppReturns([]byte(`{"resources":[{"state":"STARTED"}]}`), nil)
 			})
 			It("returns a meaningul error", func() {
 				err := appChecker.CheckApps(appSpec)

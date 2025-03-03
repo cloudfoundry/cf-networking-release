@@ -158,7 +158,8 @@ var _ = Describe("AppPusher", func() {
 
 				fakeAdapter.CheckAppStub = func(guid string) ([]byte, error) {
 					if guid == "app-to-be-skipped-guid" {
-						return []byte(`{"running_instances": 5}`), nil
+						fakeAdapter.CheckAppReturns([]byte(`{"resources":[{"state":"STARTED"}]}`), nil)
+						return []byte(`{"resources":[{"state":"RUNNING"},{"state":"RUNNING"},{"state":"RUNNING"},{"state":"RUNNING"},{"state":"RUNNING"}]}`), nil
 					} else if guid == "not-enough-instances-guid" {
 						return []byte(`{"running_instances": 3}`), nil
 					} else if guid == "failed-unmarshalling-app-guid" {
