@@ -91,20 +91,6 @@ type CCClient struct {
 		result1 cc_client.GetSecurityGroupsResponse
 		result2 error
 	}
-	GetSpaceStub        func(string, string) (*cc_client.SpaceResponse, error)
-	getSpaceMutex       sync.RWMutex
-	getSpaceArgsForCall []struct {
-		arg1 string
-		arg2 string
-	}
-	getSpaceReturns struct {
-		result1 *cc_client.SpaceResponse
-		result2 error
-	}
-	getSpaceReturnsOnCall map[int]struct {
-		result1 *cc_client.SpaceResponse
-		result2 error
-	}
 	GetSpaceGUIDsStub        func(string, []string) ([]string, error)
 	getSpaceGUIDsMutex       sync.RWMutex
 	getSpaceGUIDsArgsForCall []struct {
@@ -119,19 +105,19 @@ type CCClient struct {
 		result1 []string
 		result2 error
 	}
-	GetSubjectSpaceStub        func(string, string, cc_client.SpaceResponse) (*cc_client.SpaceResource, error)
+	GetSubjectSpaceStub        func(string, string, string) (*cc_client.RolesV3Resource, error)
 	getSubjectSpaceMutex       sync.RWMutex
 	getSubjectSpaceArgsForCall []struct {
 		arg1 string
 		arg2 string
-		arg3 cc_client.SpaceResponse
+		arg3 string
 	}
 	getSubjectSpaceReturns struct {
-		result1 *cc_client.SpaceResource
+		result1 *cc_client.RolesV3Resource
 		result2 error
 	}
 	getSubjectSpaceReturnsOnCall map[int]struct {
-		result1 *cc_client.SpaceResource
+		result1 *cc_client.RolesV3Resource
 		result2 error
 	}
 	GetSubjectSpacesStub        func(string, string) (map[string]struct{}, error)
@@ -555,71 +541,6 @@ func (fake *CCClient) GetSecurityGroupsWithPageReturnsOnCall(i int, result1 cc_c
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetSpace(arg1 string, arg2 string) (*cc_client.SpaceResponse, error) {
-	fake.getSpaceMutex.Lock()
-	ret, specificReturn := fake.getSpaceReturnsOnCall[len(fake.getSpaceArgsForCall)]
-	fake.getSpaceArgsForCall = append(fake.getSpaceArgsForCall, struct {
-		arg1 string
-		arg2 string
-	}{arg1, arg2})
-	stub := fake.GetSpaceStub
-	fakeReturns := fake.getSpaceReturns
-	fake.recordInvocation("GetSpace", []interface{}{arg1, arg2})
-	fake.getSpaceMutex.Unlock()
-	if stub != nil {
-		return stub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *CCClient) GetSpaceCallCount() int {
-	fake.getSpaceMutex.RLock()
-	defer fake.getSpaceMutex.RUnlock()
-	return len(fake.getSpaceArgsForCall)
-}
-
-func (fake *CCClient) GetSpaceCalls(stub func(string, string) (*cc_client.SpaceResponse, error)) {
-	fake.getSpaceMutex.Lock()
-	defer fake.getSpaceMutex.Unlock()
-	fake.GetSpaceStub = stub
-}
-
-func (fake *CCClient) GetSpaceArgsForCall(i int) (string, string) {
-	fake.getSpaceMutex.RLock()
-	defer fake.getSpaceMutex.RUnlock()
-	argsForCall := fake.getSpaceArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *CCClient) GetSpaceReturns(result1 *cc_client.SpaceResponse, result2 error) {
-	fake.getSpaceMutex.Lock()
-	defer fake.getSpaceMutex.Unlock()
-	fake.GetSpaceStub = nil
-	fake.getSpaceReturns = struct {
-		result1 *cc_client.SpaceResponse
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *CCClient) GetSpaceReturnsOnCall(i int, result1 *cc_client.SpaceResponse, result2 error) {
-	fake.getSpaceMutex.Lock()
-	defer fake.getSpaceMutex.Unlock()
-	fake.GetSpaceStub = nil
-	if fake.getSpaceReturnsOnCall == nil {
-		fake.getSpaceReturnsOnCall = make(map[int]struct {
-			result1 *cc_client.SpaceResponse
-			result2 error
-		})
-	}
-	fake.getSpaceReturnsOnCall[i] = struct {
-		result1 *cc_client.SpaceResponse
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *CCClient) GetSpaceGUIDs(arg1 string, arg2 []string) ([]string, error) {
 	var arg2Copy []string
 	if arg2 != nil {
@@ -690,13 +611,13 @@ func (fake *CCClient) GetSpaceGUIDsReturnsOnCall(i int, result1 []string, result
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetSubjectSpace(arg1 string, arg2 string, arg3 cc_client.SpaceResponse) (*cc_client.SpaceResource, error) {
+func (fake *CCClient) GetSubjectSpace(arg1 string, arg2 string, arg3 string) (*cc_client.RolesV3Resource, error) {
 	fake.getSubjectSpaceMutex.Lock()
 	ret, specificReturn := fake.getSubjectSpaceReturnsOnCall[len(fake.getSubjectSpaceArgsForCall)]
 	fake.getSubjectSpaceArgsForCall = append(fake.getSubjectSpaceArgsForCall, struct {
 		arg1 string
 		arg2 string
-		arg3 cc_client.SpaceResponse
+		arg3 string
 	}{arg1, arg2, arg3})
 	stub := fake.GetSubjectSpaceStub
 	fakeReturns := fake.getSubjectSpaceReturns
@@ -717,41 +638,41 @@ func (fake *CCClient) GetSubjectSpaceCallCount() int {
 	return len(fake.getSubjectSpaceArgsForCall)
 }
 
-func (fake *CCClient) GetSubjectSpaceCalls(stub func(string, string, cc_client.SpaceResponse) (*cc_client.SpaceResource, error)) {
+func (fake *CCClient) GetSubjectSpaceCalls(stub func(string, string, string) (*cc_client.RolesV3Resource, error)) {
 	fake.getSubjectSpaceMutex.Lock()
 	defer fake.getSubjectSpaceMutex.Unlock()
 	fake.GetSubjectSpaceStub = stub
 }
 
-func (fake *CCClient) GetSubjectSpaceArgsForCall(i int) (string, string, cc_client.SpaceResponse) {
+func (fake *CCClient) GetSubjectSpaceArgsForCall(i int) (string, string, string) {
 	fake.getSubjectSpaceMutex.RLock()
 	defer fake.getSubjectSpaceMutex.RUnlock()
 	argsForCall := fake.getSubjectSpaceArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *CCClient) GetSubjectSpaceReturns(result1 *cc_client.SpaceResource, result2 error) {
+func (fake *CCClient) GetSubjectSpaceReturns(result1 *cc_client.RolesV3Resource, result2 error) {
 	fake.getSubjectSpaceMutex.Lock()
 	defer fake.getSubjectSpaceMutex.Unlock()
 	fake.GetSubjectSpaceStub = nil
 	fake.getSubjectSpaceReturns = struct {
-		result1 *cc_client.SpaceResource
+		result1 *cc_client.RolesV3Resource
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetSubjectSpaceReturnsOnCall(i int, result1 *cc_client.SpaceResource, result2 error) {
+func (fake *CCClient) GetSubjectSpaceReturnsOnCall(i int, result1 *cc_client.RolesV3Resource, result2 error) {
 	fake.getSubjectSpaceMutex.Lock()
 	defer fake.getSubjectSpaceMutex.Unlock()
 	fake.GetSubjectSpaceStub = nil
 	if fake.getSubjectSpaceReturnsOnCall == nil {
 		fake.getSubjectSpaceReturnsOnCall = make(map[int]struct {
-			result1 *cc_client.SpaceResource
+			result1 *cc_client.RolesV3Resource
 			result2 error
 		})
 	}
 	fake.getSubjectSpaceReturnsOnCall[i] = struct {
-		result1 *cc_client.SpaceResource
+		result1 *cc_client.RolesV3Resource
 		result2 error
 	}{result1, result2}
 }
@@ -836,8 +757,6 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getSecurityGroupsLastUpdateMutex.RUnlock()
 	fake.getSecurityGroupsWithPageMutex.RLock()
 	defer fake.getSecurityGroupsWithPageMutex.RUnlock()
-	fake.getSpaceMutex.RLock()
-	defer fake.getSpaceMutex.RUnlock()
 	fake.getSpaceGUIDsMutex.RLock()
 	defer fake.getSpaceGUIDsMutex.RUnlock()
 	fake.getSubjectSpaceMutex.RLock()

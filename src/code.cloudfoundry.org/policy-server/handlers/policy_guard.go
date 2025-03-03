@@ -37,14 +37,7 @@ func (g *PolicyGuard) CheckAccess(policies []store.Policy, subjectToken uaa_clie
 		return false, fmt.Errorf("getting space guids: %s", err)
 	}
 	for _, guid := range spaceGUIDs {
-		space, err := g.CCClient.GetSpace(token, guid)
-		if err != nil {
-			return false, fmt.Errorf("getting space with guid %s: %s", guid, err)
-		}
-		if space == nil {
-			return false, nil
-		}
-		subjectSpace, err := g.CCClient.GetSubjectSpace(token, subjectToken.Subject, *space)
+		subjectSpace, err := g.CCClient.GetSubjectSpace(token, subjectToken.Subject, guid)
 		if err != nil {
 			return false, fmt.Errorf("getting space with guid %s: %s", guid, err)
 		}

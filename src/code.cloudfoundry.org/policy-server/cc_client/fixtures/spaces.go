@@ -81,7 +81,7 @@ const SpaceV3LiveSpaces = `{
          "relationships": {
             "organization": {
                "data": {
-                  "guid": "3638bc38-4e7a-45c9-8119-40af6f58b088"
+                  "guid": "org-1-guid"
                }
             }
          }
@@ -94,12 +94,44 @@ const SpaceV3LiveSpaces = `{
          "relationships": {
             "organization": {
                "data": {
-                  "guid": "3638bc38-4e7a-45c9-8119-40af6f58b088"
+                  "guid": "org-1-guid"
                }
             }
          }
       }
    ]
+}`
+
+const SpaceV3LiveSpace1 = `{
+   "resources": [
+      {
+         "guid": "space-1-guid",
+         "name": "space-1",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "org-1-guid"
+               }
+            }
+         }
+      }
+    ]
+}`
+
+const SpaceV3LiveSpace2 = `{
+   "resources": [
+      {
+         "guid": "space-2-guid",
+         "name": "space-2",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "org-1-guid"
+               }
+            }
+         }
+      }
+    ]
 }`
 
 const SpaceV3MultiplePages = `{

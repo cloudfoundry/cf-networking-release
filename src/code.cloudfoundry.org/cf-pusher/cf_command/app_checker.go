@@ -21,11 +21,25 @@ type AppChecker struct {
 }
 
 type AppStatus struct {
-	GUID             string `json:"guid"`
-	Name             string `json:"name"`
-	RunningInstances int    `json:"running_instances"`
-	Instances        int    `json:"instances"`
-	State            string `json:"state"`
+	Resources []AppResource `json:"resources"`
+}
+
+type AppResource struct {
+	State string `json:"state"`
+}
+
+func (a AppStatus) Running() int {
+	count := 0
+	for _, value := range a.Resources {
+		if value.State == "RUNNING" {
+			count++
+		}
+	}
+	return count
+
+}
+func (a AppStatus) Total() int {
+	return len(a.Resources)
 }
 
 func (a *AppChecker) CheckApps(appSpec map[string]int) error {
@@ -66,19 +80,19 @@ func (a *AppChecker) CheckApps(appSpec map[string]int) error {
 				return
 			}
 
-			if s.Instances == 0 {
+			if s.Total() == 0 {
 				errs <- fmt.Errorf("checking app %s: %s", app.Name, "no instances are running")
 				return
 			}
 
-			if s.RunningInstances != s.Instances {
+			if s.Running() != s.Total() {
 				errs <- fmt.Errorf("checking app %s: %s", app.Name, "not all instances are running")
 				return
 			}
 
 			if desiredInstances, ok := appSpec[app.Name]; ok {
-				if appSpec[app.Name] != s.RunningInstances {
-					errs <- fmt.Errorf("checking app %s: %s, running: %d desired: %d", app.Name, "not running desired instances", s.RunningInstances, desiredInstances)
+				if appSpec[app.Name] != s.Running() {
+					errs <- fmt.Errorf("checking app %s: %s, running: %d desired: %d", app.Name, "not running desired instances", s.Running(), desiredInstances)
 					return
 				}
 			} else {

@@ -2,6 +2,7 @@ package acceptance_test
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -14,6 +15,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
+
+const spaceClientID = "45733a09-a1c2-4990-b0ee-3e0428552c05"
 
 var _ = Describe("space developer policy configuration", func() {
 	var (
@@ -80,7 +83,7 @@ var _ = Describe("space developer policy configuration", func() {
 		Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		_, err = uaaAPI.CreateClient(uaa.Client{
-			ClientID:             "space-client",
+			ClientID:             spaceClientID,
 			ClientSecret:         "password",
 			DisplayName:          "space-client",
 			Authorities:          []string{"network.write", "cloud_controller.read"},
@@ -98,10 +101,58 @@ var _ = Describe("space developer policy configuration", func() {
 		spaceBGuid, err := cfCLI.SpaceGuid(spaceNameB)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid)).Wait()).To(gexec.Exit(0))
+		type organization struct {
+			Data struct {
+				Guid string `json:"guid,omitempty"`
+			} `json:"data,omitempty"`
+		}
+		type space struct {
+			Data struct {
+				Guid string `json:"guid,omitempty"`
+			} `json:"data,omitempty"`
+		}
+		type role struct {
+			Type          string `json:"type"`
+			Relationships struct {
+				User struct {
+					Data struct {
+						Guid string `json:"guid"`
+					} `json:"data"`
+				} `json:"user"`
+				Organization *organization `json:"organization,omitempty"`
+				Space        *space        `json:"space,omitempty"`
+			} `json:"relationships"`
+		}
 
-		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceAGuid))
-		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceBGuid))
+		r := new(role)
+		r.Type = "organization_user"
+		r.Relationships.User.Data.Guid = spaceClientID
+		r.Relationships.Organization = &organization{}
+		r.Relationships.Organization.Data.Guid = orgGuid
+
+		body, err := json.Marshal(r)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(cf.Cf("curl", "-X", "POST", "/v3/roles", "-d", string(body)).Wait()).To(gexec.Exit(0))
+
+		r1 := new(role)
+		r1.Type = "space_developer"
+		r1.Relationships.User.Data.Guid = spaceClientID
+		r1.Relationships.Space = &space{}
+		r1.Relationships.Space.Data.Guid = spaceAGuid
+		body, err = json.Marshal(r1)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(cf.Cf("curl", "-X", "POST", "/v3/roles", "-d", string(body)).Wait()).To(gexec.Exit(0))
+
+		r1 = new(role)
+		r1.Type = "space_developer"
+		r1.Relationships.User.Data.Guid = spaceClientID
+		r1.Relationships.Space = &space{}
+		r1.Relationships.Space.Data.Guid = spaceBGuid
+		body, err = json.Marshal(r1)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(cf.Cf("curl", "-X", "POST", "/v3/roles", "-d", string(body)).Wait()).To(gexec.Exit(0))
+
 	})
 
 	AfterEach(func() {
@@ -109,7 +160,7 @@ var _ = Describe("space developer policy configuration", func() {
 			Expect(cf.Cf("logout").Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("auth", config.AdminUser, config.AdminPassword).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-			uaaAPI.DeleteClient("space-client")
+			uaaAPI.DeleteClient(spaceClientID)
 
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
@@ -190,7 +241,7 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 		},
 			Entry("as a user", []string{"space-developer", "password"}),
-			Entry("as a service account", []string{"space-client", "password", "--client-credentials"}),
+			Entry("as a service account", []string{spaceClientID, "password", "--client-credentials"}),
 		)
 	})
 })

@@ -158,7 +158,9 @@ func (a *Adapter) SpaceGuid(name string) (string, error) {
 }
 
 type Apps struct {
-	TotalResults int `json:"total_results"`
+	Pagination struct {
+		TotalResults int `json:"total_results"`
+	} `json:"pagination"`
 }
 
 func (a *Adapter) OrgGuid(name string) (string, error) {
@@ -185,7 +187,7 @@ func (a *Adapter) Curl(method, path, inputFile string) ([]byte, error) {
 }
 
 func (a *Adapter) AppCount(orgGuid string) (int, error) {
-	commandArgs := []string{"curl", fmt.Sprintf("/v2/apps?q=organization_guid%%20IN%%20%s", orgGuid)}
+	commandArgs := []string{"curl", fmt.Sprintf("/v3/apps?organization_guids=%s", orgGuid)}
 	a.LogCommand(commandArgs)
 	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, err := a.runCombinedOutput(cmd)
@@ -193,11 +195,11 @@ func (a *Adapter) AppCount(orgGuid string) (int, error) {
 	if err := json.Unmarshal(bytes, apps); err != nil {
 		return -1, err
 	}
-	return apps.TotalResults, err
+	return apps.Pagination.TotalResults, err
 }
 
 func (a *Adapter) CheckApp(guid string) ([]byte, error) {
-	commandArgs := []string{"curl", fmt.Sprintf("/v2/apps/%s/summary", guid)}
+	commandArgs := []string{"curl", fmt.Sprintf("/v3/apps/%s/processes/web/stats", guid)}
 	a.LogCommand(commandArgs)
 	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	return a.runCombinedOutput(cmd)

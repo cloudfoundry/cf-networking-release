@@ -20,9 +20,8 @@ const SECURITY_GROUPS_PER_PAGE = 5000
 //counterfeiter:generate -o fakes/cc_client.go --fake-name CCClient . CCClient
 type CCClient interface {
 	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
-	GetSpace(token, spaceGUID string) (*SpaceResponse, error)
 	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
-	GetSubjectSpace(token, subjectId string, spaces SpaceResponse) (*SpaceResource, error)
+	GetSubjectSpace(token, subjectId, spaceGUID string) (*RolesV3Resource, error)
 	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
@@ -109,6 +108,35 @@ type AppsV3Response struct {
 	} `json:"resources"`
 }
 
+type RolesV3Response struct {
+	Pagination struct {
+		TotalPages  int `json:"total_pages"`
+		TotalResult int `json:"total_result"`
+		First       struct {
+			Href string `json:"href"`
+		} `json:"first"`
+		Last struct {
+			Href string `json:"href"`
+		} `json:"last"`
+		Next struct {
+			Href string `json:"href"`
+		} `json:"next"`
+	} `json:"pagination"`
+	Resources []RolesV3Resource `json:"resources"`
+}
+
+type RolesV3Resource struct {
+	Relationships RoleRelationship `json:"relationships"`
+}
+
+type RoleRelationship struct {
+	Space struct {
+		Data struct {
+			GUID string `json:"guid"`
+		} `json:"data"`
+	} `json:"space"`
+}
+
 type SpacesV3Response struct {
 	Pagination struct {
 		TotalPages int `json:"total_pages"`
@@ -122,33 +150,20 @@ type SpacesV3Response struct {
 			Href string `json:"href"`
 		} `json:"next"`
 	} `json:"pagination"`
-	Resources []struct {
-		GUID string `json:"guid"`
-	} `json:"resources"`
+	Resources []SpacesV3Resource `json:"resources"`
 }
 
-type SpaceResponse struct {
-	Entity SpaceEntity `json:"entity"`
+type SpacesV3Resource struct {
+	GUID          string             `json:"guid"`
+	Name          string             `json:"name"`
+	Relationships SpaceRelationships `json:"relationships"`
 }
-
-type SpaceEntity struct {
-	Name             string `json:"name"`
-	OrganizationGUID string `json:"organization_guid"`
-}
-
-type SpaceResource struct {
-	Metadata struct {
-		GUID string `json:"guid"`
-	}
-	Entity SpaceEntity `json:"entity"`
-}
-
-type SpacesResponse struct {
-	TotalResults int64           `json:"total_results"`
-	TotalPages   int64           `json:"total_pages"`
-	PrevUrl      string          `json:"prev_url"`
-	NextUrl      string          `json:"next_url"`
-	Resources    []SpaceResource `json:"resources"`
+type SpaceRelationships struct {
+	Organization struct {
+		Data struct {
+			GUID string `json:"guid"`
+		} `json:"data"`
+	} `json:"organization"`
 }
 
 func (c *Client) GetAllAppGUIDs(token string) (map[string]struct{}, error) {
@@ -316,13 +331,13 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	return set, nil
 }
 
-func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
+func (c *Client) GetSpace(token, spaceGUID string) (*SpacesV3Response, error) {
 	c.Logger.Info("get-space", lager.Data{"space-guid": spaceGUID})
 	token = fmt.Sprintf("bearer %s", token)
-	route := fmt.Sprintf("/v2/spaces/%s", spaceGUID)
+	route := fmt.Sprintf("/v3/spaces?guids=%s", spaceGUID)
 	c.Logger.Debug("get-space-request", lager.Data{"route": route})
 
-	var response SpaceResponse
+	var response SpacesV3Response
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		typedErr, ok := err.(*json_client.HttpResponseCodeError)
@@ -335,25 +350,26 @@ func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
 		}
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
-	c.Logger.Debug("get-space-response", lager.Data{"resources": response.Entity})
+	c.Logger.Debug("get-space-response", lager.Data{"resources": response.Resources})
 
 	return &response, nil
 }
 
-func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (*SpaceResource, error) {
-	c.Logger.Info("get-subject-space", lager.Data{"subject-id": subjectId, "space-response": space})
+func (c *Client) GetSubjectSpace(token, subjectId, spaceGUID string) (*RolesV3Resource, error) {
+	c.Logger.Info("get-subject-space", lager.Data{"subject-id": subjectId, "space-guid": spaceGUID})
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
-	values.Add("q", fmt.Sprintf("developer_guid:%s", subjectId))
-	values.Add("q", fmt.Sprintf("name:%s", space.Entity.Name))
-	values.Add("q", fmt.Sprintf("organization_guid:%s", space.Entity.OrganizationGUID))
+	values.Add("types", "space_developer")
+	values.Add("user_guids", subjectId)
+	values.Add("space_guids", spaceGUID)
+	values.Add("include", "space")
 
-	route := fmt.Sprintf("/v2/spaces?%s", values.Encode())
+	route := fmt.Sprintf("/v3/roles?%s", values.Encode())
 
 	c.Logger.Debug("get-subject-space-request", lager.Data{"route": route})
 
-	var response SpacesResponse
+	var response RolesV3Response
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
@@ -379,29 +395,31 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
-	values.Add("results-per-page", maximumPageSize)
+	values.Add("per_page", maximumPageSize)
+	values.Add("user_guids", subjectId)
+	values.Add("include", "space")
 
-	route := fmt.Sprintf("/v2/users/%s/spaces?%s", subjectId, values.Encode())
+	route := fmt.Sprintf("/v3/roles?%s", values.Encode())
 
 	c.Logger.Debug("get-subject-spaces-request", lager.Data{"route": route})
 
-	var resources []SpaceResource
+	var resources []RolesV3Resource
 	for route != "" {
-		var response SpacesResponse
+		var response RolesV3Response
 		err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
 		if err != nil {
 			return nil, fmt.Errorf("json client do: %s", err)
 		}
 
-		c.Logger.Debug("get-subject-spaces-response", lager.Data{"resources": response.Resources, "next-url": response.NextUrl})
+		c.Logger.Debug("get-subject-spaces-response", lager.Data{"resources": response.Resources, "next-url": response.Pagination.Next.Href})
 
-		route = response.NextUrl
+		route = response.Pagination.Next.Href
 		resources = append(resources, response.Resources...)
 	}
 
 	subjectSpaces := map[string]struct{}{}
 	for _, space := range resources {
-		spaceID := space.Metadata.GUID
+		spaceID := space.Relationships.Space.Data.GUID
 		subjectSpaces[spaceID] = struct{}{}
 	}
 
