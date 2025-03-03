@@ -83,7 +83,7 @@ func Auth(username, password string) {
 }
 
 func getUAABaseURL() string {
-	sess := cf.Cf("curl", "/v2/info")
+	sess := cf.Cf("curl", "/info")
 	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
 	var response struct {
 		TokenEndpoint string `json:"token_endpoint"`
@@ -147,27 +147,33 @@ func waitForAllInstancesToBeRunning(appName string) {
 	appGuidSession := cf.Cf("app", appName, "--guid")
 	Expect(appGuidSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 
-	capiURL := fmt.Sprintf("v2/apps/%s/instances", strings.TrimSpace(string(appGuidSession.Out.Contents())))
+	capiURL := fmt.Sprintf("/v3/apps/%s/processes/web/stats", strings.TrimSpace(string(appGuidSession.Out.Contents())))
 
-	type instanceInfo struct {
-		State string `json:"state"`
+	type stats struct {
+		Resources []struct {
+			Routable bool   `json:"routable"`
+			State    string `json:"state"`
+		} `json:"resources"`
 	}
 
-	instances := make(map[string]instanceInfo)
+	var s stats
 
 	allInstancesRunning := func() bool {
 		session := cf.Cf("curl", capiURL)
 		Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
-		json.Unmarshal(session.Out.Contents(), &instances)
-		Expect(instances).To(Not(BeEmpty()))
+		json.Unmarshal(session.Out.Contents(), &s)
+		Expect(s.Resources).NotTo(BeEmpty())
 
-		for _, instance := range instances {
-			if instance.State != "RUNNING" {
-				return false
+		running := false
+		for _, instance := range s.Resources {
+			if instance.State == "RUNNING" && instance.Routable {
+				running = true
+			} else {
+				running = false
 			}
 		}
-		return true
+		return running
 	}
 
 	Eventually(allInstancesRunning, "30s", "500ms").Should(Equal(true), "not all instances running")

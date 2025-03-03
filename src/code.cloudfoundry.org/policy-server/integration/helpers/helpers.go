@@ -64,44 +64,50 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	}
 
 	if r.URL.Path == "/v3/spaces" {
-		w.WriteHeader(http.StatusOK)
-		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
-		w.Write([]byte(fixtures.SpaceV3LiveSpaces))
+		if strings.Contains(r.URL.RawQuery, "space-1") {
+			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
+			w.Write([]byte(fixtures.SpaceV3LiveSpace1))
+		} else if strings.Contains(r.URL.RawQuery, "space-2") {
+			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
+			w.Write([]byte(fixtures.SpaceV3LiveSpace2))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
+			w.Write([]byte(fixtures.SpaceV3LiveSpaces))
+		}
 		return
 	}
 
-	if r.URL.Path == "/v2/spaces/space-1-guid" {
+	if r.URL.Path == "/v3/spaces/space-1-guid" {
 		w.WriteHeader(http.StatusOK)
 		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.Space1))
 		return
 	}
-	if r.URL.Path == "/v2/spaces/space-2-guid" {
+	if r.URL.Path == "/v3/spaces/space-2-guid" {
 		w.WriteHeader(http.StatusOK)
 		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.Space2))
 		return
 	}
 
-	if r.URL.Path == "/v2/spaces" {
-		if strings.Contains(r.URL.RawQuery, "space-1") {
-			w.WriteHeader(http.StatusOK)
-			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
-			w.Write([]byte(fixtures.SubjectSpace))
-			return
-		}
-		if strings.Contains(r.URL.RawQuery, "space-2") {
-			w.WriteHeader(http.StatusOK)
-			// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
-			w.Write([]byte(fixtures.SubjectSpaceEmpty))
-			return
-		}
-	}
-
-	if r.URL.Path == "/v2/users/some-user-or-client-id/spaces" {
+	if r.URL.Path == "/v3/roles" && !r.URL.Query().Has("types") {
 		w.WriteHeader(http.StatusOK)
 		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
 		w.Write([]byte(fixtures.SubjectSpaces))
+		return
+	}
+
+	if r.URL.Path == "/v3/roles" && r.URL.Query().Has("types") {
+		w.WriteHeader(http.StatusOK)
+		spaces := map[string]string{
+			"space-1-guid": fixtures.SubjectSpace1,
+			"space-2-guid": fixtures.SubjectSpace2,
+		}
+		// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
+		w.Write([]byte(spaces[r.URL.Query().Get("space_guids")]))
 		return
 	}
 

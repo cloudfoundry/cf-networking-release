@@ -1,37 +1,39 @@
 package fixtures
 
 const SubjectSpace = `{
-  "total_results": 1,
-  "total_pages": 1,
-  "prev_url": null,
-  "next_url": null,
-  "resources": [
-    {
-      "metadata": {
-        "guid": "2e100106-0b74-4062-8671-0d375f951cb4",
-        "url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4",
-        "created_at": "2016-06-08T16:41:40Z",
-        "updated_at": "2016-06-08T16:41:26Z"
-      },
-      "entity": {
-        "name": "some-space-name",
-        "organization_guid": "some-org-guid",
-        "space_quota_definition_guid": null,
-        "allow_ssh": true,
-        "organization_url": "/v2/organizations/some-org-guid",
-        "developers_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/developers",
-        "managers_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/managers",
-        "auditors_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/auditors",
-        "apps_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/apps",
-        "routes_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/routes",
-        "domains_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/domains",
-        "service_instances_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/service_instances",
-        "app_events_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/app_events",
-        "events_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/events",
-        "security_groups_url": "/v2/spaces/2e100106-0b74-4062-8671-0d375f951cb4/security_groups"
+  "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
+  "created_at": "2017-02-01T01:33:58Z",
+  "updated_at": "2017-02-01T01:33:58Z",
+  "name": "some-space-name,
+  "relationships": {
+    "organization": {
+      "data": {
+        "guid": "e00705b9-7b42-4561-ae97-2520399d2133"
       }
+    },
+    "quota": {
+      "data": null
     }
-  ]
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920"
+    },
+    "features": {
+      "href": "https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/features"
+    },
+    "organization": {
+      "href": "https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"
+    },
+    "apply_manifest": {
+      "href": "https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920/actions/apply_manifest",
+      "method": "POST"
+    }
+  },
+  "metadata": {
+    "labels": {},
+    "annotations": {}
+  }
 }`
 
 const SubjectSpaceEmpty = `{
@@ -43,160 +45,221 @@ const SubjectSpaceEmpty = `{
 }`
 
 const SubjectSpaces = `{
-  "total_results": 2,
-  "total_pages": 1,
-  "prev_url": null,
-  "next_url": null,
-  "resources": [
-    {
-      "metadata": {
-        "guid": "space-1-guid",
-        "url": "/v2/spaces/space-1-guid",
-        "created_at": "2016-06-08T16:41:40Z",
-        "updated_at": "2016-06-08T16:41:26Z"
+   "resources": [
+      {
+         "guid": "guid-1",
+         "type": "space_developer",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "org-2-guid"
+               }
+            },
+            "space": {
+               "data": {
+                  "guid": "space-1-guid"
+               }
+            }
+         }
       },
-      "entity": {
-        "name": "space-1-name",
-        "organization_guid": "org-1-guid",
-        "space_quota_definition_guid": null,
-        "allow_ssh": true,
-        "organization_url": "/v2/organizations/org-1-guid",
-        "developers_url": "/v2/spaces/space-1-guid/developers",
-        "managers_url": "/v2/spaces/space-1-guid/managers",
-        "auditors_url": "/v2/spaces/space-1-guid/auditors",
-        "apps_url": "/v2/spaces/space-1-guid/apps",
-        "routes_url": "/v2/spaces/space-1-guid/routes",
-        "domains_url": "/v2/spaces/space-1-guid/domains",
-        "service_instances_url": "/v2/spaces/space-1-guid/service_instances",
-        "app_events_url": "/v2/spaces/space-1-guid/app_events",
-        "events_url": "/v2/spaces/space-1-guid/events",
-        "security_groups_url": "/v2/spaces/space-1-guid/security_groups"
+      {
+         "guid": "guid-2",
+         "type": "space_developer",
+         "relationships": {
+            "organization": {
+               "data": {
+		  "guid": "org-2-guid"
+               }
+            },
+            "space": {
+               "data": {
+                  "guid": "space-2-guid"
+               }
+            }
+         }
       }
-    },
-    {
-      "metadata": {
-        "guid": "space-2-guid",
-        "url": "/v2/spaces/space-2-guid",
-        "created_at": "2016-06-08T16:41:40Z",
-        "updated_at": "2016-06-08T16:41:26Z"
-      },
-      "entity": {
-        "name": "space-2-name",
-        "organization_guid": "org-2-guid",
-        "space_quota_definition_guid": null,
-        "allow_ssh": true,
-        "organization_url": "/v2/organizations/org-2-guid",
-        "developers_url": "/v2/spaces/space-2-guid/developers",
-        "managers_url": "/v2/spaces/space-2-guid/managers",
-        "auditors_url": "/v2/spaces/space-2-guid/auditors",
-        "apps_url": "/v2/spaces/space-2-guid/apps",
-        "routes_url": "/v2/spaces/space-2-guid/routes",
-        "domains_url": "/v2/spaces/space-2-guid/domains",
-        "service_instances_url": "/v2/spaces/space-2-guid/service_instances",
-        "app_events_url": "/v2/spaces/space-2-guid/app_events",
-        "events_url": "/v2/spaces/space-2-guid/events",
-        "security_groups_url": "/v2/spaces/space-2-guid/security_groups"
+   ]
+}`
+
+const SubjectSpace1 = `{
+   "resources": [
+      {
+         "guid": "guid-1",
+         "type": "space_developer",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "org-2-guid"
+               }
+            },
+            "space": {
+               "data": {
+                  "guid": "space-1-guid"
+               }
+            }
+         }
       }
-    }
   ]
 }`
 
+const SubjectSpace2 = `{}`
+
 const SubjectSpacesPage1 = `{
-  "total_results": 3,
-  "total_pages": 3,
-  "prev_url": null,
-  "next_url": "/v2/users/some-subject-id/spaces?order-direction=asc&page=2&results-per-page=1",
-  "resources": [
-    {
-      "metadata": {
-        "guid": "space-1-guid",
-        "url": "/v2/spaces/space-1-guid",
-        "created_at": "2016-06-08T16:41:40Z",
-        "updated_at": "2016-06-08T16:41:26Z"
+   "pagination": {
+      "total_results": 3,
+      "total_pages": 3,
+      "first": {
+         "href": "https://api.example.org/v3/roles?page=1&per_page=2"
       },
-      "entity": {
-        "name": "space-1-name",
-        "organization_guid": "org-1-guid",
-        "space_quota_definition_guid": null,
-        "allow_ssh": true,
-        "organization_url": "/v2/organizations/org-1-guid",
-        "developers_url": "/v2/spaces/space-1-guid/developers",
-        "managers_url": "/v2/spaces/space-1-guid/managers",
-        "auditors_url": "/v2/spaces/space-1-guid/auditors",
-        "apps_url": "/v2/spaces/space-1-guid/apps",
-        "routes_url": "/v2/spaces/space-1-guid/routes",
-        "domains_url": "/v2/spaces/space-1-guid/domains",
-        "service_instances_url": "/v2/spaces/space-1-guid/service_instances",
-        "app_events_url": "/v2/spaces/space-1-guid/app_events",
-        "events_url": "/v2/spaces/space-1-guid/events",
-        "security_groups_url": "/v2/spaces/space-1-guid/security_groups"
+      "last": {
+         "href": "https://api.example.org/v3/roles?page=3&per_page=2"
+      },
+      "next": {
+         "href": "https://api.example.org/v3/roles?page=2&per_page=2"
+      },
+      "previous": null
+   },
+   "resources": [
+      {
+         "guid": "40557c70-d1bd-4976-a2ab-a85f5e882418",
+         "created_at": "2019-10-10T17:19:12Z",
+         "updated_at": "2019-10-10T17:19:12Z",
+         "type": "organization_auditor",
+         "relationships": {
+            "user": {
+               "data": {
+                  "guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"
+               }
+            },
+            "organization": {
+               "data": {
+                  "guid": "05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+               }
+            },
+            "space": {
+               "data": {
+                  "guid": "space-1-guid"
+               }
+            }
+         },
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418"
+            },
+            "user": {
+               "href": "https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8"
+            },
+            "organization": {
+               "href": "https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+            }
+         }
       }
-    }
-  ]
+   ]
 }`
 const SubjectSpacesPage2 = `{
-  "total_results": 3,
-  "total_pages": 3,
-  "prev_url": "/v2/users/some-subject-id/spaces?order-direction=asc&page=1&results-per-page=1",
-  "next_url": "/v2/users/some-subject-id/spaces?order-direction=asc&page=3&results-per-page=1",
-  "resources": [
-    {
-      "metadata": {
-        "guid": "space-2-guid",
-        "url": "/v2/spaces/space-2-guid",
-        "created_at": "2016-06-08T16:41:40Z",
-        "updated_at": "2016-06-08T16:41:26Z"
+   "pagination": {
+      "total_results": 3,
+      "total_pages": 3,
+      "first": {
+         "href": "https://api.example.org/v3/roles?page=1&per_page=2"
       },
-      "entity": {
-        "name": "space-2-name",
-        "organization_guid": "org-2-guid",
-        "space_quota_definition_guid": null,
-        "allow_ssh": true,
-        "organization_url": "/v2/organizations/org-2-guid",
-        "developers_url": "/v2/spaces/space-2-guid/developers",
-        "managers_url": "/v2/spaces/space-2-guid/managers",
-        "auditors_url": "/v2/spaces/space-2-guid/auditors",
-        "apps_url": "/v2/spaces/space-2-guid/apps",
-        "routes_url": "/v2/spaces/space-2-guid/routes",
-        "domains_url": "/v2/spaces/space-2-guid/domains",
-        "service_instances_url": "/v2/spaces/space-2-guid/service_instances",
-        "app_events_url": "/v2/spaces/space-2-guid/app_events",
-        "events_url": "/v2/spaces/space-2-guid/events",
-        "security_groups_url": "/v2/spaces/space-2-guid/security_groups"
+      "last": {
+         "href": "https://api.example.org/v3/roles?page=3&per_page=2"
+      },
+      "next": {
+         "href": "https://api.example.org/v3/roles?page=3&per_page=2"
+      },
+      "previous": {
+         "href": "https://api.example.org/v3/roles?page=1&per_page=2"
       }
-    }
-  ]
+   },
+   "resources": [
+      {
+         "guid": "40557c70-d1bd-4976-a2ab-a85f5e882418",
+         "created_at": "2019-10-10T17:19:12Z",
+         "updated_at": "2019-10-10T17:19:12Z",
+         "type": "organization_auditor",
+         "relationships": {
+            "user": {
+               "data": {
+                  "guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"
+               }
+            },
+            "organization": {
+               "data": {
+                  "guid": "05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+               }
+            },
+            "space": {
+               "data": {
+                  "guid": "space-2-guid"
+               }
+
+            }
+         },
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418"
+            },
+            "user": {
+               "href": "https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8"
+            },
+            "organization": {
+               "href": "https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+            }
+         }
+      }
+   ]
 }`
 const SubjectSpacesPage3 = `{
-  "total_results": 3,
-  "total_pages": 3,
-  "prev_url": "/v2/users/some-subject-id/spaces?order-direction=asc&page=2&results-per-page=1",
-  "next_url": null,
-  "resources": [
-    {
-      "metadata": {
-        "guid": "space-3-guid",
-        "url": "/v2/spaces/space-3-guid",
-        "created_at": "2016-06-08T16:41:40Z",
-        "updated_at": "2016-06-08T16:41:26Z"
+   "pagination": {
+      "total_results": 3,
+      "total_pages": 3,
+      "first": {
+         "href": "https://api.example.org/v3/roles?page=1&per_page=2"
       },
-      "entity": {
-        "name": "space-3-name",
-        "organization_guid": "org-3-guid",
-        "space_quota_definition_guid": null,
-        "allow_ssh": true,
-        "organization_url": "/v2/organizations/org-3-guid",
-        "developers_url": "/v2/spaces/space-3-guid/developers",
-        "managers_url": "/v2/spaces/space-3-guid/managers",
-        "auditors_url": "/v2/spaces/space-3-guid/auditors",
-        "apps_url": "/v2/spaces/space-3-guid/apps",
-        "routes_url": "/v2/spaces/space-3-guid/routes",
-        "domains_url": "/v2/spaces/space-3-guid/domains",
-        "service_instances_url": "/v2/spaces/space-3-guid/service_instances",
-        "app_events_url": "/v2/spaces/space-3-guid/app_events",
-        "events_url": "/v2/spaces/space-3-guid/events",
-        "security_groups_url": "/v2/spaces/space-3-guid/security_groups"
+      "last": {
+         "href": "https://api.example.org/v3/roles?page=3&per_page=2"
+      },
+      "next": null,
+      "previous": {
+         "href": "https://api.example.org/v3/roles?page=2&per_page=2"
       }
-    }
-  ]
+   },
+   "resources": [
+      {
+         "guid": "40557c70-d1bd-4976-a2ab-a85f5e882418",
+         "created_at": "2019-10-10T17:19:12Z",
+         "updated_at": "2019-10-10T17:19:12Z",
+         "type": "organization_auditor",
+         "relationships": {
+            "user": {
+               "data": {
+                  "guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"
+               }
+            },
+            "organization": {
+               "data": {
+                  "guid": "05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+               }
+            },
+            "space": {
+               "data": {
+                  "guid": "space-3-guid"
+               }
+            }
+         },
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418"
+            },
+            "user": {
+               "href": "https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8"
+            },
+            "organization": {
+               "href": "https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+            }
+         }
+      }
+   ]
 }`

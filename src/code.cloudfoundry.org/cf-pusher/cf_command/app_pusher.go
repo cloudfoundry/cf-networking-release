@@ -46,7 +46,7 @@ func (a *AppPusher) shouldPushApp(name string) bool {
 
 		s := &AppStatus{}
 		err = json.Unmarshal(appBytes, s)
-		if err != nil || s.RunningInstances < a.DesiredRunningInstances {
+		if err != nil || s.Running() < a.DesiredRunningInstances {
 			// Error unmarshalling response
 			return true
 		}

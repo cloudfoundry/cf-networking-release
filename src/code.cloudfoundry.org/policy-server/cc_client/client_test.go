@@ -296,12 +296,11 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the space with the matching GUID", func() {
-			space := cc_client.SpaceResponse{
-				Entity: cc_client.SpaceEntity{
-					Name:             "name-2064",
-					OrganizationGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
-				},
-			}
+			space := new(cc_client.SpacesV3Response)
+			space.Resources = make([]cc_client.SpacesV3Resource, 1)
+			space.Resources[0].Name = "some-space-name"
+			space.Resources[0].GUID = "some-space-guid"
+			space.Resources[0].Relationships.Organization.Data.GUID = "6e1ca5aa-55f1-4110-a97f-1f3473e771b9"
 
 			matchingSpace, err := client.GetSpace("some-token", "some-space-guid")
 			Expect(err).NotTo(HaveOccurred())
@@ -311,11 +310,11 @@ var _ = Describe("Client", func() {
 			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v2/spaces/some-space-guid"))
+			Expect(route).To(Equal("/v3/spaces?guids=some-space-guid"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
-			Expect(matchingSpace).To(Equal(&space))
+			Expect(matchingSpace).To(Equal(space))
 		})
 
 		Context("when the json client returns an error", func() {
@@ -471,21 +470,21 @@ var _ = Describe("Client", func() {
 			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?results-per-page=100"))
+			Expect(route).To(Equal("/v3/roles?include=space&per_page=100&user_guids=some-subject-id"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
 			method, route, reqData, _, token = fakeExternalJSONClient.DoArgsForCall(1)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?order-direction=asc&page=2&results-per-page=1"))
+			Expect(route).To(Equal("https://api.example.org/v3/roles?page=2&per_page=2"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
 			method, route, reqData, _, token = fakeExternalJSONClient.DoArgsForCall(2)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?order-direction=asc&page=3&results-per-page=1"))
+			Expect(route).To(Equal("https://api.example.org/v3/roles?page=3&per_page=2"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
@@ -509,33 +508,15 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetSubjectSpace", func() {
-		space := cc_client.SpaceResponse{
-			Entity: cc_client.SpaceEntity{
-				Name:             "some-space-name",
-				OrganizationGUID: "some-org-guid",
-			},
-		}
+		var spaceGUID string
 		BeforeEach(func() {
+
+			spaceGUID = "some-space-name"
+
 			fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.SubjectSpace), respData)
 				return nil
 			}
-		})
-
-		It("returns the matching spaces for the subject", func() {
-			matchingSpace, err := client.GetSubjectSpace("some-token", "some-subject-id", space)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeExternalJSONClient.DoCallCount()).To(Equal(1))
-
-			method, route, reqData, _, token := fakeExternalJSONClient.DoArgsForCall(0)
-
-			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v2/spaces?q=developer_guid%3Asome-subject-id&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
-			Expect(reqData).To(BeNil())
-			Expect(token).To(Equal("bearer some-token"))
-
-			Expect(matchingSpace.Entity).To(Equal(space.Entity))
 		})
 
 		Context("when the subject has no spaces", func() {
@@ -547,7 +528,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns nil", func() {
-				space, err := client.GetSubjectSpace("some-token", "some-subject-id", space)
+				space, err := client.GetSubjectSpace("some-token", "some-subject-id", spaceGUID)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(space).To(BeNil())
 			})
@@ -562,7 +543,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := client.GetSubjectSpace("some-token", "some-subject-id", space)
+				_, err := client.GetSubjectSpace("some-token", "some-subject-id", spaceGUID)
 				Expect(err).To(MatchError("found more than one matching space"))
 			})
 		})
@@ -573,7 +554,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns a helpful error", func() {
-				_, err := client.GetSubjectSpace("some-token", "some-subject-id", space)
+				_, err := client.GetSubjectSpace("some-token", "some-subject-id", spaceGUID)
 				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})

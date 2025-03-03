@@ -21,9 +21,6 @@ var _ = Describe("PolicyGuard", func() {
 		tokenData     uaa_client.CheckTokenResponse
 		policies      []store.Policy
 		spaceGUIDs    []string
-		space1        cc_client.SpaceResponse
-		space2        cc_client.SpaceResponse
-		space3        cc_client.SpaceResponse
 	)
 
 	BeforeEach(func() {
@@ -57,58 +54,31 @@ var _ = Describe("PolicyGuard", func() {
 			UserName: "some-developer",
 		}
 		spaceGUIDs = []string{"space-guid-1", "space-guid-2", "space-guid-3"}
-		space1 = cc_client.SpaceResponse{
-			Entity: cc_client.SpaceEntity{
-				Name:             "space-1",
-				OrganizationGUID: "org-guid-1",
-			},
-		}
-		space2 = cc_client.SpaceResponse{
-			Entity: cc_client.SpaceEntity{
-				Name:             "space-2",
-				OrganizationGUID: "org-guid-2",
-			}}
-		space3 = cc_client.SpaceResponse{
-			Entity: cc_client.SpaceEntity{
-				Name:             "space-3",
-				OrganizationGUID: "org-guid-3",
-			}}
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetSpaceGUIDsReturns(spaceGUIDs, nil)
-		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (*cc_client.SpaceResponse, error) {
+		fakeCCClient.GetSubjectSpaceStub = func(token, subjectId string, spaceGUID string) (*cc_client.RolesV3Resource, error) {
 			switch spaceGUID {
-			case "space-guid-1":
+			case spaceGUIDs[0]:
 				{
-					return &space1, nil
+					r := &cc_client.RolesV3Resource{}
+					r.Relationships = cc_client.RoleRelationship{}
+					r.Relationships.Space.Data.GUID = spaceGUIDs[0]
+					return r, nil
 				}
-			case "space-guid-2":
+			case spaceGUIDs[1]:
 				{
-					return &space2, nil
+					r := &cc_client.RolesV3Resource{}
+					r.Relationships = cc_client.RoleRelationship{}
+					r.Relationships.Space.Data.GUID = spaceGUIDs[1]
+					return r, nil
 				}
-			case "space-guid-3":
+			case spaceGUIDs[2]:
 				{
-					return &space3, nil
-				}
-			default:
-				{
-					return nil, errors.New("stub called with unexpected guid")
-				}
-			}
-		}
-		fakeCCClient.GetSubjectSpaceStub = func(token, subjectId string, space cc_client.SpaceResponse) (*cc_client.SpaceResource, error) {
-			switch space {
-			case space1:
-				{
-					return &cc_client.SpaceResource{Entity: space1.Entity}, nil
-				}
-			case space2:
-				{
-					return &cc_client.SpaceResource{Entity: space2.Entity}, nil
-				}
-			case space3:
-				{
-					return &cc_client.SpaceResource{Entity: space3.Entity}, nil
+					r := &cc_client.RolesV3Resource{}
+					r.Relationships = cc_client.RoleRelationship{}
+					r.Relationships.Space.Data.GUID = spaceGUIDs[2]
+					return r, nil
 				}
 			default:
 				{
@@ -156,29 +126,19 @@ var _ = Describe("PolicyGuard", func() {
 			token, appGUIDs := fakeCCClient.GetSpaceGUIDsArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(appGUIDs).To(ConsistOf([]string{"some-app-guid", "some-other-guid", "yet-another-guid"}))
-			Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(3))
-			token, guid := fakeCCClient.GetSpaceArgsForCall(0)
-			Expect(token).To(Equal("policy-server-token"))
-			Expect(guid).To(Equal("space-guid-1"))
-			token, guid = fakeCCClient.GetSpaceArgsForCall(1)
-			Expect(token).To(Equal("policy-server-token"))
-			Expect(guid).To(Equal("space-guid-2"))
-			token, guid = fakeCCClient.GetSpaceArgsForCall(2)
-			Expect(token).To(Equal("policy-server-token"))
-			Expect(guid).To(Equal("space-guid-3"))
 			Expect(fakeCCClient.GetSubjectSpaceCallCount()).To(Equal(3))
 			token, subjectId, checkSubjectSpace := fakeCCClient.GetSubjectSpaceArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(subjectId).To(Equal("some-developer-guid"))
-			Expect(checkSubjectSpace).To(Equal(space1))
+			Expect(checkSubjectSpace).To(Equal(spaceGUIDs[0]))
 			token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(1)
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(subjectId).To(Equal("some-developer-guid"))
-			Expect(checkSubjectSpace).To(Equal(space2))
+			Expect(checkSubjectSpace).To(Equal(spaceGUIDs[1]))
 			token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(2)
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(subjectId).To(Equal("some-developer-guid"))
-			Expect(checkSubjectSpace).To(Equal(space3))
+			Expect(checkSubjectSpace).To(Equal(spaceGUIDs[2]))
 			Expect(authorized).To(BeTrue())
 		})
 
@@ -198,29 +158,19 @@ var _ = Describe("PolicyGuard", func() {
 				token, appGUIDs := fakeCCClient.GetSpaceGUIDsArgsForCall(0)
 				Expect(token).To(Equal("policy-server-token"))
 				Expect(appGUIDs).To(ConsistOf([]string{"some-app-guid", "some-other-guid", "yet-another-guid"}))
-				Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(3))
-				token, guid := fakeCCClient.GetSpaceArgsForCall(0)
-				Expect(token).To(Equal("policy-server-token"))
-				Expect(guid).To(Equal("space-guid-1"))
-				token, guid = fakeCCClient.GetSpaceArgsForCall(1)
-				Expect(token).To(Equal("policy-server-token"))
-				Expect(guid).To(Equal("space-guid-2"))
-				token, guid = fakeCCClient.GetSpaceArgsForCall(2)
-				Expect(token).To(Equal("policy-server-token"))
-				Expect(guid).To(Equal("space-guid-3"))
 				Expect(fakeCCClient.GetSubjectSpaceCallCount()).To(Equal(3))
 				token, subjectId, checkSubjectSpace := fakeCCClient.GetSubjectSpaceArgsForCall(0)
 				Expect(token).To(Equal("policy-server-token"))
 				Expect(subjectId).To(Equal("some-client-id"))
-				Expect(checkSubjectSpace).To(Equal(space1))
+				Expect(checkSubjectSpace).To(Equal(spaceGUIDs[0]))
 				token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(1)
 				Expect(token).To(Equal("policy-server-token"))
 				Expect(subjectId).To(Equal("some-client-id"))
-				Expect(checkSubjectSpace).To(Equal(space2))
+				Expect(checkSubjectSpace).To(Equal(spaceGUIDs[1]))
 				token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(2)
 				Expect(token).To(Equal("policy-server-token"))
 				Expect(subjectId).To(Equal("some-client-id"))
-				Expect(checkSubjectSpace).To(Equal(space3))
+				Expect(checkSubjectSpace).To(Equal(spaceGUIDs[2]))
 				Expect(authorized).To(BeTrue())
 			})
 		})
@@ -235,20 +185,8 @@ var _ = Describe("PolicyGuard", func() {
 				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
-				Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(0))
 				Expect(fakeCCClient.GetSubjectSpaceCallCount()).To(Equal(0))
 				Expect(authorized).To(BeTrue())
-			})
-		})
-
-		Context("when the getting one of the the spaces returns nil", func() {
-			BeforeEach(func() {
-				fakeCCClient.GetSpaceReturns(nil, nil)
-			})
-			It("returns false", func() {
-				authorized, err := policyGuard.CheckAccess(policies, tokenData)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(authorized).To(BeFalse())
 			})
 		})
 
@@ -281,17 +219,6 @@ var _ = Describe("PolicyGuard", func() {
 			It("returns a useful error", func() {
 				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).To(MatchError("getting space guids: banana"))
-				Expect(authorized).To(BeFalse())
-			})
-		})
-
-		Context("when the getting one of the the spaces fails", func() {
-			BeforeEach(func() {
-				fakeCCClient.GetSpaceReturns(nil, errors.New("banana"))
-			})
-			It("returns a useful error", func() {
-				authorized, err := policyGuard.CheckAccess(policies, tokenData)
-				Expect(err).To(MatchError("getting space with guid space-guid-1: banana"))
 				Expect(authorized).To(BeFalse())
 			})
 		})
