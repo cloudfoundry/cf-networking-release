@@ -122,4 +122,45 @@ var _ = Describe("SecurityGroupsMetricsWrapper", func() {
 			})
 		})
 	})
+
+	Describe("LastUpdated", func() {
+		BeforeEach(func() {
+			fakeStore.LastUpdatedReturns(12345, nil)
+		})
+
+		It("calls LastUpdated on the Store", func() {
+			timestamp, err := metricsWrapper.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(timestamp).To(Equal(12345))
+
+			Expect(fakeStore.LastUpdatedCallCount()).To(Equal(1))
+		})
+
+		It("emits a metric", func() {
+			_, err := metricsWrapper.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("SecurityGroupsStoreLastUpdatedSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.LastUpdatedReturns(0, errors.New("meow"))
+			})
+			It("emits an error metric", func() {
+				_, err := metricsWrapper.LastUpdated()
+				Expect(err).To(MatchError("meow"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("SecurityGroupsStoreLastUpdatedError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("SecurityGroupsStoreLastUpdatedErrorTime"))
+			})
+		})
+	})
+
 })

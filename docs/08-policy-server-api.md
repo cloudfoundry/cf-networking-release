@@ -310,6 +310,18 @@ Response Body:
 - `policies[].source.id`: the `policy_group_id` of the source (currently always an `app_id`)
 - `policies[].source.tag`: the `tag` of the source allowed to the destination
 
+`GET /networking/v1/internal/policies_last_updated`
+
+Get the timestamp of the last time policy-server had policy info modified.
+
+Query Parameters:
+
+- None.
+
+Response Body:
+
+- An integer value representing the last update timestamp in nanoseconds since Jan 1, 1970.
+
 `GET /networking/v1/internal/security_groups`
 
 List security groups that are bound to spaces defined by `space_guids` parameter and global security groups.
@@ -337,6 +349,19 @@ Response Body:
   guids the security group is bound to
 - `security_groups[].running_space_guids`: comma-separated list of running space
   guids the security group is bound to
+
+
+`GET /networking/v1/internal/security_groups_last_updated`
+
+Get the timestamp of the last time policy-server received updated security group info.
+
+Query Parameters:
+
+- None.
+
+Response Body:
+
+- An integer value representing the last update timestamp in nanoseconds since Jan 1, 1970.
 
 ### Example Put Tags Request and Response
 

@@ -79,6 +79,15 @@ func (c *InternalClient) GetPoliciesByID(ids ...string) ([]Policy, error) {
 	return policies.Policies, nil
 }
 
+func (c *InternalClient) GetSecurityGroupsLastUpdated() (int, error) {
+	var lastUpdatedTimestamp int
+	err := c.JsonClient.Do("GET", "/networking/v1/internal/security_groups_last_updated", nil, &lastUpdatedTimestamp, "")
+	if err != nil {
+		return 0, err
+	}
+	return lastUpdatedTimestamp, nil
+}
+
 func (c *InternalClient) GetSecurityGroupsForSpace(spaceGuids ...string) ([]SecurityGroup, error) {
 	var securityGroups []SecurityGroup
 	var next int

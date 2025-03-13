@@ -2,8 +2,10 @@ package store
 
 import (
 	"fmt"
-	"strings"
+	"sort"
+	"time"
 
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/policy-server/store/helpers"
 )
 
@@ -11,6 +13,7 @@ import (
 type SecurityGroupsStore interface {
 	Replace([]SecurityGroup) error
 	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)
+	LastUpdated() (int, error)
 }
 
 type SGStore struct {
@@ -162,6 +165,10 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 		}
 	}
 
+	err = sgs.updateLastUpdated(tx)
+	if err != nil {
+		return fmt.Errorf("updating security_groups_info.last_updated: %s", err)
+	}
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("committing transaction: %s", err)
@@ -194,4 +201,18 @@ func (sgs *SGStore) onConflictUpdateSQL() string {
 	default:
 		return ""
 	}
+}
+
+func (sgs *SGStore) LastUpdated() (int, error) {
+	var timestamp time.Time
+	err := sgs.Conn.QueryRow(`SELECT last_updated FROM security_groups_info LIMIT 1`).Scan(&timestamp)
+	if err != nil {
+		return 0, fmt.Errorf("getting policies: %s", err)
+	}
+	return int(timestamp.UnixNano()), err
+}
+
+func (sgs *SGStore) updateLastUpdated(tx db.Transaction) error {
+	_, err := tx.Exec(`UPDATE security_groups_info SET last_updated=CURRENT_TIMESTAMP(6)`)
+	return err
 }

@@ -7,6 +7,7 @@ import (
 type securityGroupsStore interface {
 	Replace([]SecurityGroup) error
 	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)
+	LastUpdated() (int, error)
 }
 
 type SecurityGroupsMetricsWrapper struct {
@@ -38,4 +39,17 @@ func (mw *SecurityGroupsMetricsWrapper) BySpaceGuids(spaceGuids []string, page P
 		mw.MetricsSender.SendDuration("SecurityGroupsStoreBySpaceGuidsSuccessTime", allTimeDuration)
 	}
 	return securityGroups, pagination, err
+}
+
+func (mw *SecurityGroupsMetricsWrapper) LastUpdated() (int, error) {
+	startTime := time.Now()
+	timestamp, err := mw.Store.LastUpdated()
+	lastUpdatedTimeDuration := time.Since(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("SecurityGroupsStoreLastUpdatedError")
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreLastUpdatedErrorTime", lastUpdatedTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreLastUpdatedSuccessTime", lastUpdatedTimeDuration)
+	}
+	return timestamp, err
 }
