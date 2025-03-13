@@ -21,25 +21,28 @@ type SGStore struct {
 }
 
 func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
+	stagingSGs = 
 	query := `
 		SELECT
-			id,
+			security_groups.id,
 			guid,
 			name,
 			rules,
 			staging_default,
 			running_default,
-			staging_spaces,
-			running_spaces
-		FROM security_groups`
+			staging_spaces.space_guid,
+			running_spaces.space_guid
+		FROM security_groups
+			JOIN staging_spaces on staging_spaces.security_group_guid = security_groups.guid
+		`
 
 	whereClause := `staging_default=true OR running_default=true`
 
 	if len(spaceGuids) > 0 {
-		whereClause = fmt.Sprintf("%s OR %s OR %s",
+		whereClause = fmt.Sprintf("%s OR staging_spaces.space_guid IN (%s) OR running_spaces.space_guid IN (%s)",
 			whereClause,
-			sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
-			sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
+			helpers.QuestionMarks(len(spaceGuids)),
+			helpers.QuestionMarks(len(spaceGuids)),
 		)
 	}
 
@@ -53,10 +56,10 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	}
 
 	if page.From > 0 {
-		query = query + " AND id >= %"
+		query = query + " AND security_groups.id >= %"
 		whereBindings = append(whereBindings, page.From)
 	}
-	query = query + " ORDER BY id"
+	query = query + " ORDER BY security_groups.id"
 
 	if page.Limit > 0 {
 		// we don't use a placeholder because limit is an integer and it is safe to interpolate it
@@ -71,29 +74,64 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	}
 	defer rows.Close()
 
+	securityGroups := map[string]SecurityGroup{}
+	stagingSpaces := map[string]map[string]struct{}{}
+	runningSpaces := map[string]map[string]struct{}{}
 	result := []SecurityGroup{}
 	nextId := 0
 	for rows.Next() {
 		var id int
 		var securityGroup SecurityGroup
+		var stagingSpace, runningSpace *string
 		err := rows.Scan(&id,
 			&securityGroup.Guid,
 			&securityGroup.Name,
 			&securityGroup.Rules,
 			&securityGroup.StagingDefault,
 			&securityGroup.RunningDefault,
-			&securityGroup.StagingSpaceGuids,
-			&securityGroup.RunningSpaceGuids,
+			&stagingSpace,
+			&runningSpace,
 		)
 		if err != nil {
 			return nil, Pagination{}, fmt.Errorf("scanning security group result: %s", err)
 		}
 
-		if page.Limit == 0 || len(result) < page.Limit {
-			result = append(result, securityGroup)
+		sg, ok := securityGroups[securityGroup.Guid]
+		if !ok {
+			securityGroup.StagingSpaceGuids = SpaceGuids{}
+			securityGroup.RunningSpaceGuids = SpaceGuids{}
+			sg = securityGroup
+		}
+
+		if stagingSpace != nil {
+			if stagingSpaces[sg.Guid] == nil {
+				stagingSpaces[sg.Guid] = map[string]struct{}{}
+			}
+			stagingSpaces[sg.Guid][*stagingSpace] = struct{}{}
+		}
+		if runningSpace != nil {
+			if runningSpaces[sg.Guid] == nil {
+				runningSpaces[sg.Guid] = map[string]struct{}{}
+			}
+			runningSpaces[sg.Guid][*runningSpace] = struct{}{}
+		}
+
+		if page.Limit == 0 || len(securityGroups) < page.Limit {
+			securityGroups[sg.Guid] = sg
 		} else {
 			nextId = id
 		}
+	}
+	for _, sg := range securityGroups {
+		for space := range stagingSpaces[sg.Guid] {
+			sg.StagingSpaceGuids = append(sg.StagingSpaceGuids, space)
+		}
+		sort.Strings(sg.StagingSpaceGuids)
+		for space := range runningSpaces[sg.Guid] {
+			sg.RunningSpaceGuids = append(sg.RunningSpaceGuids, space)
+		}
+		sort.Strings(sg.RunningSpaceGuids)
+		result = append(result, sg)
 	}
 	return result, Pagination{Next: nextId}, nil
 }
@@ -124,10 +162,10 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 
 	upsertQuery := tx.Rebind(`
 		INSERT INTO security_groups
-		(guid, name, rules, staging_default, running_default, staging_spaces, running_spaces)
-		VALUES(?, ?, ?, ?, ?, ?, ?) ` +
+		(guid, name, rules, staging_default, running_default)
+		VALUES(?, ?, ?, ?, ?) ` +
 		sgs.onConflictUpdateSQL() +
-		` name=?, rules=?, staging_default=?, running_default=?, staging_spaces=?, running_spaces=?`)
+		` name=?, rules=?, staging_default=?, running_default=?`)
 
 	for _, group := range newSecurityGroups {
 		delete(existingGuids, group.Guid)
@@ -138,17 +176,23 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 			group.Rules,
 			group.StagingDefault,
 			group.RunningDefault,
-			group.StagingSpaceGuids,
-			group.RunningSpaceGuids,
 			group.Name,
 			group.Rules,
 			group.StagingDefault,
 			group.RunningDefault,
-			group.StagingSpaceGuids,
-			group.RunningSpaceGuids,
 		)
 		if err != nil {
 			return fmt.Errorf("saving security group %s (%s): %s", group.Guid, group.Name, err)
+		}
+
+		err = sgs.replaceSpaceBinding(tx, "staging_spaces", group.Guid, group.StagingSpaceGuids)
+		if err != nil {
+			return fmt.Errorf("updating security group %s (%s)'s staging space bindings: %s", group.Guid, group.Name, err)
+		}
+
+		err = sgs.replaceSpaceBinding(tx, "running_spaces", group.Guid, group.RunningSpaceGuids)
+		if err != nil {
+			return fmt.Errorf("updating security group %s (%s)'s staging space bindings: %s", group.Guid, group.Name, err)
 		}
 	}
 
@@ -176,21 +220,67 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	return nil
 }
 
-func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) string {
-	switch sgs.Conn.DriverName() {
-	case helpers.MySQL:
-		clauses := []string{}
-		for range filterValues {
-			clauses = append(clauses, fmt.Sprintf(`json_contains(%s, json_quote(?))`, columnName))
-		}
-		return strings.Join(clauses, " OR ")
-	case helpers.Postgres:
-		filterList := helpers.MarksWithSeparator(len(filterValues), "%", ", ")
-		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
-	default:
-		return ""
+func (sgs *SGStore) replaceSpaceBinding(tx db.Transaction, tableName string, securityGroup string, spaceGuids []string) error {
+	existingGuids := map[string]bool{}
+
+	existingGuidQuery := tx.Rebind(fmt.Sprintf("SELECT space_guid id FROM %s WHERE security_group_guid = ?", tableName))
+	rows, err := tx.Queryx(existingGuidQuery, securityGroup)
+	if err != nil {
+		return fmt.Errorf("selecting spaces from %s: %s", tableName, err)
 	}
+	if rows != nil {
+		defer rows.Close()
+		for rows.Next() {
+			var guid string
+			err := rows.Scan(&guid)
+			if err != nil {
+				return fmt.Errorf("scanning security group result: %s", err)
+			}
+			existingGuids[guid] = true
+		}
+	}
+
+	replaceQuery := tx.Rebind(fmt.Sprintf(`INSERT INTO %s (security_group_guid, space_guid) VALUES(?, ?)`, tableName) +
+		sgs.onConflictUpdateSQL() + ` security_group_guid=?, space_guid=?`)
+
+	for _, space := range spaceGuids {
+		delete(existingGuids, space)
+		_, err := tx.Exec(replaceQuery, securityGroup, space, securityGroup, space)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(existingGuids) > 0 {
+		args := []interface{}{securityGroup}
+		for guid := range existingGuids {
+			args = append(args, guid)
+		}
+		_, err = tx.Exec(tx.Rebind(fmt.Sprintf("DELETE FROM %s WHERE security_group_guid = ? and space_guid IN (%s)",
+			tableName, helpers.QuestionMarks(len(existingGuids)))), args...)
+		if err != nil {
+			return fmt.Errorf("deleting security group %s' space bindings in %s: %s", securityGroup, tableName, err)
+		}
+	}
+
+	return nil
 }
+
+// func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) string {
+// 	switch sgs.Conn.DriverName() {
+// 	case helpers.MySQL:
+// 		clauses := []string{}
+// 		for range filterValues {
+// 			clauses = append(clauses, fmt.Sprintf(`json_contains(%s, json_quote(?))`, columnName))
+// 		}
+// 		return strings.Join(clauses, " OR ")
+// 	case helpers.Postgres:
+// 		filterList := helpers.MarksWithSeparator(len(filterValues), "%", ", ")
+// 		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
+// 	default:
+// 		return ""
+// 	}
+// }
 
 func (sgs *SGStore) onConflictUpdateSQL() string {
 	switch sgs.Conn.DriverName() {

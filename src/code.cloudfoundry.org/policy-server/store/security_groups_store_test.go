@@ -115,6 +115,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Guid:              "first-guid",
 					Name:              "first-asg",
 					Rules:             "firstRules",
+					StagingSpaceGuids: []string{},
 					RunningSpaceGuids: []string{"space-a"},
 				}))
 				Expect(pagination.Next).To(Equal(0))
@@ -169,8 +170,8 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Guid:              "third-guid",
 					Name:              "third-name",
 					Rules:             "thirdRules",
-					RunningSpaceGuids: []string{"space-c", "space-d", "space-e"},
-					StagingSpaceGuids: []string{"space-c", "space-d", "space-f"},
+					RunningSpaceGuids: []string{"space-d", "space-e"},
+					StagingSpaceGuids: []string{"space-d"},
 				}, store.SecurityGroup{
 					Guid:              "fourth-guid",
 					Name:              "fourth-name",
@@ -192,8 +193,8 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Guid:              "third-guid",
 					Name:              "third-name",
 					Rules:             "thirdRules",
-					RunningSpaceGuids: []string{"space-c", "space-d", "space-e"},
-					StagingSpaceGuids: []string{"space-c", "space-d", "space-f"},
+					RunningSpaceGuids: []string{"space-d", "space-e"},
+					StagingSpaceGuids: []string{"space-d"},
 				}))
 				Expect(pagination).To(Equal(store.Pagination{Next: 4}))
 
@@ -241,6 +242,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Name:              "first-asg",
 					Rules:             "firstRules",
 					StagingDefault:    true,
+					StagingSpaceGuids: []string{},
 					RunningSpaceGuids: []string{"space-a"},
 				}, store.SecurityGroup{
 					Guid:              "second-guid",
@@ -263,6 +265,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Name:              "first-asg",
 					Rules:             "firstRules",
 					StagingDefault:    true,
+					StagingSpaceGuids: []string{},
 					RunningSpaceGuids: []string{"space-a"},
 				}))
 				Expect(pagination.Next).To(Equal(0))
@@ -299,6 +302,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Name:              "first-asg",
 					Rules:             "firstRules",
 					RunningDefault:    true,
+					StagingSpaceGuids: []string{},
 					RunningSpaceGuids: []string{"space-a"},
 				}, store.SecurityGroup{
 					Guid:              "second-guid",
@@ -320,6 +324,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Name:              "first-asg",
 					Rules:             "firstRules",
 					RunningDefault:    true,
+					StagingSpaceGuids: []string{},
 					RunningSpaceGuids: []string{"space-a"},
 				}))
 				Expect(pagination.Next).To(Equal(0))
@@ -335,6 +340,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				Guid:              "first-guid",
 				Name:              "first-asg",
 				Rules:             "firstRules",
+				StagingSpaceGuids: []string{},
 				RunningSpaceGuids: []string{"first-space"},
 			}, {
 				Guid:              "second-guid",
