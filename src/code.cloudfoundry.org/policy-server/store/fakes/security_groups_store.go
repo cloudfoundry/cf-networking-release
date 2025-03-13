@@ -24,6 +24,18 @@ type SecurityGroupsStore struct {
 		result2 store.Pagination
 		result3 error
 	}
+	LastUpdatedStub        func() (int, error)
+	lastUpdatedMutex       sync.RWMutex
+	lastUpdatedArgsForCall []struct {
+	}
+	lastUpdatedReturns struct {
+		result1 int
+		result2 error
+	}
+	lastUpdatedReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	ReplaceStub        func([]store.SecurityGroup) error
 	replaceMutex       sync.RWMutex
 	replaceArgsForCall []struct {
@@ -112,6 +124,62 @@ func (fake *SecurityGroupsStore) BySpaceGuidsReturnsOnCall(i int, result1 []stor
 	}{result1, result2, result3}
 }
 
+func (fake *SecurityGroupsStore) LastUpdated() (int, error) {
+	fake.lastUpdatedMutex.Lock()
+	ret, specificReturn := fake.lastUpdatedReturnsOnCall[len(fake.lastUpdatedArgsForCall)]
+	fake.lastUpdatedArgsForCall = append(fake.lastUpdatedArgsForCall, struct {
+	}{})
+	stub := fake.LastUpdatedStub
+	fakeReturns := fake.lastUpdatedReturns
+	fake.recordInvocation("LastUpdated", []interface{}{})
+	fake.lastUpdatedMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *SecurityGroupsStore) LastUpdatedCallCount() int {
+	fake.lastUpdatedMutex.RLock()
+	defer fake.lastUpdatedMutex.RUnlock()
+	return len(fake.lastUpdatedArgsForCall)
+}
+
+func (fake *SecurityGroupsStore) LastUpdatedCalls(stub func() (int, error)) {
+	fake.lastUpdatedMutex.Lock()
+	defer fake.lastUpdatedMutex.Unlock()
+	fake.LastUpdatedStub = stub
+}
+
+func (fake *SecurityGroupsStore) LastUpdatedReturns(result1 int, result2 error) {
+	fake.lastUpdatedMutex.Lock()
+	defer fake.lastUpdatedMutex.Unlock()
+	fake.LastUpdatedStub = nil
+	fake.lastUpdatedReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *SecurityGroupsStore) LastUpdatedReturnsOnCall(i int, result1 int, result2 error) {
+	fake.lastUpdatedMutex.Lock()
+	defer fake.lastUpdatedMutex.Unlock()
+	fake.LastUpdatedStub = nil
+	if fake.lastUpdatedReturnsOnCall == nil {
+		fake.lastUpdatedReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.lastUpdatedReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *SecurityGroupsStore) Replace(arg1 []store.SecurityGroup) error {
 	var arg1Copy []store.SecurityGroup
 	if arg1 != nil {
@@ -183,6 +251,8 @@ func (fake *SecurityGroupsStore) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.bySpaceGuidsMutex.RLock()
 	defer fake.bySpaceGuidsMutex.RUnlock()
+	fake.lastUpdatedMutex.RLock()
+	defer fake.lastUpdatedMutex.RUnlock()
 	fake.replaceMutex.RLock()
 	defer fake.replaceMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

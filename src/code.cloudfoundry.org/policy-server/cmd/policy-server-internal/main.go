@@ -117,6 +117,7 @@ func main() {
 
 	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
 	securityGroupsHandlerV1 := handlers.NewAsgsIndex(wrappedSecurityGroupsStore, asgMapper, errorResponse)
+	internalSecurityGroupsLastUpdatedHandlerV1 := handlers.NewSecurityGroupsLastUpdatedInternal(logger, wrappedSecurityGroupsStore, errorResponse)
 
 	hstsHeaderWrapper := handlers.HSTSHandler{}
 
@@ -148,13 +149,15 @@ func main() {
 		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
 		{Name: "internal_policies_last_updated", Method: "GET", Path: "/networking/:version/internal/policies_last_updated"},
 		{Name: "internal_security_groups", Method: "GET", Path: "/networking/:version/internal/security_groups"},
+		{Name: "internal_security_groups_last_updated", Method: "GET", Path: "/networking/:version/internal/security_groups_last_updated"},
 	}
 
 	internalHandlers := rata.Handlers{
-		"create_tags":                    metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
-		"internal_policies":              metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
-		"internal_policies_last_updated": metricsWrap("InternalPoliciesLastUpdated", logWrap(internalPoliciesLastUpdatedHandlerV1)),
-		"internal_security_groups":       metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
+		"create_tags":                           metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"internal_policies":                     metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
+		"internal_policies_last_updated":        metricsWrap("InternalPoliciesLastUpdated", logWrap(internalPoliciesLastUpdatedHandlerV1)),
+		"internal_security_groups":              metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
+		"internal_security_groups_last_updated": metricsWrap("InternalSecurityGroupsLastUpdated", logWrap(internalSecurityGroupsLastUpdatedHandlerV1)),
 	}
 
 	for key, handler := range internalHandlers {

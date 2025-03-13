@@ -366,6 +366,20 @@ var _ = Describe("SecurityGroupsStore", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		It("updates last updated field", func() {
+			lastUpdatedOriginal, err := securityGroupsStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedOriginal).NotTo(BeNil())
+			time.Sleep(1 * time.Second)
+
+			err = securityGroupsStore.Replace(newRules)
+			Expect(err).NotTo(HaveOccurred())
+
+			lastUpdatedNew, err := securityGroupsStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedNew).To(BeNumerically(">", lastUpdatedOriginal))
+		})
+
 		It("replaces the spaceSecurityGroupsStore data with the newly provided data", func() {
 			err := securityGroupsStore.Replace(newRules)
 			Expect(err).ToNot(HaveOccurred())
@@ -455,6 +469,29 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 			})
 		})
-
 	})
+
+	Describe("LastUpdated()", func() {
+		var currentTime int64
+		BeforeEach(func() {
+
+			migrateAndPopulateTags(realDb, 1)
+			currentTime = time.Now().UnixNano()
+
+			securityGroupsStore.Replace([]store.SecurityGroup{{
+				Guid:              "third-guid",
+				Name:              "third-name",
+				Rules:             "thirdRules",
+				StagingSpaceGuids: []string{"third-space"},
+				StagingDefault:    true,
+				RunningSpaceGuids: []string{},
+			}})
+		})
+		It("returns a timestamp in UnixNano format", func() {
+			updatedTime, err := securityGroupsStore.LastUpdated()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedTime).To(BeNumerically(">", currentTime))
+		})
+	})
+
 })
