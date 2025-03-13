@@ -21,12 +21,14 @@ import (
 
 type Config struct {
 	config.Config
-	GlobalAGGs        int  `json:"global_asgs"`
-	TotalSpaces       int  `json:"total_spaces"`
-	SpacesWithOneASG  int  `json:"spaces_with_one_asg"`
-	HowManyASGsIsMany int  `json:"how_many_asgs_is_many"`
-	AppsPerSpace      int  `json:"apps_per_space"`
-	SkipASGCreation   bool `json:"skip_asg_creation"`
+	GlobalASGs                          int  `json:"global_asgs"`
+	TotalASGs                           int  `json:"total_asgs"`
+	ASGsPerSpace                        int  `json:"spaces_with_one_asg"`
+	ASGsWithMultipleSpaces              int  `json:"asgs_with_multiple_spaces"`
+	SpaceCountForASGsWithMultipleSpaces int  `json:"space_count_for_asgs_with_multiple_spaces"`
+	TotalSpaces                         int  `json:"total_spaces"`
+	AppsPerSpace                        int  `json:"apps_per_space"`
+	SkipASGCreation                     bool `json:"skip_asg_creation"`
 }
 
 type ConcurrentSpaceSetup struct {
@@ -51,21 +53,50 @@ func main() {
 		log.Fatalf("connecting to api: %s", err)
 	}
 
-	var manyASGs []string
+	// Iterate over each space and create/bind asgs and push apps as needed
+
+	var spaces []string
+	var asgs []string
 	if !config.SkipASGCreation {
 		// Create global asgs
 		createGlobalASGs(config)
 		// Create a bunch of bindable ASGs
-		manyASGs = createManyASGs(config.HowManyASGsIsMany, config.ASGSize, config.Prefix, globalAdapter)
+		asgs = createASGs(config.TotalASGs-config.GlobalASGs, config.ASGSize, config.Prefix, globalAdapter)
 	}
-	// Compile the proxy app
+	spaces = createSpacesConcurrently(config)
+
+	orgName := fmt.Sprintf("%s-org", config.Prefix)
+
+	var spaceIndex = 0
+	for _, asg := range asgs[0:config.ASGsWithMultipleSpaces] {
+		for range config.SpaceCountForASGsWithMultipleSpaces {
+			if spaceIndex >= len(spaces) {
+				spaceIndex = 0
+			}
+			bindASGToThisSpace(asg, orgName, spaces[spaceIndex], globalAdapter)
+			spaceIndex++
+		}
+	}
+
+	for _, asg := range asgs[config.ASGsWithMultipleSpaces:] {
+		if spaceIndex >= len(spaces) {
+			spaceIndex = 0
+		}
+		bindASGToThisSpace(asg, orgName, spaces[spaceIndex], globalAdapter)
+		spaceIndex++
+	}
+
 	compileBinary()
 
-	// Iterate over each space and create/bind asgs and push apps as needed
+}
+
+func createSpacesConcurrently(config Config) []string {
 	sem := make(chan bool, config.Concurrency)
+	var spaceNames []string
 	for i := 0; i < config.TotalSpaces; i++ {
-		setup := generateConcurrentSpaceSetup(i, config)
 		sem <- true
+		setup := generateConcurrentSpaceSetup(i, config)
+		spaceNames = append(spaceNames, setup.OrgSpaceCreator.Space)
 		go func(s *ConcurrentSpaceSetup, c Config, index int) {
 			defer func() { <-sem }()
 
@@ -79,25 +110,16 @@ func main() {
 				log.Fatalf("creating org and space: %s", err)
 			}
 
-			if index < c.SpacesWithOneASG {
-				// Create and bind a single ASG to this space
-				createAndBindOneASGToThisSpace(fmt.Sprintf("%s-asg", s.OrgSpaceCreator.Space), c.ASGSize, s.OrgSpaceCreator, s.Adapter)
-			} else {
-				// Bind many asgs to this space
-				bindManyASGsToThisSpace(manyASGs, s.OrgSpaceCreator.Org, s.OrgSpaceCreator.Space, s.Adapter)
-			}
-
 			// Push apps for this space
 			if err := s.AppPusher.Push(); err != nil {
 				log.Printf("Got an error while pushing proxy apps: %s", err)
 			}
-
 		}(setup, config, i)
 	}
-
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
 	}
+	return spaceNames
 }
 
 func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpaceSetup {
@@ -200,7 +222,7 @@ func generateAppManifest(appsDir string) string {
 
 func createGlobalASGs(config Config) {
 	sem := make(chan bool, config.Concurrency)
-	for index := 0; index < config.GlobalAGGs; index++ {
+	for index := 0; index < config.GlobalASGs; index++ {
 		sem <- true
 		go func(p string, i int) {
 			defer func() { <-sem }()
@@ -240,15 +262,13 @@ func createGlobalASGs(config Config) {
 	}
 }
 
-func bindManyASGsToThisSpace(asgNames []string, orgName, spaceName string, adapter *cf_cli_adapter.Adapter) {
-	for _, asg := range asgNames {
-		if err := adapter.BindSecurityGroup(asg, orgName, spaceName); err != nil {
-			log.Fatalf("binding asg %s to org %s, space %s: %s", asg, orgName, spaceName, err)
-		}
+func bindASGToThisSpace(asg string, orgName, spaceName string, adapter *cf_cli_adapter.Adapter) {
+	if err := adapter.BindSecurityGroup(asg, orgName, spaceName); err != nil {
+		log.Fatalf("binding asg %s to org %s, space %s: %s", asg, orgName, spaceName, err)
 	}
 }
 
-func createManyASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter.Adapter) []string {
+func createASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter.Adapter) []string {
 	var asgNames []string
 	for i := 0; i < howMany; i++ {
 		asgName := fmt.Sprintf("%s-many-%d-asg", prefix, i)
@@ -276,25 +296,6 @@ func createManyASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter
 	return asgNames
 }
 
-func createAndBindOneASGToThisSpace(asgName string, asgSize int, osc cf_command.OrgSpaceCreator, adapter *cf_cli_adapter.Adapter) {
-	asgContent := testsupport.BuildASG(asgSize)
-	asgFile, err := testsupport.CreateTempFile(asgContent)
-	if err != nil {
-		log.Fatalf("creating asg file: %s", err)
-	}
-
-	// check ASG and install if not OK
-	asgChecker := cf_command.ASGChecker{Adapter: adapter}
-	asgErr := asgChecker.CheckASG(asgName, asgContent)
-	if asgErr != nil {
-		// install ASG
-		asgInstaller := cf_command.ASGInstaller{Adapter: adapter}
-		if err = asgInstaller.InstallASG(asgName, asgFile, osc.Org, osc.Space); err != nil {
-			log.Fatalf("install asg: %s", err)
-		}
-	}
-}
-
 func parseConfig() Config {
 	configPath := flag.String("config", "", "path to the config file")
 	flag.Parse()
@@ -318,7 +319,11 @@ func parseConfig() Config {
 	}
 	config.Prefix = strings.TrimSuffix(config.Prefix, "-")
 
-	if config.SpacesWithOneASG > config.TotalSpaces {
+	if config.SpaceCountForASGsWithMultipleSpaces > config.TotalSpaces {
+		log.Fatalf("total_spaces must be greater than or equal to spaces_with_one_asg")
+	}
+
+	if config.GlobalASGs+config.ASGsWithMultipleSpaces > config.TotalASGs {
 		log.Fatalf("total_spaces must be greater than or equal to spaces_with_one_asg")
 	}
 

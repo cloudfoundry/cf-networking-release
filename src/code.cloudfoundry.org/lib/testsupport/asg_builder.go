@@ -21,6 +21,9 @@ func BuildASG(n int) string {
 		t := `{"protocol": "tcp", "destination": "` + fmt.Sprintf("169.254.%d.%d", i/254, i%254) + `", "ports": "` + fmt.Sprintf("%d", uniquePort) + `" },`
 		asg = asg + t
 		uniquePort++
+		if uniquePort > 65535 {
+			uniquePort = 1
+		}
 	}
 
 	t := `{"protocol": "tcp", "destination": "` + fmt.Sprintf("169.254.%d.%d", n/254, n%254) + `", "ports": "` + fmt.Sprintf("%d", uniquePort) + `" }`
