@@ -8,9 +8,10 @@ import (
 )
 
 type MigrationsProvider struct {
-	MigrationsToPerformStub        func() (migrations.PolicyServerMigrations, error)
+	MigrationsToPerformStub        func(bool) (migrations.PolicyServerMigrations, error)
 	migrationsToPerformMutex       sync.RWMutex
 	migrationsToPerformArgsForCall []struct {
+		arg1 bool
 	}
 	migrationsToPerformReturns struct {
 		result1 migrations.PolicyServerMigrations
@@ -24,17 +25,18 @@ type MigrationsProvider struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *MigrationsProvider) MigrationsToPerform() (migrations.PolicyServerMigrations, error) {
+func (fake *MigrationsProvider) MigrationsToPerform(arg1 bool) (migrations.PolicyServerMigrations, error) {
 	fake.migrationsToPerformMutex.Lock()
 	ret, specificReturn := fake.migrationsToPerformReturnsOnCall[len(fake.migrationsToPerformArgsForCall)]
 	fake.migrationsToPerformArgsForCall = append(fake.migrationsToPerformArgsForCall, struct {
-	}{})
+		arg1 bool
+	}{arg1})
 	stub := fake.MigrationsToPerformStub
 	fakeReturns := fake.migrationsToPerformReturns
-	fake.recordInvocation("MigrationsToPerform", []interface{}{})
+	fake.recordInvocation("MigrationsToPerform", []interface{}{arg1})
 	fake.migrationsToPerformMutex.Unlock()
 	if stub != nil {
-		return stub()
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -48,10 +50,17 @@ func (fake *MigrationsProvider) MigrationsToPerformCallCount() int {
 	return len(fake.migrationsToPerformArgsForCall)
 }
 
-func (fake *MigrationsProvider) MigrationsToPerformCalls(stub func() (migrations.PolicyServerMigrations, error)) {
+func (fake *MigrationsProvider) MigrationsToPerformCalls(stub func(bool) (migrations.PolicyServerMigrations, error)) {
 	fake.migrationsToPerformMutex.Lock()
 	defer fake.migrationsToPerformMutex.Unlock()
 	fake.MigrationsToPerformStub = stub
+}
+
+func (fake *MigrationsProvider) MigrationsToPerformArgsForCall(i int) bool {
+	fake.migrationsToPerformMutex.RLock()
+	defer fake.migrationsToPerformMutex.RUnlock()
+	argsForCall := fake.migrationsToPerformArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *MigrationsProvider) MigrationsToPerformReturns(result1 migrations.PolicyServerMigrations, result2 error) {

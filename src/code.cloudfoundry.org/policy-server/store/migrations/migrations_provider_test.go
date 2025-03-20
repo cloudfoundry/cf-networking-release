@@ -25,7 +25,7 @@ var _ = Describe("Migrations Provider", func() {
 	})
 
 	It("returns a list of migrations to perform", func() {
-		migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
+		migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
 		Expect(err).ToNot(HaveOccurred())
 		expectedMigrations := migrations.PolicyServerMigrations{
 			migrations.V1ModifiedMigrationsToPerform[0],
@@ -47,23 +47,42 @@ var _ = Describe("Migrations Provider", func() {
 
 	It("returns a helpful error message for V1MigrationOccurred errors", func() {
 		migrationStore.HasV1MigrationOccurredReturns(false, errors.New("I AM ERROR"))
-		_, err := migrationsProvider.MigrationsToPerform()
+		_, err := migrationsProvider.MigrationsToPerform(false)
 
 		Expect(err).To(MatchError("failed to check V1 Migration status: I AM ERROR"))
 	})
 
 	It("returns a helpful error message for V2MigrationOccurred errors", func() {
 		migrationStore.HasV2MigrationOccurredReturns(false, errors.New("I AM ERROR"))
-		_, err := migrationsProvider.MigrationsToPerform()
+		_, err := migrationsProvider.MigrationsToPerform(false)
 
 		Expect(err).To(MatchError("failed to check V2 Migration status: I AM ERROR"))
 	})
 
 	It("returns a helpful error message for V3MigrationOccurred errors", func() {
 		migrationStore.HasV3MigrationOccurredReturns(false, errors.New("I AM ERROR"))
-		_, err := migrationsProvider.MigrationsToPerform()
+		_, err := migrationsProvider.MigrationsToPerform(false)
 
 		Expect(err).To(MatchError("failed to check V3 Migration status: I AM ERROR"))
+	})
+
+	Context("when a migration is set to skip on mysql 5.7", func() {
+		Context("and the database is not mysql 5.7", func() {
+			It("lists the migration", func() {
+				migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(migrationsToPerform).To(ContainElement(migrations.MigrationsToPerform[78]))
+				Expect(migrationsToPerform).To(ContainElement(migrations.MigrationsToPerform[79]))
+			})
+		})
+		Context("and the database is mysql 5.7", func() {
+			It("doesn't list the migration", func() {
+				migrationsToPerform, err := migrationsProvider.MigrationsToPerform(true)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(migrationsToPerform).ToNot(ContainElement(migrations.MigrationsToPerform[78]))
+				Expect(migrationsToPerform).ToNot(ContainElement(migrations.MigrationsToPerform[79]))
+			})
+		})
 	})
 
 	Context("when legacy v1 migration has already occurred", func() {
@@ -72,7 +91,7 @@ var _ = Describe("Migrations Provider", func() {
 		})
 
 		It("returns a legacy v1 migration in the list of migrations to perform", func() {
-			migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
+			migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
 			Expect(err).ToNot(HaveOccurred())
 			expectedMigrations := migrations.PolicyServerMigrations{
 				migrations.V1LegacyMigrationsToPerform[0],
@@ -99,7 +118,7 @@ var _ = Describe("Migrations Provider", func() {
 		})
 
 		It("returns a legacy v2 migration in the list of migrations to perform", func() {
-			migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
+			migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
 			Expect(err).ToNot(HaveOccurred())
 			expectedMigrations := migrations.PolicyServerMigrations{
 				migrations.V2LegacyMigrationsToPerform[0],
@@ -123,7 +142,7 @@ var _ = Describe("Migrations Provider", func() {
 		})
 
 		It("returns a legacy v3 migration in the list of migrations to perform", func() {
-			migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
+			migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
 			Expect(err).ToNot(HaveOccurred())
 			expectedMigrations := migrations.PolicyServerMigrations{
 				migrations.V3LegacyMigrationsToPerform[0],

@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	"sort"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"

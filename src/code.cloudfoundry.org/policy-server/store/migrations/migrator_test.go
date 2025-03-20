@@ -2237,7 +2237,7 @@ func queryTableColumnNames(tableName string, realDb *db.ConnWrapper) []string {
 }
 
 func getMigrationIndex(migrationsProvider *migrations.MigrationsProvider, migrationId string) int {
-	migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
+	migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
 	Expect(err).NotTo(HaveOccurred())
 	for i, migration := range migrationsToPerform {
 		if migration.Id == migrationId {

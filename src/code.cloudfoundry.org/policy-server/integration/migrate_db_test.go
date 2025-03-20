@@ -3,6 +3,7 @@ package integration_test
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
@@ -95,6 +96,22 @@ func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
 		len(migrations.V2ModifiedMigrationsToPerform) +
 		len(migrations.V3ModifiedMigrationsToPerform) +
 		len(migrations.MigrationsToPerform)
+
+	var skippedMigrations int
+	for _, migration := range migrations.MigrationsToPerform {
+		if migration.SkipMySQL57 {
+			skippedMigrations++
+		}
+	}
+
+	if conn.DriverName() == "mysql" {
+		var version string
+		err := conn.QueryRow("SELECT VERSION()").Scan(&version)
+		Expect(err).ToNot(HaveOccurred())
+		if strings.HasPrefix(version, "5.7.") {
+			numMigrations = numMigrations - skippedMigrations
+		}
+	}
 
 	var migrationCount int
 	conn.QueryRow("SELECT COUNT(*) FROM gorp_migrations").Scan(&migrationCount)
