@@ -432,4 +432,22 @@ var MigrationsToPerform = PolicyServerMigrations{
 		Id: "81",
 		Up: migration_v0081,
 	},
+	PolicyServerMigration{
+		Id:          "82",
+		Up:          migration_v0082,
+		SkipMySQL57: true,
+	},
+	PolicyServerMigration{
+		Id:          "83",
+		Up:          migration_v0083,
+		SkipMySQL57: true,
+	},
+	PolicyServerMigration{
+		Id: "84",
+		Up: migration_v0084,
+	},
+	PolicyServerMigration{
+		Id: "85",
+		Up: migration_v0085,
+	},
 }
