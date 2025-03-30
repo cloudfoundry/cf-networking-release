@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.39.0
+# code.cloudfoundry.org/cf-networking-helpers v0.40.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 # code.cloudfoundry.org/localip v0.34.0
@@ -67,7 +67,7 @@ github.com/tedsuo/ifrit
 github.com/tedsuo/ifrit/grouper
 github.com/tedsuo/ifrit/http_server
 github.com/tedsuo/ifrit/sigmon
-# golang.org/x/net v0.37.0
+# golang.org/x/net v0.38.0
 ## explicit; go 1.23.0
 golang.org/x/net/html
 golang.org/x/net/html/atom
