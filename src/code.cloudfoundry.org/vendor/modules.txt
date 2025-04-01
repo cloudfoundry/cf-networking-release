@@ -44,6 +44,12 @@ code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20250324121313-75aea42a1fc3
 ## explicit; go 1.23.0
 code.cloudfoundry.org/go-diodes
+# code.cloudfoundry.org/go-log-cache/v3 v3.1.0
+## explicit; go 1.23.0
+code.cloudfoundry.org/go-log-cache/v3/rpc/logcache_v1
+# code.cloudfoundry.org/go-loggregator/v10 v10.1.0
+## explicit; go 1.22.0
+code.cloudfoundry.org/go-loggregator/v10/rpc/loggregator_v2
 # code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 ## explicit; go 1.21
 code.cloudfoundry.org/go-loggregator/v9
@@ -100,14 +106,29 @@ github.com/cf-container-networking/sql-migrate/sqlparse
 ## explicit; go 1.23.0
 github.com/cloudfoundry-community/go-uaa
 github.com/cloudfoundry-community/go-uaa/passwordcredentials
+# github.com/cloudfoundry/cf-acceptance-tests v1.9.1-0.20250312160631-048ab2ea8caa
+## explicit; go 1.23.0
+github.com/cloudfoundry/cf-acceptance-tests/cats_suite_helpers
+github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers
+github.com/cloudfoundry/cf-acceptance-tests/helpers/assets
+github.com/cloudfoundry/cf-acceptance-tests/helpers/config
+github.com/cloudfoundry/cf-acceptance-tests/helpers/download
+github.com/cloudfoundry/cf-acceptance-tests/helpers/logs
+github.com/cloudfoundry/cf-acceptance-tests/helpers/skip_messages
+github.com/cloudfoundry/cf-acceptance-tests/helpers/v3_helpers
 # github.com/cloudfoundry/cf-test-helpers/v2 v2.12.0
 ## explicit; go 1.23.0
 github.com/cloudfoundry/cf-test-helpers/v2/cf
 github.com/cloudfoundry/cf-test-helpers/v2/commandreporter
 github.com/cloudfoundry/cf-test-helpers/v2/commandstarter
 github.com/cloudfoundry/cf-test-helpers/v2/config
+github.com/cloudfoundry/cf-test-helpers/v2/generator
+github.com/cloudfoundry/cf-test-helpers/v2/helpers
+github.com/cloudfoundry/cf-test-helpers/v2/helpers/internal
 github.com/cloudfoundry/cf-test-helpers/v2/internal
 github.com/cloudfoundry/cf-test-helpers/v2/silentcommandstarter
+github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers
+github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers/internal
 # github.com/cloudfoundry/dropsonde v1.1.0
 ## explicit; go 1.18
 github.com/cloudfoundry/dropsonde
@@ -183,6 +204,11 @@ github.com/google/pprof/profile
 ## explicit
 # github.com/gorilla/mux v1.6.2
 ## explicit
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3
+## explicit; go 1.23.0
+github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
+github.com/grpc-ecosystem/grpc-gateway/v2/runtime
+github.com/grpc-ecosystem/grpc-gateway/v2/utilities
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
 github.com/jackc/pgpassfile
@@ -454,6 +480,11 @@ golang.org/x/time/rate
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/astutil/edge
+# google.golang.org/genproto/googleapis/api v0.0.0-20250303144028-a0af3efb3deb
+## explicit; go 1.23.0
+google.golang.org/genproto/googleapis/api
+google.golang.org/genproto/googleapis/api/annotations
+google.golang.org/genproto/googleapis/api/httpbody
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/rpc/status
@@ -481,6 +512,7 @@ google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/experimental/stats
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/grpclog/internal
+google.golang.org/grpc/health/grpc_health_v1
 google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancer/gracefulswitch
@@ -551,9 +583,13 @@ google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
+google.golang.org/protobuf/types/known/fieldmaskpb
+google.golang.org/protobuf/types/known/structpb
 google.golang.org/protobuf/types/known/timestamppb
+google.golang.org/protobuf/types/known/wrapperspb
 # gopkg.in/gorp.v1 v1.7.2
 ## explicit
 gopkg.in/gorp.v1
