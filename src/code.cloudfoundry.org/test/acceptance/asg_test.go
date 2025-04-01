@@ -15,8 +15,10 @@ import (
 
 var _ = Describe("Application Security Groups", func() {
 	var (
-		orgName string
-		asgName string
+		orgName   string
+		asgName   string
+		appName   string
+		spaceName string
 	)
 
 	AfterEach(func() {
@@ -33,11 +35,6 @@ var _ = Describe("Application Security Groups", func() {
 		By("deleting the org")
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
-
-	var (
-		appName   string
-		spaceName string
-	)
 
 	BeforeEach(func() {
 		By("unbinding all running ASGs")
