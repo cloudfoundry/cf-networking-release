@@ -7,6 +7,7 @@ import (
 
 	spamAPI "example-apps/spammer/api"
 
+	"github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -49,6 +50,9 @@ var _ = Describe("Outbound connection limit", func() {
 	})
 
 	Describe("when an app opens multiple connections to one host", func() {
+		AfterEach(func() {
+			app_helpers.AppReport(proxyName)
+		})
 		It("the connections get rate limited", func() {
 			By("pushing proxy")
 			pushProxy(proxyName)

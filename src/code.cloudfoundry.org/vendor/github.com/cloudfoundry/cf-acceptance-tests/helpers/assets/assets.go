@@ -1,0 +1,97 @@
+package assets
+
+type Assets struct {
+	AspClassic                 string
+	Catnip                     string
+	CatnipSrc                  string
+	CredHubEnabledApp          string
+	CredHubServiceBroker       string
+	Dora                       string
+	DoraZip                    string
+	DotnetCore                 map[string]string
+	GoCallsRubyZip             string
+	Golang                     string
+	GRPC                       string
+	HelloWorld                 string
+	HelloRouting               string
+	HTTP2                      string
+	Java                       string
+	JavaSpringZip              string
+	JavaUnwriteableZip         string
+	LoggregatorLoadGenerator   string
+	LoggregatorLoadGeneratorGo string
+	Python                     string
+	PythonCrashApp             string
+	Nginx                      string
+	Node                       string
+	CNBNode                    string
+	NodeWithProcfile           string
+	Nora                       string
+	Pora                       string
+	Php                        string
+	Proxy                      string
+	R                          string
+	RubySimple                 string
+	SecurityGroupBuildpack     string
+	ServiceBroker              string
+	Staticfile                 string
+	SyslogDrainListener        string
+	Binary                     string
+	LoggingRouteService        string
+	TCPListener                string
+	Wcf                        string
+	WindowsWebapp              string
+	Worker                     string
+	MultiPortApp               string
+	SpringSleuthZip            string
+}
+
+func NewAssets() Assets {
+	return Assets{
+		AspClassic:           "assets/asp-classic",
+		Catnip:               "assets/catnip/bin",
+		CatnipSrc:            "assets/catnip",
+		CredHubEnabledApp:    "assets/credhub-enabled-app/credhub-enabled-app.jar",
+		CredHubServiceBroker: "assets/credhub-service-broker",
+		Dora:                 "assets/dora",
+		DoraZip:              "assets/dora.zip",
+		DotnetCore: map[string]string{
+			"cflinuxfs4": "assets/dotnet-core/cflinuxfs4",
+		},
+		GoCallsRubyZip:             "assets/go_calls_ruby.zip",
+		Golang:                     "assets/golang",
+		GRPC:                       "assets/grpc",
+		HelloRouting:               "assets/hello-routing",
+		HelloWorld:                 "assets/hello-world",
+		HTTP2:                      "assets/http2",
+		Java:                       "assets/java",
+		JavaSpringZip:              "assets/java-spring/target/spring-boot-trivial-app-0.0.1.jar",
+		JavaUnwriteableZip:         "assets/java-unwriteable-dir/java-unwriteable-dir.jar",
+		LoggregatorLoadGenerator:   "assets/loggregator-load-generator",
+		LoggregatorLoadGeneratorGo: "assets/loggregator-load-generator-go",
+		Nginx:                      "assets/nginx",
+		Node:                       "assets/node",
+		CNBNode:                    "assets/cnb-node",
+		NodeWithProcfile:           "assets/node-with-procfile",
+		Nora:                       "assets/nora/NoraPublished",
+		Pora:                       "assets/pora",
+		Php:                        "assets/php",
+		Proxy:                      "assets/proxy",
+		Python:                     "assets/python",
+		PythonCrashApp:             "assets/python-crash-app",
+		R:                          "assets/r",
+		RubySimple:                 "assets/ruby_simple",
+		SecurityGroupBuildpack:     "assets/security_group_buildpack.zip",
+		ServiceBroker:              "assets/service_broker",
+		Staticfile:                 "assets/staticfile",
+		SyslogDrainListener:        "assets/syslog-drain-listener",
+		Binary:                     "assets/binary",
+		LoggingRouteService:        "assets/logging-route-service",
+		TCPListener:                "assets/tcp-listener",
+		Wcf:                        "assets/wcf/Hello.Service.IIS",
+		WindowsWebapp:              "assets/webapp",
+		Worker:                     "assets/worker",
+		MultiPortApp:               "assets/multi-port-app",
+		SpringSleuthZip:            "assets/spring-sleuth/spring-sleuth.jar",
+	}
+}

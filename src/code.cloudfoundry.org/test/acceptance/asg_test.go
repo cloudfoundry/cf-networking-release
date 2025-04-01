@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -19,6 +20,8 @@ var _ = Describe("Application Security Groups", func() {
 	)
 
 	AfterEach(func() {
+		app_helpers.AppReport(appName)
+
 		By("deleting the asg")
 		removeASG(asgName)
 

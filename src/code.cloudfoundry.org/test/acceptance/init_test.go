@@ -105,6 +105,7 @@ func appDir(appType string) string {
 }
 
 func pushProxy(appName string) {
+
 	Expect(cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),

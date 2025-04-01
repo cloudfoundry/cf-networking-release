@@ -3,6 +3,7 @@ package acceptance_test
 import (
 	"fmt"
 
+	"github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,6 +32,7 @@ var _ = Describe("search domains", func() {
 	})
 
 	AfterEach(func() {
+		app_helpers.AppReport(appName)
 		By("deleting the test org")
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lib/testsupport"
+	"github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -38,6 +39,17 @@ var _ = Describe("Container startup time with a big ASG", func() {
 	})
 
 	Describe("Pushing app with and without a large application security group (ASG)", func() {
+		var appA, appB string
+
+		BeforeEach(func() {
+			appA = fmt.Sprintf("appA-%d", randomGenerator.Int31())
+			appB = fmt.Sprintf("appB-%d", randomGenerator.Int31())
+		})
+		AfterEach(func() {
+			app_helpers.AppReport(appA)
+			app_helpers.AppReport(appB)
+		})
+
 		It("should not give large time difference", func() {
 			var (
 				durationWithoutASG time.Duration
@@ -46,7 +58,6 @@ var _ = Describe("Container startup time with a big ASG", func() {
 
 			By("pushing an app", func() {
 				start := time.Now()
-				appB := fmt.Sprintf("appB-%d", randomGenerator.Int31())
 				pushProxy(appB)
 				durationWithoutASG = time.Since(start)
 			})
@@ -62,7 +73,6 @@ var _ = Describe("Container startup time with a big ASG", func() {
 
 			By("pushing another app", func() {
 				start := time.Now()
-				appA := fmt.Sprintf("appA-%d", randomGenerator.Int31())
 				pushProxy(appA)
 				durationWithASG = time.Since(start)
 			})

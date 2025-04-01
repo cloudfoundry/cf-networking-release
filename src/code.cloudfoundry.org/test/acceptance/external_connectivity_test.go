@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lib/testsupport"
+	"github.com/cloudfoundry/cf-acceptance-tests/helpers/app_helpers"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -50,6 +51,8 @@ var _ = Describe("external connectivity", func() {
 	})
 
 	AfterEach(func() {
+		app_helpers.AppReport(appA)
+
 		By("adding back all the original running ASGs")
 		for _, sg := range testConfig.DefaultSecurityGroups {
 			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
