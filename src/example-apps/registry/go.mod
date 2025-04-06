@@ -23,7 +23,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/nicksnyder/go-i18n v1.10.3 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
