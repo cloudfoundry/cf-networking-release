@@ -13,14 +13,14 @@ replace (
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20250328093854-4ca7ffa87add
 	code.cloudfoundry.org/cf-networking-helpers v0.41.0
-	code.cloudfoundry.org/clock v1.33.0
-	code.cloudfoundry.org/debugserver v0.44.0
-	code.cloudfoundry.org/filelock v0.32.0
-	code.cloudfoundry.org/garden v0.0.0-20250402022550-6fe78a10209e
-	code.cloudfoundry.org/lager/v3 v3.32.0
+	code.cloudfoundry.org/clock v1.34.0
+	code.cloudfoundry.org/debugserver v0.45.0
+	code.cloudfoundry.org/filelock v0.33.0
+	code.cloudfoundry.org/garden v0.0.0-20250409022702-f497a0aaee4b
+	code.cloudfoundry.org/lager/v3 v3.33.0
 	code.cloudfoundry.org/locket v0.0.0-20250312193944-994ce54b9bd5
-	code.cloudfoundry.org/policy_client v0.49.0
-	code.cloudfoundry.org/tlsconfig v0.23.0
+	code.cloudfoundry.org/policy_client v0.50.0
+	code.cloudfoundry.org/tlsconfig v0.24.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
@@ -28,17 +28,17 @@ require (
 	github.com/cloudfoundry/cf-acceptance-tests v1.9.1-0.20250312160631-048ab2ea8caa
 	github.com/cloudfoundry/cf-test-helpers/v2 v2.12.0
 	github.com/cloudfoundry/dropsonde v1.1.0
-	github.com/containernetworking/cni v1.2.3
+	github.com/containernetworking/cni v1.3.0
 	github.com/containernetworking/plugins v1.6.2
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/montanaflynn/stats v0.7.1
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.11.0
+	github.com/nats-io/nats-server/v2 v2.11.1
 	github.com/nats-io/nats-top v0.6.3
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.23.3
+	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -47,16 +47,16 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.38.0
+	golang.org/x/net v0.39.0
 	golang.org/x/sys v0.32.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.49.0 // indirect
-	code.cloudfoundry.org/durationjson v0.36.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20250403121146-782f4df60cf8 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.50.0 // indirect
+	code.cloudfoundry.org/durationjson v0.37.0 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20250407090537-96fce8693346 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.0 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.1.0 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/cloudfoundry/sonde-go v0.0.0-20250403123151-62edc04c2604 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
-	github.com/go-sql-driver/mysql v1.9.1 // indirect
+	github.com/go-sql-driver/mysql v1.9.2 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -92,14 +92,15 @@ require (
 	github.com/vishvananda/netns v0.0.5 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.step.sm/crypto v0.60.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
+	go.uber.org/automaxprocs v1.6.0 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/oauth2 v0.29.0 // indirect
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
-	golang.org/x/tools v0.31.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250404141209-ee84b53bf3d0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250404141209-ee84b53bf3d0 // indirect
+	golang.org/x/tools v0.32.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250409194420-de1ac958c67a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250409194420-de1ac958c67a // indirect
 	google.golang.org/grpc v1.71.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
