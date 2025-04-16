@@ -63,11 +63,13 @@ func (l *CNILoader) GetNetworkConfig() (*libcni.NetworkConfigList, error) {
 		toReturn = confList
 	} else if len(confFilePaths) > 0 {
 		path := confFilePaths[0]
+		//lint:ignore SA1019 - we will address this, but would like to keep units passing
 		conf, err := libcni.ConfFromFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("unable to load config from %s: %s", path, err)
 		}
 
+		//lint:ignore SA1019 - we will address this, but would like to keep units passing
 		confList, err := libcni.ConfListFromConf(conf)
 		if err != nil {
 			// untested, unable to cause failure case.
