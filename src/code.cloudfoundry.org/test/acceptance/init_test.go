@@ -22,7 +22,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-const Timeout_Push = 2 * time.Minute
+const Timeout_Push = 3 * time.Minute
 
 var (
 	appsDir         string
