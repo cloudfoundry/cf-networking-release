@@ -1,9 +1,9 @@
-# code.cloudfoundry.org/bbs v0.0.0-20250328093854-4ca7ffa87add
+# code.cloudfoundry.org/bbs v0.0.0-20250414163106-a163a3b524d2
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.41.0
+# code.cloudfoundry.org/cf-networking-helpers v0.42.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -22,33 +22,33 @@ code.cloudfoundry.org/cf-networking-helpers/poller
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/clock v1.34.0
+# code.cloudfoundry.org/clock v1.35.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.45.0
+# code.cloudfoundry.org/debugserver v0.46.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.50.0
+# code.cloudfoundry.org/diego-logging-client v0.51.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/diego-logging-client
-# code.cloudfoundry.org/durationjson v0.37.0
+# code.cloudfoundry.org/durationjson v0.38.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.33.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20250409022702-f497a0aaee4b
+# code.cloudfoundry.org/garden v0.0.0-20250417175132-3dcb20fef8fb
 ## explicit; go 1.23.0
 code.cloudfoundry.org/garden
-# code.cloudfoundry.org/go-diodes v0.0.0-20250407090537-96fce8693346
+# code.cloudfoundry.org/go-diodes v0.0.0-20250417050917-333c2580673b
 ## explicit; go 1.23.0
 code.cloudfoundry.org/go-diodes
-# code.cloudfoundry.org/go-log-cache/v3 v3.1.0
+# code.cloudfoundry.org/go-log-cache/v3 v3.1.1
 ## explicit; go 1.23.0
 code.cloudfoundry.org/go-log-cache/v3/rpc/logcache_v1
-# code.cloudfoundry.org/go-loggregator/v10 v10.1.0
-## explicit; go 1.22.0
+# code.cloudfoundry.org/go-loggregator/v10 v10.2.0
+## explicit; go 1.23.0
 code.cloudfoundry.org/go-loggregator/v10/rpc/loggregator_v2
 # code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 ## explicit; go 1.21
@@ -57,7 +57,7 @@ code.cloudfoundry.org/go-loggregator/v9/rpc/loggregator_v2
 code.cloudfoundry.org/go-loggregator/v9/runtimeemitter
 # code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953
 ## explicit
-# code.cloudfoundry.org/lager/v3 v3.33.0
+# code.cloudfoundry.org/lager/v3 v3.34.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
@@ -79,7 +79,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.50.0
+# code.cloudfoundry.org/policy_client v0.51.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.24.0
@@ -197,7 +197,7 @@ github.com/google/go-cmp/cmp/internal/value
 github.com/google/go-tpm/legacy/tpm2
 github.com/google/go-tpm/tpmutil
 github.com/google/go-tpm/tpmutil/tbs
-# github.com/google/pprof v0.0.0-20250403155104-27863c87afa6
+# github.com/google/pprof v0.0.0-20250418163039-24c5476c6587
 ## explicit; go 1.23
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
@@ -267,8 +267,8 @@ github.com/nats-io/go-nats
 github.com/nats-io/go-nats/bench
 github.com/nats-io/go-nats/encoders/builtin
 github.com/nats-io/go-nats/util
-# github.com/nats-io/jwt/v2 v2.7.3
-## explicit; go 1.22
+# github.com/nats-io/jwt/v2 v2.7.4
+## explicit; go 1.23.0
 github.com/nats-io/jwt/v2
 # github.com/nats-io/nats-server/v2 v2.11.1
 ## explicit; go 1.23.0
@@ -289,8 +289,8 @@ github.com/nats-io/nats-server/v2/server/tpm
 # github.com/nats-io/nats-top v0.6.3
 ## explicit; go 1.23
 github.com/nats-io/nats-top/util
-# github.com/nats-io/nkeys v0.4.10
-## explicit; go 1.20
+# github.com/nats-io/nkeys v0.4.11
+## explicit; go 1.23.0
 github.com/nats-io/nkeys
 # github.com/nats-io/nuid v1.0.1
 ## explicit
@@ -383,7 +383,7 @@ github.com/tedsuo/rata
 github.com/vishvananda/netns
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
-# go.step.sm/crypto v0.60.0
+# go.step.sm/crypto v0.61.0
 ## explicit; go 1.23.0
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
@@ -486,12 +486,12 @@ golang.org/x/time/rate
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/internal/astutil/edge
-# google.golang.org/genproto/googleapis/api v0.0.0-20250409194420-de1ac958c67a
+# google.golang.org/genproto/googleapis/api v0.0.0-20250414145226-207652e42e2e
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20250409194420-de1ac958c67a
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.71.1
