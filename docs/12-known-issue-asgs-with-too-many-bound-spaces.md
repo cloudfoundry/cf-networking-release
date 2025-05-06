@@ -1,12 +1,12 @@
 ---
-title: Know Issue - Policy Server DB Failures when a Non-Global ASG is Bound to More than 148 Spaces
+title: Know Issue - Policy Server Mysql DB Failures when a Non-Global ASG is Bound to More than 148 Spaces
 expires_at: never
 tags: [cf-networking-release]
 ---
 
 
 ## Issue
-The policy-server pre-start fails when upgrading to cf-networking-release version 3.68.0 or higher.
+The policy-server pre-start fails when upgrading to cf-networking-release version 3.68.0 or higher when using mysql.
 
 ### Symptom 1: failing on migration 82
 
@@ -75,8 +75,13 @@ If any results are returned, then you will run into this bug and you should foll
 1. Connect to the policy server db. 
 1. Run the following queries.
 ```
+# for mysql
 select name from security_groups WHERE JSON_LENGTH(staging_spaces) > 148;
 select name from security_groups WHERE JSON_LENGTH(running_spaces) > 148;
+
+# for postgres
+select name from security_groups WHERE json_array_length(staging_spaces::json) > 148;
+select name from security_groups WHERE json_array_length(running_spaces::json) > 148;
 ```
 
 If either of those queries return any rows, then you will run into this bug and you should follow the mitigations.
@@ -92,9 +97,9 @@ The “staging_spaces” and “running_spaces” columns become too large when 
 There is no permanent fix at this time (05/06/2025).
 
 ## Mitigations
-### Mitigation Option 1: Use foundation wide ASGs
-Foundation wide ASGs have an empty array for "running_spaces" and "staging_spaces" in the database so they will never trigger this issue.
-1. Make and bind a new foundation wide ASG with all the same rules as the problematic ASG.
+### Mitigation Option 1: Use global ASGs
+Global ASGs have an empty array for "running_spaces" and "staging_spaces" in the database so they will never trigger this issue.
+1. Make and bind a new global ASG with all the same rules as the problematic ASG.
 2. Delete the problematic ASG
 
 ### Mitigation Option 2: Make multiple ASGs with the same rules
