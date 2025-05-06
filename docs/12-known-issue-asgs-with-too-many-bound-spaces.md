@@ -78,10 +78,6 @@ If any results are returned, then you will run into this bug and you should foll
 # for mysql
 select name from security_groups WHERE JSON_LENGTH(staging_spaces) > 148;
 select name from security_groups WHERE JSON_LENGTH(running_spaces) > 148;
-
-# for postgres
-select name from security_groups WHERE json_array_length(staging_spaces::json) > 148;
-select name from security_groups WHERE json_array_length(running_spaces::json) > 148;
 ```
 
 If either of those queries return any rows, then you will run into this bug and you should follow the mitigations.
