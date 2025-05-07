@@ -1,5 +1,5 @@
 ---
-title: Know Issue - Policy Server Mysql DB Failures when a Non-Global ASG is Bound to More than 148 Spaces
+title: Know Issue - Policy Server Mysql DB Failures when an ASG is Bound to More than 148 Spaces
 expires_at: never
 tags: [cf-networking-release]
 ---
@@ -93,10 +93,12 @@ The “staging_spaces” and “running_spaces” columns become too large when 
 There is no permanent fix at this time (05/06/2025).
 
 ## Mitigations
-### Mitigation Option 1: Use global ASGs
-Global ASGs have an empty array for "running_spaces" and "staging_spaces" in the database so they will never trigger this issue.
+### Mitigation Option 1: Use Global ASGs that aren't bound to any spaces
+Global ASGs do not _need_ to be bound to individual spaces. However, they can be bound unnecessarily to individual spaces, which will trigger this bug.
+
 1. Make and bind a new global ASG with all the same rules as the problematic ASG.
-2. Delete the problematic ASG
+2. Delete the problematic ASG.
+3. Do not bind the new ASG to spaces or orgs individually.
 
 ### Mitigation Option 2: Make multiple ASGs with the same rules
 Instead of binding one ASG to 148+ spaces, make 2 identical ASGs and bind them to <149 spaces each.
@@ -117,7 +119,7 @@ cat /var/vcap/jobs/policy-server/bin/pre-start
 /var/vcap/jobs/policy-server/bin/pre-start
 ```
 
-### Breaking Glass Mitigation - in dire cases only
+### Break Glass Mitigation - in dire cases only
 If the you have to continue an upgrade urgently and can't do either of the mitigations listed, you can force skip these migrations.
 1. Access the policy server db
 2. Add these rows manually so it will fake as if migrations 82 and 83 have run.
