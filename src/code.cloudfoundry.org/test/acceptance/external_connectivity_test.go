@@ -152,6 +152,7 @@ var _ = Describe("external connectivity", func() {
 			}
 
 			By("checking that the app cannot ping the internet")
+			Eventually(cannotPing, "10s", "1s").Should(Succeed())
 			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding an icmp security group")
