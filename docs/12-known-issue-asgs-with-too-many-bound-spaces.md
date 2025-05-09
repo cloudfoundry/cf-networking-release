@@ -6,7 +6,13 @@ tags: [cf-networking-release]
 
 
 ## Issue
-The policy-server pre-start fails when upgrading to cf-networking-release version 3.68.0 or higher when using mysql.
+The policy-server pre-start fails when...
+* upgrading to CF Networking Release version 3.68.0 or 3.69.0
+* AND using MYSQL for the policy server DB
+* AND dynamic ASGs are enabled
+
+## Permanent Fix
+A fix will be included in CF Networking Release 3.70.0. For deployments that are using MYSQL DBs with dynamic ASGS enabled, we suggest skipping CF Networking Release 3.68.0 and 3.69.0 and upgrading to CF Networking Release 3.70.0 or higher.
 
 ### Symptom 1: failing on migration 82
 
@@ -70,7 +76,6 @@ If any results are returned, then you will run into this bug and you should foll
 ]
 ```
 
-
 ### Option 2: Query the database
 1. Connect to the policy server db. 
 1. Run the following queries.
@@ -89,10 +94,19 @@ and thus the migration will fail. This causes the pre-start script to fail.
 
 The “staging_spaces” and “running_spaces” columns become too large when a single ASG is bound to more than 148 individual spaces for that lifecycle. 
 
-## Resolution
-There is no permanent fix at this time (05/06/2025).
 
 ## Mitigations
+### The Easiest Mitigation
+You can force skip these migrations.
+1. Access the policy server db
+2. Add these rows manually so it will fake as if migrations 82 and 83 have run.
+```
+insert into gorp_migrations (id, applied_at) values (82, NOW());
+insert into gorp_migrations (id, applied_at) values (83, NOW());
+```
+This is a safe procedure. The permanent fix has taken into account the fact that some DBs will be altered manually like this.
+
+
 ### Mitigation Option 1: Use Global ASGs that aren't bound to any spaces
 Global ASGs do not _need_ to be bound to individual spaces. However, they can be bound unnecessarily to individual spaces, which will trigger this bug.
 
@@ -118,17 +132,5 @@ cat /var/vcap/jobs/policy-server/bin/pre-start
 # run the pre-start script. It will log output and will migrate the db
 /var/vcap/jobs/policy-server/bin/pre-start
 ```
-
-### Break Glass Mitigation - in dire cases only
-If the you have to continue an upgrade urgently and can't do either of the mitigations listed, you can force skip these migrations.
-1. Access the policy server db
-2. Add these rows manually so it will fake as if migrations 82 and 83 have run.
-```
-insert into gorp_migrations (id, applied_at) values (82, NOW());
-insert into gorp_migrations (id, applied_at) values (83, NOW());
-```
-
-⚠️ WARNING: If you skip migrations now, you should still work towards running the mitigations listed above.
-Once you have done the mitigations you can delete these rows from the migration database and follow the steps above to run the migrations manually. 
  
 
