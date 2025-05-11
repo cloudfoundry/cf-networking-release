@@ -622,8 +622,8 @@ code.cloudfoundry.org/lager/v3 v3.37.0 h1:cAOUYz2am0remjeKBorIwIapzW6QoRGAFa3ztQ
 code.cloudfoundry.org/lager/v3 v3.37.0/go.mod h1:k6m2qvgAaiS6fE1TpzUoCo3p3aED72dcGgSZCiQznf4=
 code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201 h1:m6Zwwr6HjmdXS/EGwIhar0N6ExQZvmqYSC23MNE+5jc=
 code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
-code.cloudfoundry.org/policy_client v0.53.0 h1:SoAOaqzMm29ehZbG6Zj6dJT1jKrdPcyQYncQJwkoJl4=
-code.cloudfoundry.org/policy_client v0.53.0/go.mod h1:F2euJxFeuOj9MpyRpUivJmz0bn7jPGlkP5IycCZszPE=
+code.cloudfoundry.org/policy_client v0.54.0 h1:5hBDoKfPTpuR1ue2NKrNwdIWDkWuVRn0M0WJ7epMieE=
+code.cloudfoundry.org/policy_client v0.54.0/go.mod h1:KcgWdFt/xOXIdlviqlVyGMTju1LNec7FC8fFTWIPzhQ=
 code.cloudfoundry.org/tlsconfig v0.27.0 h1:2thU4KOShc0DpzAohYKnmU/MxqtIOrx2pC5NzSntPc4=
 code.cloudfoundry.org/tlsconfig v0.27.0/go.mod h1:S0imKZw0arqMYk6tfb88bfsOJ0+08Po+LTlM2DQkK+0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -814,8 +814,8 @@ github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/google/go-tpm v0.9.4 h1:awZRf9FwOeTunQmHoDYSHJps3ie6f1UlhS1fOdPEt1I=
-github.com/google/go-tpm v0.9.4/go.mod h1:h9jEsEECg7gtLis0upRBQU+GhYVH6jMjrFxI8u6bVUY=
+github.com/google/go-tpm v0.9.5 h1:ocUmnDebX54dnW+MQWGQRbdaAcJELsa6PqZhJ48KwVU=
+github.com/google/go-tpm v0.9.5/go.mod h1:h9jEsEECg7gtLis0upRBQU+GhYVH6jMjrFxI8u6bVUY=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/martian/v3 v3.0.0/go.mod h1:y5Zk1BBys9G+gd6Jrk0W3cC1+ELVxBWuIGO+w/tUAp0=
 github.com/google/martian/v3 v3.1.0/go.mod h1:y5Zk1BBys9G+gd6Jrk0W3cC1+ELVxBWuIGO+w/tUAp0=

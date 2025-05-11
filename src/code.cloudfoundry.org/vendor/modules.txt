@@ -79,7 +79,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.53.0
+# code.cloudfoundry.org/policy_client v0.54.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.27.0
@@ -192,7 +192,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-tpm v0.9.4
+# github.com/google/go-tpm v0.9.5
 ## explicit; go 1.22
 github.com/google/go-tpm/legacy/tpm2
 github.com/google/go-tpm/tpmutil

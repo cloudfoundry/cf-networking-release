@@ -19,7 +19,7 @@ require (
 	code.cloudfoundry.org/garden v0.0.0-20250507022932-d3475276d354
 	code.cloudfoundry.org/lager/v3 v3.37.0
 	code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201
-	code.cloudfoundry.org/policy_client v0.53.0
+	code.cloudfoundry.org/policy_client v0.54.0
 	code.cloudfoundry.org/tlsconfig v0.27.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -71,7 +71,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-tpm v0.9.4 // indirect
+	github.com/google/go-tpm v0.9.5 // indirect
 	github.com/google/pprof v0.0.0-20250501235452-c0086092b71a // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
