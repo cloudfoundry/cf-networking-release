@@ -28,7 +28,6 @@ type columnUsage struct {
 }
 
 var _ = Describe("migrations", func() {
-
 	var (
 		dbConf                     db.Config
 		realDb                     *db.ConnWrapper
@@ -47,6 +46,15 @@ var _ = Describe("migrations", func() {
 		numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, migrationIdx)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(numMigrations).To(Equal(migrationIdx))
+	}
+
+	migrateToFrom := func(migrationId string, fromId string) {
+		By("migrating to " + migrationId)
+		migrationIdx := getMigrationIndex(modifiedMigrationsProvider, migrationId)
+		fromMigrationIdx := getMigrationIndex(modifiedMigrationsProvider, fromId)
+		numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, migrationIdx)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(numMigrations).To(Equal(migrationIdx - fromMigrationIdx))
 	}
 
 	BeforeEach(func() {
@@ -1991,6 +1999,56 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V82-V91 - running_spaces_idx and staging_spaces_idx", func() {
+			BeforeEach(func() {
+				if realDb.DriverName() != "mysql" {
+					Skip("skipping postgres test")
+				}
+			})
+
+			It("should migrate if running_spaces_idx and staging_spaces_idx don't exist", func() {
+				By("performing migration")
+				migrateTo("91")
+
+				rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select INDEX_NAME
+							from INFORMATION_SCHEMA.statistics
+							where non_unique = 1 AND table_schema = ?
+						`, realDb.DriverName()), dbConf.DatabaseName)
+				Expect(err).NotTo(HaveOccurred())
+				idxNames := scanIdxRows(rows)
+				Expect(idxNames).ToNot(ContainElement("staging_spaces_idx"))
+				Expect(idxNames).ToNot(ContainElement("running_spaces_idx"))
+			})
+
+			It("should migrate if running_spaces_idx and staging_spaces_idx exist", func() {
+				By("performing migration before staging/running spaces idx")
+				migrateTo("81")
+
+				By("Simulating 82 and 83 migrations")
+				m82 := "CREATE INDEX staging_spaces_idx ON security_groups ((CAST(staging_spaces -> '$[*]' AS CHAR(36) ARRAY)))"
+				_, err := realDb.Query(m82)
+				Expect(err).NotTo(HaveOccurred())
+
+				m83 := "CREATE INDEX running_spaces_idx ON security_groups ((CAST(running_spaces -> '$[*]' AS CHAR(36) ARRAY)))"
+				_, err = realDb.Query(m83)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("performing migration to rollback 82 and 83")
+				migrateToFrom("91", "81")
+
+				rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select INDEX_NAME
+							from INFORMATION_SCHEMA.statistics
+							where non_unique = 1 AND table_schema = ?
+						`, realDb.DriverName()), dbConf.DatabaseName)
+				Expect(err).NotTo(HaveOccurred())
+				idxNames := scanIdxRows(rows)
+				Expect(idxNames).ToNot(ContainElement("staging_spaces_idx"))
+				Expect(idxNames).ToNot(ContainElement("running_spaces_idx"))
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
@@ -2176,6 +2234,19 @@ func scanColumnUsageRows(rows *sql.Rows) []columnUsage {
 	}
 	Expect(rows.Err()).NotTo(HaveOccurred())
 	return actual
+}
+
+func scanIdxRows(rows *sql.Rows) []string {
+	var idxs []string
+	defer rows.Close()
+	for rows.Next() {
+		var idxName string
+
+		Expect(rows.Scan(&idxName)).To(Succeed())
+		idxs = append(idxs, idxName)
+	}
+	Expect(rows.Err()).NotTo(HaveOccurred())
+	return idxs
 }
 
 func scanCountRow(rows *sql.Rows) int {
