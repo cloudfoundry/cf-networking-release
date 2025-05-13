@@ -2,6 +2,7 @@ package migrations_test
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 	migrationsFakes "code.cloudfoundry.org/policy-server/store/migrations/fakes"
 	testhelpers "code.cloudfoundry.org/test-helpers"
 	migrate "github.com/cf-container-networking/sql-migrate"
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -41,15 +43,26 @@ var _ = Describe("migrations", func() {
 		migrator                   *migrations.Migrator
 	)
 
+	var previousMigrationId string
 	migrateTo := func(migrationId string) {
-		By("migrating to " + migrationId)
-		migrationIdx := getMigrationIndex(modifiedMigrationsProvider, migrationId)
-		numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, migrationIdx)
+		var steps int
+		if previousMigrationId != "" {
+			By(fmt.Sprintf("migrating from %s to %s", previousMigrationId, migrationId))
+			migrationIdx := getMigrationIndex(modifiedMigrationsProvider, migrationId)
+			previousMigrationIdx := getMigrationIndex(modifiedMigrationsProvider, previousMigrationId)
+			steps = migrationIdx - previousMigrationIdx
+		} else {
+			By("migrating to " + migrationId)
+			steps = getMigrationIndex(modifiedMigrationsProvider, migrationId)
+		}
+		numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, steps)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(numMigrations).To(Equal(migrationIdx))
+		Expect(numMigrations).To(Equal(steps))
+		previousMigrationId = migrationId
 	}
 
 	BeforeEach(func() {
+		previousMigrationId = ""
 		mockDb = &fakes.Db{}
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("migrator_test_node_%d", time.Now().UnixNano())
@@ -1988,6 +2001,129 @@ var _ = Describe("migrations", func() {
 				err := realDb.QueryRow(queryTableIdType).Scan(&maxvalue)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(maxvalue).To(Equal(9223372036854775807))
+			})
+		})
+
+		Describe("v82-83 - multi-value indices for security_groups space bindings", func() {
+			var spacesJson string
+			BeforeEach(func() {
+				migrateTo("81")
+				var guids []string
+				for range 149 {
+					guid, err := uuid.NewV4()
+					Expect(err).ToNot(HaveOccurred())
+					guids = append(guids, guid.String())
+				}
+				array, err := json.Marshal(guids)
+				spacesJson = string(array)
+				Expect(err).ToNot(HaveOccurred())
+			})
+			It("no longer adds indices", func() {
+				By("performing migration")
+				migrateTo("83")
+
+				var count int
+				By("verifying no indices exist for running spaces")
+				indexCountQuery := "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'running_spaces_idx' AND table_schema = DATABASE()"
+				err := realDb.QueryRow(indexCountQuery).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+				By("verifying no indices exist for staging spaces")
+				indexCountQuery = "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'staging_spaces_idx' AND table_schema = DATABASE()"
+				err = realDb.QueryRow(indexCountQuery).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+			})
+
+			Context("when migrating with security_groups bound to >148 running spaces", func() {
+				BeforeEach(func() {
+					insertSql := "INSERT INTO security_groups (guid, name, running_spaces) VALUES(?, ?, ?)"
+					_, err := realDb.Exec(insertSql, "fake-guid", "my-asg", spacesJson)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("doesn't fail", func() {
+					migrateTo("83")
+				})
+			})
+
+			Context("when migrating with security_groups bound to >148 staging spaces", func() {
+				BeforeEach(func() {
+					insertSql := "INSERT INTO security_groups (guid, name, staging_spaces) VALUES(?, ?, ?)"
+					_, err := realDb.Exec(insertSql, "fake-guid", "my-asg", spacesJson)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("doesn't fail", func() {
+					migrateTo("83")
+				})
+			})
+		})
+
+		Describe("v86-91 - removing multi-value indices for security_groups space bindings", func() {
+			BeforeEach(func() {
+				migrateTo("83")
+			})
+			Context("when v82-83 had created multi-value indices already", func() {
+				BeforeEach(func() {
+					runningIndex := `CREATE INDEX running_spaces_idx ON security_groups ((CAST(running_spaces -> '$[*]' AS CHAR(36) ARRAY)))`
+					_, err := realDb.Exec(runningIndex)
+					Expect(err).NotTo(HaveOccurred())
+
+					stagingIndex := `CREATE INDEX staging_spaces_idx ON security_groups ((CAST(staging_spaces -> '$[*]' AS CHAR(36) ARRAY)))`
+					_, err = realDb.Exec(stagingIndex)
+					Expect(err).NotTo(HaveOccurred())
+
+					var count int
+					By("verifying the index exists for running spaces")
+					indexCountQuery := "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'running_spaces_idx' AND table_schema = DATABASE()"
+					err = realDb.QueryRow(indexCountQuery).Scan(&count)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(count).To(Equal(1))
+
+					By("verifying the index exists for staging spaces")
+					indexCountQuery = "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'staging_spaces_idx' AND table_schema = DATABASE()"
+					err = realDb.QueryRow(indexCountQuery).Scan(&count)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(count).To(Equal(1))
+				})
+
+				It("removes the multi-value indices from previous versions of v82+83", func() {
+					By("performing migration")
+					migrateTo("91")
+
+					var count int
+					By("verifying no indices exist for running spaces")
+					indexCountQuery := "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'running_spaces_idx' AND table_schema = DATABASE()"
+					err := realDb.QueryRow(indexCountQuery).Scan(&count)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(count).To(Equal(0))
+
+					By("verifying no indices exist for staging spaces")
+					indexCountQuery = "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'staging_spaces_idx' AND table_schema = DATABASE()"
+					err = realDb.QueryRow(indexCountQuery).Scan(&count)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(count).To(Equal(0))
+				})
+			})
+
+			Context("if no previous indices were present", func() {
+				It("doesn't fail", func() {
+					var count int
+					By("verifying no indices exist for running spaces")
+					indexCountQuery := "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'running_spaces_idx' AND table_schema = DATABASE()"
+					err := realDb.QueryRow(indexCountQuery).Scan(&count)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(count).To(Equal(0))
+
+					By("verifying no indices exist for staging spaces")
+					indexCountQuery = "SELECT COUNT(*) FROM information_schema.statistics WHERE table_name = 'security_groups' AND index_name = 'staging_spaces_idx' AND table_schema = DATABASE()"
+					err = realDb.QueryRow(indexCountQuery).Scan(&count)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(count).To(Equal(0))
+
+					By("migrating after ensuring the indices were absent")
+					migrateTo("91")
+				})
 			})
 		})
 
