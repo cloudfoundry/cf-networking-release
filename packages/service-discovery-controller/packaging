@@ -10,5 +10,6 @@ mkdir ${BOSH_INSTALL_TARGET}/bin
 export GOBIN=${BOSH_INSTALL_TARGET}/bin
 
 pushd src/code.cloudfoundry.org
-go install code.cloudfoundry.org/service-discovery-controller/...
+  go build -o "${BOSH_INSTALL_TARGET}/bin/service-discovery-controller" code.cloudfoundry.org/service-discovery-controller/cmd/service-discovery-controller
+  go build -o "${BOSH_INSTALL_TARGET}/bin/config-validator" code.cloudfoundry.org/service-discovery-controller/cmd/config-validator
 popd

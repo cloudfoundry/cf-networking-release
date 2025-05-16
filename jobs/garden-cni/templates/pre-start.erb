@@ -1,4 +1,8 @@
 #!/bin/bash -eu
 
+<% if spec.bootstrap == true %>
+/var/vcap/packages/runc-cni/bin/config-validator -config /var/vcap/jobs/garden-cni/config/adapter.json
+<% end %>
+
 rm -rf /var/vcap/data/garden-cni/container-netns || true
 rm -rf /var/vcap/data/garden-cni/external-networker-state.json || true

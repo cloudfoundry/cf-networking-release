@@ -10,5 +10,6 @@ mkdir ${BOSH_INSTALL_TARGET}/bin
 export GOBIN=${BOSH_INSTALL_TARGET}/bin
 
 pushd src/code.cloudfoundry.org
-go install code.cloudfoundry.org/bosh-dns-adapter/...
+  go build -o "${BOSH_INSTALL_TARGET}/bin/bosh-dns-adapter" code.cloudfoundry.org/bosh-dns-adapter/cmd/bosh-dns-adapter
+  go build -o "${BOSH_INSTALL_TARGET}/bin/config-validator" code.cloudfoundry.org/bosh-dns-adapter/cmd/config-validator
 popd

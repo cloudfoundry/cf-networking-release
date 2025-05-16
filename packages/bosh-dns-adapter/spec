@@ -8,8 +8,10 @@ files:
   - code.cloudfoundry.org/go.mod
   - code.cloudfoundry.org/go.sum
   - code.cloudfoundry.org/vendor/modules.txt
+  - code.cloudfoundry.org/bosh-dns-adapter/cmd/bosh-dns-adapter/*.go
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub
-  - code.cloudfoundry.org/bosh-dns-adapter/*.go # gosub
+  - code.cloudfoundry.org/bosh-dns-adapter/cmd/bosh-dns-adapter/*.go # gosub
+  - code.cloudfoundry.org/bosh-dns-adapter/cmd/config-validator/*.go # gosub
   - code.cloudfoundry.org/bosh-dns-adapter/config/*.go # gosub
   - code.cloudfoundry.org/bosh-dns-adapter/handlers/*.go # gosub
   - code.cloudfoundry.org/bosh-dns-adapter/sdcclient/*.go # gosub

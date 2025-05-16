@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+<% if spec.bootstrap == true %>
+/var/vcap/packages/bosh-dns-adapter/bin/config-validator -config /var/vcap/jobs/bosh-dns-adapter/config/config.json
+<% end %>
