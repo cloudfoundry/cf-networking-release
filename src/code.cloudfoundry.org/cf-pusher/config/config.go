@@ -25,5 +25,6 @@ type Config struct {
 	RunExperimentalOutboundConnLimitTest bool     `json:"run_experimental_outbound_conn_limit_test"`
 	SkipSpaceDeveloperPolicyTest         bool     `json:"skip_space_developer_policy_test"`
 	SkipSearchDomainTests                bool     `json:"skip_search_domain_tests"`
+	SkipSSHTests                         bool     `json:"skip_ssh_tests"`
 	SkipSSLValidation                    bool     `json:"skip_ssl_validation"`
 }

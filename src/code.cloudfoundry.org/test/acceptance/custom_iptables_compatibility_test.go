@@ -24,6 +24,10 @@ var _ = Describe("Custom iptables compatibility", func() {
 			Skip("skipping custom iptables compatibility tests")
 		}
 
+		if testConfig.SkipSSHTests {
+			Skip("skipping tests that require app SSH access")
+		}
+
 		appName = fmt.Sprintf("appA-%d", randomGenerator.Int31())
 
 		orgName = testConfig.Prefix + "custom-iptables-org"
