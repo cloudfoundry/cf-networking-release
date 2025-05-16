@@ -8,7 +8,4 @@ if [ -f /var/vcap/jobs/bosh-dns/bin/wait ]; then
     /var/vcap/jobs/bosh-dns/bin/wait
 fi
 
-/var/vcap/packages/policy-server/bin/migrate-db \
-  -config-file=/var/vcap/jobs/policy-server/config/policy-server.json
-
 <% end %>

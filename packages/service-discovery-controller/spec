@@ -36,8 +36,8 @@ files:
   - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.go # gosub
   - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.s # gosub
   - code.cloudfoundry.org/vendor/github.com/bmizerany/pat/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/*.go # gosub
-  - code.cloudfoundry.org/vendor/github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/rubenv/sql-migrate/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/rubenv/sql-migrate/sqlparse/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
@@ -100,5 +100,4 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/protobuf/reflect/protoregistry/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/protobuf/runtime/protoiface/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/protobuf/runtime/protoimpl/*.go # gosub
-  - code.cloudfoundry.org/vendor/gopkg.in/gorp.v1/*.go # gosub
   - code.cloudfoundry.org/vendor/gopkg.in/validator.v2/*.go # gosub

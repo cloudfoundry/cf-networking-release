@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
@@ -18,10 +17,10 @@ import (
 	"code.cloudfoundry.org/policy-server/store/migrations"
 	migrationsFakes "code.cloudfoundry.org/policy-server/store/migrations/fakes"
 	testhelpers "code.cloudfoundry.org/test-helpers"
-	migrate "github.com/cf-container-networking/sql-migrate"
 	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 type columnUsage struct {
@@ -2127,71 +2126,6 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
-		Context("when migrating in parallel", func() {
-			Context("mysql", func() {
-				BeforeEach(func() {
-					if realDb.DriverName() != "mysql" {
-						Skip("skipping mysql tests")
-					}
-				})
-
-				It("should migrate", func() {
-					done := make(chan interface{})
-					go func() {
-						defer close(done)
-						numOfRoutines := 10
-						wg := sync.WaitGroup{}
-						wg.Add(numOfRoutines)
-
-						for i := 0; i < numOfRoutines; i++ {
-							go func() {
-								defer wg.Done()
-								defer GinkgoRecover()
-
-								_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-								Expect(err).ToNot(HaveOccurred())
-							}()
-						}
-
-						wg.Wait()
-					}()
-					Eventually(done, 10*time.Second).Should(BeClosed())
-				})
-			})
-
-			Context("postgres", func() {
-				BeforeEach(func() {
-					if realDb.DriverName() != "postgres" {
-						Skip("skipping postgres tests")
-					}
-				})
-
-				It("should migrate", func() {
-					done := make(chan interface{})
-					go func() {
-						defer close(done)
-						numOfRoutines := 10
-						wg := sync.WaitGroup{}
-						wg.Add(numOfRoutines)
-
-						for i := 0; i < numOfRoutines; i++ {
-							go func() {
-								defer wg.Done()
-								defer GinkgoRecover()
-
-								_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-								Expect(err).ToNot(HaveOccurred())
-							}()
-						}
-
-						wg.Wait()
-					}()
-					Eventually(done, 10*time.Second).Should(BeClosed())
-				})
-			})
-
-		})
-
 		Context("when getting migrations to perform fails", func() {
 			It("returns a meaningful error message", func() {
 				legacyMigrationsProvider.MigrationsToPerformReturns(nil, errors.New("mark mark mark"))
@@ -2229,10 +2163,14 @@ var _ = Describe("migrations", func() {
 		It("should no-op", func() {
 			adapter := migrations.MigrateAdapter{}
 
-			migrateUp(realDb, adapter, migrations.V1ModifiedMigrationsToPerform)
-			migrateUp(realDb, adapter, migrations.V2ModifiedMigrationsToPerform)
-			migrateUp(realDb, adapter, migrations.V3ModifiedMigrationsToPerform)
-			migrateUp(realDb, adapter, migrations.MigrationsToPerform)
+			toMigrate := migrations.V1ModifiedMigrationsToPerform
+			migrateUp(realDb, adapter, toMigrate)
+			toMigrate = append(toMigrate, migrations.V2ModifiedMigrationsToPerform...)
+			migrateUp(realDb, adapter, toMigrate)
+			toMigrate = append(toMigrate, migrations.V3ModifiedMigrationsToPerform...)
+			migrateUp(realDb, adapter, toMigrate)
+			toMigrate = append(toMigrate, migrations.MigrationsToPerform...)
+			migrateUp(realDb, adapter, toMigrate)
 
 			migrateDown(realDb, adapter, migrations.V1ModifiedMigrationsToPerform)
 			migrateDown(realDb, adapter, migrations.V2ModifiedMigrationsToPerform)

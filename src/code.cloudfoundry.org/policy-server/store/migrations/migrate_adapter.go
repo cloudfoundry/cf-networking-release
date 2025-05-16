@@ -2,9 +2,8 @@ package migrations
 
 import (
 	"errors"
-	"time"
 
-	migrate "github.com/cf-container-networking/sql-migrate"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 type MigrateAdapter struct {
@@ -15,5 +14,5 @@ func (ma *MigrateAdapter) ExecMax(db MigrationDb, dialect string, m migrate.Migr
 		return 0, errors.New("down migration not supported")
 	}
 
-	return migrate.ExecMaxWithLock(db.RawConnection().DB, dialect, m, dir, max, 1*time.Minute) // tested through integration
+	return migrate.ExecMax(db.RawConnection().DB, dialect, m, dir, max) // tested through integration
 }
