@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/policy-server/store/migrations"
-	migrate "github.com/cf-container-networking/sql-migrate"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 type MigrateAdapter struct {

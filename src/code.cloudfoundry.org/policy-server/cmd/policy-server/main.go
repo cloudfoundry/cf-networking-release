@@ -33,6 +33,7 @@ import (
 	"code.cloudfoundry.org/policy-server/handlers"
 	psmiddleware "code.cloudfoundry.org/policy-server/middleware"
 	"code.cloudfoundry.org/policy-server/store"
+	"code.cloudfoundry.org/policy-server/store/migrations"
 	"code.cloudfoundry.org/policy-server/uaa_client"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
@@ -121,6 +122,29 @@ func main() {
 	}
 
 	logger.Info("db connection retrieved", lager.Data{})
+
+	doneChan := make(chan bool, 1)
+	go func() {
+		for {
+			err := migrateAndPopulateGroupsTable(logger, conf, connectionPool)
+			if err != nil {
+				logger.Error("failed migrating and populating tags, retrying", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			doneChan <- true
+			return
+		}
+	}()
+
+	select {
+	case <-doneChan:
+		logger.Info("migrations and groups table population are complete")
+	case <-time.After(time.Duration(conf.DatabaseMigrationTimeout) * time.Second):
+		errMsg := fmt.Errorf("migrations and groups table population timed out after %d seconds", conf.DatabaseMigrationTimeout)
+		logger.Error("db migrations and populating tags failed", errMsg)
+		os.Exit(3)
+	}
 
 	c2cPolicyStore := store.New(
 		connectionPool,
@@ -345,4 +369,36 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 		PollInterval:    pollInterval,
 		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
 	}
+}
+
+func migrateAndPopulateGroupsTable(logger lager.Logger, conf *config.Config, dbConn *db.ConnWrapper) error {
+
+	logger.Info("migration db connection retrieved")
+
+	migrator := &migrations.Migrator{
+		MigrateAdapter: &migrations.MigrateAdapter{},
+		MigrationsProvider: &migrations.MigrationsProvider{
+			Store: &store.MigrationsStore{
+				DBConn: dbConn,
+			},
+		},
+	}
+
+	tagPopulator := &store.TagPopulator{DBConnection: dbConn}
+
+	logger.Info("running migrations")
+	numMigrationsRun, err := migrator.PerformMigrations(dbConn.DriverName(), dbConn, 0)
+	if err != nil {
+		return fmt.Errorf("perform migrations: %s", err)
+	}
+	logger.Info("finished running migrations", lager.Data{"num-migrations-completed": numMigrationsRun})
+
+	logger.Info("populating groups table")
+	err = tagPopulator.PopulateTables(conf.TagLength)
+	if err != nil {
+		return fmt.Errorf("populating groups table: %s", err)
+	}
+	logger.Info("finished populating groups table")
+
+	return nil
 }

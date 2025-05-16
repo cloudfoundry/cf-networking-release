@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	migrate "github.com/cf-container-networking/sql-migrate"
 	"github.com/jmoiron/sqlx"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 //go:generate counterfeiter -generate

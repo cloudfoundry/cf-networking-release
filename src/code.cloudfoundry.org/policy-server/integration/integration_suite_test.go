@@ -21,14 +21,12 @@ var (
 	policyServerPath          string
 	policyServerInternalPath  string
 	policyServerAsgSyncerPath string
-	migrateDbPath             string
 )
 
 type policyServerPaths struct {
 	Internal  string
 	AsgSyncer string
 	External  string
-	MigrateDb string
 }
 
 var HaveName = func(name string) types.GomegaMatcher {
@@ -74,11 +72,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
-	fmt.Fprint(GinkgoWriter, "building migrate-db binary...")
-	paths.MigrateDb, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/migrate-db", "-race", "-buildvcs=false")
-	fmt.Fprint(GinkgoWriter, "done")
-	Expect(err).NotTo(HaveOccurred())
-
 	data, err := json.Marshal(paths)
 	Expect(err).NotTo(HaveOccurred())
 	return data
@@ -90,7 +83,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	policyServerPath = paths.External
 	policyServerInternalPath = paths.Internal
 	policyServerAsgSyncerPath = paths.AsgSyncer
-	migrateDbPath = paths.MigrateDb
 
 })
 
@@ -127,9 +119,6 @@ func startPolicyServers(configs []config.Config) []*gexec.Session {
 
 func startPolicyAndInternalServers(configs []config.Config, internalConfigs []config.InternalConfig) []*gexec.Session {
 	testhelpers.CreateDatabase(configs[0].Database)
-
-	session := helpers.RunMigrationsPreStartBinary(migrateDbPath, configs[0])
-	Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
 
 	var sessions []*gexec.Session
 	for _, conf := range configs {

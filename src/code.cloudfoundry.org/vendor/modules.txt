@@ -98,10 +98,6 @@ github.com/benjamintf1/unmarshalledmatchers
 # github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f
 ## explicit
 github.com/bmizerany/pat
-# github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
-## explicit
-github.com/cf-container-networking/sql-migrate
-github.com/cf-container-networking/sql-migrate/sqlparse
 # github.com/cloudfoundry-community/go-uaa v0.3.5
 ## explicit; go 1.23.0
 github.com/cloudfoundry-community/go-uaa
@@ -170,6 +166,9 @@ github.com/containernetworking/plugins/pkg/testutils
 github.com/coreos/go-iptables/iptables
 # github.com/fsnotify/fsnotify v1.8.0
 ## explicit; go 1.17
+# github.com/go-gorp/gorp/v3 v3.1.0
+## explicit; go 1.18
+github.com/go-gorp/gorp/v3
 # github.com/go-logr/logr v1.4.2
 ## explicit; go 1.18
 github.com/go-logr/logr
@@ -362,6 +361,10 @@ github.com/pivotal-cf/paraphernalia/secure/tlsconfig
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/rubenv/sql-migrate v1.8.0
+## explicit; go 1.23.0
+github.com/rubenv/sql-migrate
+github.com/rubenv/sql-migrate/sqlparse
 # github.com/square/certstrap v1.3.0
 ## explicit; go 1.18
 github.com/square/certstrap/depot
@@ -382,8 +385,6 @@ github.com/tedsuo/rata
 # github.com/vishvananda/netns v0.0.5
 ## explicit; go 1.17
 github.com/vishvananda/netns
-# github.com/ziutek/mymysql v1.5.4
-## explicit
 # go.step.sm/crypto v0.64.0
 ## explicit; go 1.23.0
 go.step.sm/crypto/fingerprint
@@ -597,9 +598,6 @@ google.golang.org/protobuf/types/known/fieldmaskpb
 google.golang.org/protobuf/types/known/structpb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
-# gopkg.in/gorp.v1 v1.7.2
-## explicit
-gopkg.in/gorp.v1
 # gopkg.in/validator.v2 v2.0.1
 ## explicit; go 1.18
 gopkg.in/validator.v2

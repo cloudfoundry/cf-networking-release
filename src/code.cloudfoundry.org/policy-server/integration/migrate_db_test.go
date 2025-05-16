@@ -2,7 +2,10 @@ package integration_test
 
 import (
 	"fmt"
+	"io"
 	"math"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +34,7 @@ var _ = Describe("Migrate DB Binary", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("migrate_test_node_%d", ports.PickAPort())
 
-		conf, _, _ = helpers.DefaultTestConfig(dbConf, "unused", "fixtures")
+		conf, _, _ = helpers.DefaultTestConfig(dbConf, "127.0.0.1:3457", "fixtures")
 		conf.Database = dbConf
 	})
 
@@ -45,9 +48,9 @@ var _ = Describe("Migrate DB Binary", func() {
 		})
 
 		It("runs the migrations and seeds the groups table", func() {
-			session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
-			Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
-
+			session := helpers.RunMigrationsPreStartBinary(policyServerPath, conf)
+			checkServerHealth(conf)
+			session.Kill().Wait(TimeoutShort)
 			conn := createDbConn(dbConf)
 			defer conn.Close()
 
@@ -56,10 +59,9 @@ var _ = Describe("Migrate DB Binary", func() {
 
 		Context("when the migrations have already run", func() {
 			It("runs successfully", func() {
-				session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
-				Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
-				session = helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
-				Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
+				session := helpers.RunMigrationsPreStartBinary(policyServerPath, conf)
+				checkServerHealth(conf)
+				session.Kill().Wait(TimeoutShort)
 			})
 		})
 	})
@@ -71,9 +73,10 @@ var _ = Describe("Migrate DB Binary", func() {
 			})
 
 			It("eventually succeeds", func() {
-				session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
+				session := helpers.RunMigrationsPreStartBinary(policyServerPath, conf)
 				testhelpers.CreateDatabase(dbConf)
-				Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
+				checkServerHealth(conf)
+				session.Kill().Wait(TimeoutShort)
 				conn := createDbConn(dbConf)
 				defer conn.Close()
 
@@ -84,7 +87,7 @@ var _ = Describe("Migrate DB Binary", func() {
 		Context("when it never becomes available", func() {
 			It("exits non-zero", func() {
 				conf.DatabaseMigrationTimeout = 1
-				session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
+				session := helpers.RunMigrationsPreStartBinary(policyServerPath, conf)
 				Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(1))
 			})
 		})
@@ -120,6 +123,21 @@ func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
 	var groupCount int
 	conn.QueryRow(`SELECT COUNT(*) FROM "groups"`).Scan(&groupCount)
 	Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8))) - 1))
+}
+
+func checkServerHealth(conf config.Config) {
+	Eventually(func() error {
+		resp, err := http.Get("http://localhost:" + strconv.Itoa(conf.ListenPort))
+		if err != nil {
+			return err
+		}
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		responseString, err := io.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(responseString).To(ContainSubstring("Network policy server, up for"))
+		defer resp.Body.Close()
+		return nil
+	}, TimeoutShort).Should(Succeed())
 }
 
 func createDbConn(dbConf db.Config) *db.ConnWrapper {
