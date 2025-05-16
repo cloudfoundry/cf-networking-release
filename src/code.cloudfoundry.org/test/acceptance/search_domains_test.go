@@ -23,6 +23,10 @@ var _ = Describe("search domains", func() {
 			Skip("skipping search domains test")
 		}
 
+		if testConfig.SkipSSHTests {
+			Skip("skipping tests that require app SSH access")
+		}
+
 		appName = fmt.Sprintf("appName-%d", randomGenerator.Int31())
 		orgName = testConfig.Prefix + "search-domains-org"
 		setupOrgAndSpace(orgName, testConfig.Prefix+"space")

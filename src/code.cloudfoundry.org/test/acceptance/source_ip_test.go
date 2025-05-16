@@ -19,6 +19,10 @@ var _ = Describe("c2c traffic source ip", func() {
 	)
 
 	BeforeEach(func() {
+		if testConfig.SkipSSHTests {
+			Skip("skipping tests that require app SSH access")
+		}
+
 		appName = fmt.Sprintf("appA-%d", randomGenerator.Int31())
 
 		orgName = testConfig.Prefix + "source-traffic-org"

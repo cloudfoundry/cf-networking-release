@@ -32,6 +32,10 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		)
 
 		BeforeEach(func() {
+			if testConfig.SkipSSHTests {
+				Skip("skipping tests that require app SSH access")
+			}
+
 			appProxy = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", randomGenerator.Int31())
 			asgName = fmt.Sprintf("wide-open-asg-%d", randomGenerator.Int31())
 

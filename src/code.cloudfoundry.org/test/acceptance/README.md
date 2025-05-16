@@ -34,6 +34,7 @@ Finally! A guide for how to run CF Networking Acceptance Tests!
 - `run_experimental_outbound_conn_limit_test`- Enables/Disables testing of the experimental option for outbound connection rate limiting.
 - `skip_space_developer_policy_test` - Unused.
 - `skip_search_domain_tests` - Disables/Enables tests to validate that search domains are propagated into the app containers' `/etc/resolv.conf`
+- `skip_ssh_tests` - Disables/Enables tests that require SSH access to app containers
 - `skip_ssl_validation` - Enables/Disables SSL validation when talking to CF + apps
 
 ## Recommended Config Options
@@ -42,7 +43,7 @@ Finally! A guide for how to run CF Networking Acceptance Tests!
 {
     "admin_password": "CF_ADMIN_PASSWORD",
     "admin_secret": "CF_ADMIN_UAA_SECRET",
-    "admin_user":"admin",
+    "admin_user": "admin",
     "api": "api.CF_SYSTEM_DOMAIN},
     "apps_domain": "CF_APPS_DOMAIN",
     "concurrency": 16,
@@ -51,19 +52,20 @@ Finally! A guide for how to run CF Networking Acceptance Tests!
     "extra_listen_ports": 2,
     "internetless": false,
     "nodes": 1,
-    "prefix":"test-",
+    "prefix": "test-",
     "proxy_applications": 1,
     "proxy_instances": 1,
     "run_custom_iptables_compatibility_test": true,
     "run_experimental_outbound_conn_limit_test": true,
     "skip_icmp_tests": false,
     "skip_search_domain_tests": false,
-    "skip_ssl_validation":true,
+    "skip_ssh_tests": false,
+    "skip_ssl_validation": true,
     "test_app_instances": 3,
     "test_applications": 2,
     "test_app_registry_ttl_seconds": 10,
     "include_security_groups": true,
-    "use_http":true
+    "use_http": true
 }
 ```
 
