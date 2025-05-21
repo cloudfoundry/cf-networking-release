@@ -18,9 +18,6 @@ packages:
 consumes:
   - name: service-discovery-controller
     type: service-discovery-controller
-  - name: cloud_controller_container_networking_info
-    type: cloud_controller_container_networking_info
-    optional: true
 
 properties:
   cf_app_sd_disable:
@@ -66,11 +63,6 @@ properties:
     description: "TLD for internal app resolution with istio service discovery."
     example: ["istio.apps.internal."]
     default: []
-
-  internal_route_vip_range:
-    description: "The ipv4 CIDR range of virtual IP addresses to be assigned to routes on internal domains.
-                  The value for this property should come from cloud_controller_container_networking_info
-                  link from capi-release. This property is here only for override purposes."
 
   healthchecker.failure_counter_file:
     description: "File used by the healthchecker to monitor consecutive failures."
