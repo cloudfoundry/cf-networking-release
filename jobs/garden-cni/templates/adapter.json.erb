@@ -6,9 +6,6 @@
       if_p("experimental_proxy_redirect_cidr") do |cidr|
         return cidr unless cidr.nil? || cidr.empty?
       end
-      if_link('cloud_controller_container_networking_info') do |link|
-        return link.p("cc.internal_route_vip_range")
-      end
       ''
     end
 

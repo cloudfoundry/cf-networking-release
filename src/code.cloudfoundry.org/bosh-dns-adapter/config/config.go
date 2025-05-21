@@ -23,7 +23,6 @@ type Config struct {
 	LogLevelAddress                   string             `json:"log_level_address" validate:"nonzero"`
 	LogLevelPort                      int                `json:"log_level_port" validate:"min=1"`
 	InternalServiceMeshDomains        []string           `json:"internal_service_mesh_domains"`
-	InternalRouteVIPRange             string             `json:"internal_route_vip_range" validate:"cidr"`
 }
 
 func init() {
@@ -52,10 +51,4 @@ func NewConfig(configJSON []byte) (*Config, error) {
 	}
 
 	return adapterConfig, err
-}
-
-func (c *Config) GetInternalRouteVIPRangeCIDR() *net.IPNet {
-	// We can ignore the error because it's been validated
-	_, cidr, _ := net.ParseCIDR(c.InternalRouteVIPRange)
-	return cidr
 }

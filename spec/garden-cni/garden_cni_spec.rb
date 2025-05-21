@@ -8,16 +8,6 @@ module Bosh::Template::Test
     let(:release_path) {File.join(File.dirname(__FILE__), '../..')}
     let(:release) {ReleaseDir.new(release_path)}
     let(:job) {release.job('garden-cni')}
-    let(:links) do
-      [
-         Link.new(
-           name: 'cloud_controller_container_networking_info',
-           properties: {
-             'cc' => {'internal_route_vip_range' => '192.168.0.1/24'}
-           }
-         )
-      ]
-    end
 
     describe 'adapter.json.erb' do
       let(:template) {job.template('config/adapter.json')}
@@ -37,7 +27,7 @@ module Bosh::Template::Test
         end
 
         it 'creates a config/adapter.json from properties' do
-          clientConfig = JSON.parse(template.render(merged_manifest_properties, consumes: links))
+          clientConfig = JSON.parse(template.render(merged_manifest_properties))
           expect(clientConfig).to eq({
             'cni_plugin_dir' => 'meow-plugin-dir',
             'cni_config_dir' => 'meow-config-dir',
@@ -53,25 +43,6 @@ module Bosh::Template::Test
             'proxy_uid' => 0,
             'enable_ingress_proxy_redirect' => true,
           })
-        end
-      end
-     
-      describe 'when accepting the value from the link' do
-        let(:merged_manifest_properties) do
-          {
-            'cni_plugin_dir' => 'meow-plugin-dir',
-            'cni_config_dir' => 'meow-config-dir',
-            'nat_port_range_start' => 1111,
-            'nat_port_range_size' => 5555,
-            'search_domains' => ['meow', 'woof', 'neopets'],
-            'experimental_enable_proxy_redirect' => true,
-            'experimental_enable_ingress_proxy_redirect' => true
-          }
-        end
-
-        it 'uses the value from the link' do
-          clientConfig = JSON.parse(template.render(merged_manifest_properties, consumes: links))
-          expect(clientConfig['proxy_redirect_cidr']).to eq('192.168.0.1/24')
         end
       end
 
@@ -111,7 +82,7 @@ module Bosh::Template::Test
         end
 
         it 'creates a config/adapter.json from properties' do
-          clientConfig = JSON.parse(template.render(merged_manifest_properties), consumes: links)
+          clientConfig = JSON.parse(template.render(merged_manifest_properties))
           expect(clientConfig).to eq({
             'cni_plugin_dir' => 'meow-plugin-dir',
             'cni_config_dir' => 'meow-config-dir',
