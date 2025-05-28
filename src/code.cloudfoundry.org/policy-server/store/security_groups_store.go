@@ -1,23 +1,177 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/store/helpers"
+	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
 //counterfeiter:generate -o fakes/security_groups_store.go --fake-name SecurityGroupsStore . SecurityGroupsStore
 type SecurityGroupsStore interface {
 	Replace([]SecurityGroup) error
 	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)
+	SpacesWithExpiredOrNoCache([]string) ([]string, error)
+	UpdateSecurityGroupsFromCapi([]string) error
 	LastUpdated() (int, error)
 }
 
 type SGStore struct {
-	Conn Database
+	Logger      lager.Logger
+	Conn        Database
+	CacheExpiry time.Duration
+	CCClient    cc_client.CCClient
+	UAAClient   *uaa_client.Client
+}
+
+func (sgs *SGStore) UpdateSecurityGroupsFromCapi(spacesNeedingRefresh []string) error {
+	tx, err := sgs.Conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("create transaction: %s", err)
+	}
+	defer tx.Rollback()
+
+	// FIXME: should this be cached and renewed vs every request?
+	token, err := sgs.UAAClient.GetToken()
+	if err != nil {
+		return fmt.Errorf("get UAA token failed: %s", err)
+	}
+
+	securityGroups, err := sgs.CCClient.GetSecurityGroupsBySpaces(token, spacesNeedingRefresh)
+	if err != nil {
+		return err
+	}
+
+	securityGroupsForSpace := map[string]map[string]SecurityGroup{}
+	for _, capiSg := range securityGroups {
+		spacesForSg := map[string]struct{}{}
+		var stagingSpaces, runningSpaces []string
+		for _, spaces := range capiSg.Relationships.StagingSpaces.Data {
+			for _, space := range spaces {
+				spacesForSg[space] = struct{}{}
+				stagingSpaces = append(stagingSpaces, space)
+			}
+		}
+		for _, spaces := range capiSg.Relationships.RunningSpaces.Data {
+			for _, space := range spaces {
+				spacesForSg[space] = struct{}{}
+				runningSpaces = append(runningSpaces, space)
+			}
+		}
+
+		rules, err := json.Marshal(capiSg.Rules)
+		if err != nil {
+			return fmt.Errorf("error converting rules to json for ASG '%s': %s", capiSg.GUID, err)
+		}
+		sg := SecurityGroup{
+			Guid:              capiSg.GUID,
+			Name:              capiSg.Name,
+			Rules:             string(rules),
+			StagingDefault:    capiSg.GloballyEnabled.Staging,
+			RunningDefault:    capiSg.GloballyEnabled.Running,
+			StagingSpaceGuids: stagingSpaces,
+			RunningSpaceGuids: runningSpaces,
+		}
+
+		for _, spaceGuid := range spacesNeedingRefresh {
+			_, boundToSpace := spacesForSg[spaceGuid]
+			if boundToSpace || sg.StagingDefault || sg.RunningDefault {
+				sgs.Logger.Info("FIXME-adding-securitygroup-to-space", lager.Data{"security-group": sg.Name, "space": spaceGuid, "boundToSpace": boundToSpace, "stagingDefault": sg.StagingDefault, "runningDefault": sg.RunningDefault})
+				if securityGroupsForSpace[spaceGuid] == nil {
+					securityGroupsForSpace[spaceGuid] = map[string]SecurityGroup{}
+				}
+				securityGroupsForSpace[spaceGuid][sg.Guid] = sg
+			} else {
+				sgs.Logger.Info("FIXME-securitygroup-not-for-space", lager.Data{"space": spaceGuid, "asg": sg})
+			}
+		}
+	}
+
+	// FIXME: rename lastUpdated to expiresAt
+	upsertQuery := tx.Rebind(`
+		INSERT INTO spaces 
+		(guid, lastUpdated, asgs)
+		VALUES(?, ?, ?) ` +
+		sgs.onConflictUpdateSQL() +
+		` lastUpdated=?, asgs=?`)
+	lastUpdated := time.Now()
+
+	for spaceGuid, sgMap := range securityGroupsForSpace {
+		var sGroups SecurityGroups
+		for _, sg := range sgMap {
+			sGroups = append(sGroups, sg)
+		}
+
+		sgs.Logger.Info("FIXME-about-to-cache-space", lager.Data{"space": spaceGuid, "asgs": sGroups, "query": upsertQuery})
+		_, err = tx.Exec(upsertQuery, spaceGuid, lastUpdated, sGroups, lastUpdated, sGroups)
+		if err != nil {
+			return fmt.Errorf("failed updating security group cache for space %s: %s", spaceGuid, err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("committing transaction: %s", err)
+	}
+	return nil
+}
+
+// FIXME: purge expired Space caches?
+
+func (sgs *SGStore) SpacesWithExpiredOrNoCache(spaceGuids []string) ([]string, error) {
+	query := `SELECT guid, lastUpdated FROM spaces`
+	if len(spaceGuids) > 0 {
+		whereClause := fmt.Sprintf("(guid IN (%s))",
+			helpers.QuestionMarks(len(spaceGuids)),
+		)
+		query = fmt.Sprintf("%s WHERE %s", query, whereClause)
+	}
+
+	var whereBindings []interface{}
+	for _, guid := range spaceGuids {
+		whereBindings = append(whereBindings, guid)
+	}
+
+	rebindedQuery := helpers.RebindForSQLDialectAndMark(query, sgs.Conn.DriverName(), "%")
+
+	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
+	if err != nil {
+		return []string{}, err
+	}
+	defer rows.Close()
+
+	var expiredOrNotCachedSpaces []string
+	spacesSeen := map[string]struct{}{}
+
+	for rows.Next() {
+		var guid string
+		var expiresAt time.Time
+		err = rows.Scan(&guid, &expiresAt)
+		if err != nil {
+			return []string{}, err
+		}
+
+		if time.Now().After(expiresAt) {
+			sgs.Logger.Info("FIXME-space-cache-expired", lager.Data{"space": guid, "expiry": expiresAt})
+			expiredOrNotCachedSpaces = append(expiredOrNotCachedSpaces, guid)
+		}
+		spacesSeen[guid] = struct{}{}
+	}
+
+	for _, guid := range spaceGuids {
+		if _, ok := spacesSeen[guid]; !ok {
+			sgs.Logger.Info("FIXME-no-cache-yet-exists-for-space", lager.Data{"space": guid})
+			expiredOrNotCachedSpaces = append(expiredOrNotCachedSpaces, guid)
+		}
+	}
+
+	return expiredOrNotCachedSpaces, nil
 }
 
 func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
@@ -25,35 +179,24 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		SELECT
 			id,
 			guid,
-			name,
-			rules,
-			staging_default,
-			running_default,
-			staging_spaces,
-			running_spaces
-		FROM security_groups`
+			asgs
+		FROM spaces`
 
-	whereClause := `staging_default=true OR running_default=true`
-
+	var whereClause string
 	if len(spaceGuids) > 0 {
-		whereClause = fmt.Sprintf("%s OR %s OR %s",
-			whereClause,
-			sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
-			sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
+		whereClause = fmt.Sprintf("(guid IN (%s))",
+			helpers.QuestionMarks(len(spaceGuids)),
 		)
 	}
+	query = fmt.Sprintf("%s WHERE %s", query, whereClause)
 
-	query = fmt.Sprintf("%s WHERE (%s)", query, whereClause)
-
-	// one for running and one for staging
-	whereBindings := make([]interface{}, len(spaceGuids)*2)
+	whereBindings := make([]any, len(spaceGuids))
 	for i, spaceGuid := range spaceGuids {
 		whereBindings[i] = spaceGuid
-		whereBindings[i+len(spaceGuids)] = spaceGuid
 	}
 
 	if page.From > 0 {
-		query = query + " AND id >= %"
+		query = query + " AND id >= ?"
 		whereBindings = append(whereBindings, page.From)
 	}
 	query = query + " ORDER BY id"
@@ -65,37 +208,40 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 
 	rebindedQuery := helpers.RebindForSQLDialectAndMark(query, sgs.Conn.DriverName(), "%")
 
+	sgs.Logger.Info("FIXME-by-spqce-guids-query", lager.Data{"query": rebindedQuery, "bindings": whereBindings})
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
 		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
 	}
 	defer rows.Close()
 
-	result := []SecurityGroup{}
+	result := map[string]SecurityGroup{}
 	nextId := 0
 	for rows.Next() {
 		var id int
-		var securityGroup SecurityGroup
+		var spaceCache SpaceCache
 		err := rows.Scan(&id,
-			&securityGroup.Guid,
-			&securityGroup.Name,
-			&securityGroup.Rules,
-			&securityGroup.StagingDefault,
-			&securityGroup.RunningDefault,
-			&securityGroup.StagingSpaceGuids,
-			&securityGroup.RunningSpaceGuids,
+			&spaceCache.Guid,
+			&spaceCache.ASGs,
 		)
 		if err != nil {
 			return nil, Pagination{}, fmt.Errorf("scanning security group result: %s", err)
 		}
 
 		if page.Limit == 0 || len(result) < page.Limit {
-			result = append(result, securityGroup)
+			for _, sg := range spaceCache.ASGs {
+				result[sg.Guid] = sg
+			}
 		} else {
 			nextId = id
 		}
 	}
-	return result, Pagination{Next: nextId}, nil
+	var asgs []SecurityGroup
+	for _, v := range result {
+		asgs = append(asgs, v)
+	}
+
+	return asgs, Pagination{Next: nextId}, nil
 }
 
 func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {

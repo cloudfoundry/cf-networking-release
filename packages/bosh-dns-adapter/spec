@@ -16,17 +16,21 @@ files:
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/monitor/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/flags/*.go # gosub
+  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
+  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/v3/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/v3/internal/truncate/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/lager/v3/lagerflags/*.go # gosub
   - code.cloudfoundry.org/lib/common/*.go # gosub
+  - code.cloudfoundry.org/policy-server/cc_client/*.go # gosub
   - code.cloudfoundry.org/policy-server/server_metrics/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/helpers/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/migrations/*.go # gosub
+  - code.cloudfoundry.org/policy-server/uaa_client/*.go # gosub
   - code.cloudfoundry.org/vendor/filippo.io/edwards25519/*.go # gosub
   - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.go # gosub
   - code.cloudfoundry.org/vendor/filippo.io/edwards25519/field/*.s # gosub

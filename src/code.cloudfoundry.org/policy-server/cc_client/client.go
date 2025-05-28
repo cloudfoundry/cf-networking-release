@@ -3,7 +3,6 @@ package cc_client
 //go:generate counterfeiter -generate
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,8 +25,9 @@ type CCClient interface {
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
 	GetSecurityGroupsLastUpdate(token string) (time.Time, error)
-	GetSecurityGroupsWithPage(token string, page int) (GetSecurityGroupsResponse, error)
+	GetSecurityGroupsWithPage(token string, spaces []string, page int) (GetSecurityGroupsResponse, error)
 	GetSecurityGroups(token string) ([]SecurityGroupResource, error)
+	GetSecurityGroupsBySpaces(token string, spaces []string) ([]SecurityGroupResource, error)
 }
 
 type Client struct {
@@ -426,15 +426,15 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	return subjectSpaces, nil
 }
 
-func (c *Client) GetSecurityGroupsWithPage(token string, page int) (GetSecurityGroupsResponse, error) {
+func (c *Client) GetSecurityGroupsWithPage(token string, spaces []string, page int) (GetSecurityGroupsResponse, error) {
 	c.Logger.Info("get-security-groups-with-page", lager.Data{"page": page})
 
 	token = fmt.Sprintf("bearer %s", token)
 	route := "/v3/security_groups"
-	queryParams := generatePageQueryParams(page)
+	queryParams := generatePageQueryParams(spaces, page)
 
 	route = fmt.Sprintf("%s?%s", route, queryParams)
-	c.Logger.Debug("get-security-groups-with-page-request", lager.Data{"route": route})
+	c.Logger.Info("FIXME-get-security-groups-with-page-request", lager.Data{"route": route})
 
 	var response GetSecurityGroupsResponse
 	err := c.ExternalJSONClient.Do("GET", route, nil, &response, token)
@@ -442,7 +442,7 @@ func (c *Client) GetSecurityGroupsWithPage(token string, page int) (GetSecurityG
 		return GetSecurityGroupsResponse{}, fmt.Errorf("json client do: %s", err)
 	}
 
-	c.Logger.Debug("get-security-groups-with-page-response", lager.Data{"resources": response.Resources})
+	c.Logger.Info("FIXME-get-security-groups-with-page-response", lager.Data{"resources": response.Resources})
 
 	return response, nil
 }
@@ -453,7 +453,7 @@ func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error
 	var err error
 	var securityGroups []SecurityGroupResource
 
-	for retry := 0; retry < 3; retry++ {
+	for retry := range 3 {
 		c.Logger.Debug("get-security-groups-retry-loop", lager.Data{"attempt": retry})
 		securityGroups, err = c.attemptPagination(token)
 		if err == nil {
@@ -469,45 +469,71 @@ func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error
 	return securityGroups, nil
 }
 
+func (c *Client) GetSecurityGroupsBySpaces(token string, spaces []string) ([]SecurityGroupResource, error) {
+	c.Logger.Info("get-security-groups-by-space")
+
+	var err error
+	var securityGroups []SecurityGroupResource
+
+	for range 3 {
+		securityGroups, err = c.attemptPaginationBySpaces(token, spaces)
+		if err == nil {
+			c.Logger.Debug("get-security-groups-retry-loop-succeeded", lager.Data{"security-groups": securityGroups})
+			break
+		}
+	}
+
+	if err != nil {
+		return []SecurityGroupResource{}, fmt.Errorf("Ran out of retry attempts. Last error was: %s\n", err.Error())
+	}
+
+	return securityGroups, nil
+}
+
 func (c *Client) attemptPagination(token string) ([]SecurityGroupResource, error) {
+	return c.attemptPaginationBySpaces(token, []string{})
+}
+func (c *Client) attemptPaginationBySpaces(token string, spaces []string) ([]SecurityGroupResource, error) {
 	c.Logger.Info("get-security-groups-attempt-pagination")
 	securityGroups := []SecurityGroupResource{}
 
-	originalUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
-	if err != nil {
-		return securityGroups, err
-	}
+	// originalUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
+	// if err != nil {
+	// 	return securityGroups, err
+	// }
 
 	page := 1
 
 	for {
 		// Get page
 		c.Logger.Debug("get-security-groups-request", lager.Data{"page": page})
-		securityGroupResponse, err := c.GetSecurityGroupsWithPage(token, page)
+		securityGroupResponse, err := c.GetSecurityGroupsWithPage(token, spaces, page)
 		if err != nil {
 			return []SecurityGroupResource{}, err
 		}
-		c.Logger.Debug("get-security-groups-response", lager.Data{"response": securityGroupResponse.Resources})
+		c.Logger.Info("FIXME-get-security-groups-response", lager.Data{"response": securityGroupResponse.Resources})
 
-		newUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
-		if err != nil {
-			return []SecurityGroupResource{}, err
-		}
+		// FIXME: if we want to keep this, make the internaljsonclient a thing again
+		// newUpdatedAt, err := c.GetSecurityGroupsLastUpdate(token)
+		// if err != nil {
+		// 	return []SecurityGroupResource{}, err
+		// }
 
 		// Check to see if there are zero ASGs
 		if securityGroupResponse.Resources == nil {
-			c.Logger.Debug("no-additional-security-groups")
+			c.Logger.Info("FIXME-no-additional-security-groups")
 			return securityGroups, nil
 		}
+		c.Logger.Info("FIXME-sgs-returned-by-capi", lager.Data{"sgs": securityGroupResponse.Resources})
 
 		// Check to make sure ASGs haven't been updated
-		if newUpdatedAt.Equal(originalUpdatedAt) {
-			c.Logger.Debug("get-security-groups-timestamps-match", lager.Data{"originalUpdatedAt": originalUpdatedAt, "newUpdatedAt": newUpdatedAt})
-			securityGroups = append(securityGroups, securityGroupResponse.Resources...)
-		} else {
-			c.Logger.Debug("get-security-groups-timestamps-differ", lager.Data{"originalUpdatedAt": originalUpdatedAt, "newUpdatedAt": newUpdatedAt})
-			return []SecurityGroupResource{}, NewUnstableSecurityGroupListError(errors.New("last_update time has changed"))
-		}
+		// if newUpdatedAt.Equal(originalUpdatedAt) {
+		//		c.Logger.Debug("get-security-groups-timestamps-match", lager.Data{"originalUpdatedAt": originalUpdatedAt, "newUpdatedAt": newUpdatedAt})
+		securityGroups = append(securityGroups, securityGroupResponse.Resources...)
+		// } else {
+		// 	c.Logger.Debug("get-security-groups-timestamps-differ", lager.Data{"originalUpdatedAt": originalUpdatedAt, "newUpdatedAt": newUpdatedAt})
+		// 	return []SecurityGroupResource{}, NewUnstableSecurityGroupListError(errors.New("last_update time has changed"))
+		// }
 
 		// Check if this is the last page
 		if securityGroupResponse.Pagination.Next.Href == "" {
@@ -550,6 +576,7 @@ func (c *Client) GetSecurityGroupsLastUpdate(token string) (time.Time, error) {
 	return lastUpdateTimestamp, nil
 }
 
-func generatePageQueryParams(page int) string {
-	return fmt.Sprintf("per_page=%s&page=%s", url.QueryEscape(fmt.Sprintf("%d", SECURITY_GROUPS_PER_PAGE)), url.QueryEscape(fmt.Sprintf("%d", page)))
+func generatePageQueryParams(spaces []string, page int) string {
+	spacesQuery := url.QueryEscape(strings.Join(spaces, ","))
+	return fmt.Sprintf("space_guids=%s&per_page=%s&page=%s", spacesQuery, url.QueryEscape(fmt.Sprintf("%d", SECURITY_GROUPS_PER_PAGE)), url.QueryEscape(fmt.Sprintf("%d", page)))
 }

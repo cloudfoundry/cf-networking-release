@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
+	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
@@ -20,10 +22,13 @@ import (
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagerflags"
 	"code.cloudfoundry.org/lib/common"
+	"code.cloudfoundry.org/lib/nonmutualtls"
 	"code.cloudfoundry.org/policy-server/api"
+	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/config"
 	"code.cloudfoundry.org/policy-server/handlers"
 	"code.cloudfoundry.org/policy-server/store"
+	"code.cloudfoundry.org/policy-server/uaa_client"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -58,6 +63,36 @@ func main() {
 	}
 	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), loggerConfig)
 
+	var uaaTlsConfig *tls.Config
+	if conf.SkipSSLValidation {
+		uaaTlsConfig = &tls.Config{
+			InsecureSkipVerify: conf.SkipSSLValidation,
+		}
+	} else {
+		uaaTlsConfig, err = nonmutualtls.NewClientTLSConfig(conf.UAACA, conf.CCCA)
+		if err != nil {
+			log.Fatalf("%s.%s error creating tls config: %s", logPrefix, jobPrefix, err) // not tested
+		}
+	}
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: uaaTlsConfig,
+		},
+	}
+
+	uaaClient := &uaa_client.Client{
+		BaseURL:    fmt.Sprintf("%s:%d", conf.UAAURL, conf.UAAPort),
+		Name:       conf.UAAClient,
+		Secret:     conf.UAAClientSecret,
+		HTTPClient: httpClient,
+		Logger:     logger,
+	}
+
+	ccClient := &cc_client.Client{
+		ExternalJSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
+		Logger:             logger,
+	}
+
 	connectionPool, err := db.NewConnectionPool(
 		conf.Database,
 		conf.MaxOpenConnections,
@@ -80,7 +115,10 @@ func main() {
 	)
 
 	securityGroupsStore := &store.SGStore{
-		Conn: connectionPool,
+		Conn:      connectionPool,
+		UAAClient: uaaClient,
+		CCClient:  ccClient,
+		Logger:    logger,
 	}
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)

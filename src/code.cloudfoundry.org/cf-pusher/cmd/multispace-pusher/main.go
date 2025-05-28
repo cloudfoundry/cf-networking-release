@@ -29,6 +29,8 @@ type Config struct {
 	TotalSpaces                         int  `json:"total_spaces"`
 	AppsPerSpace                        int  `json:"apps_per_space"`
 	SkipASGCreation                     bool `json:"skip_asg_creation"`
+	AppInstancesPerApp                  int  `json:"app_instances_per_app"`
+	MaxAppInstances                     int  `json:"max_app_instances"`
 }
 
 type ConcurrentSpaceSetup struct {
@@ -93,6 +95,7 @@ func main() {
 func createSpacesConcurrently(config Config) []string {
 	sem := make(chan bool, config.Concurrency)
 	var spaceNames []string
+	aiCount := 0
 	for i := 0; i < config.TotalSpaces; i++ {
 		sem <- true
 		setup := generateConcurrentSpaceSetup(i, config)
@@ -111,8 +114,11 @@ func createSpacesConcurrently(config Config) []string {
 			}
 
 			// Push apps for this space
-			if err := s.AppPusher.Push(); err != nil {
-				log.Printf("Got an error while pushing proxy apps: %s", err)
+			if aiCount < config.MaxAppInstances {
+				if err := s.AppPusher.Push(); err != nil {
+					log.Printf("Got an error while pushing proxy apps: %s", err)
+				}
+				aiCount += config.AppInstancesPerApp
 			}
 		}(setup, config, i)
 	}
@@ -164,7 +170,7 @@ func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpa
 			ManifestPath:            generateAppManifest(appsDir),
 			Directory:               filepath.Join(appsDir, "proxy"),
 			SkipIfPresent:           true,
-			DesiredRunningInstances: 1,
+			DesiredRunningInstances: config.AppInstancesPerApp,
 
 			PushAttempts:  3,
 			RetryWaitTime: 10 * time.Second,

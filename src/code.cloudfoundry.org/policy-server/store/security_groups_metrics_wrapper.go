@@ -7,6 +7,8 @@ import (
 type securityGroupsStore interface {
 	Replace([]SecurityGroup) error
 	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)
+	SpacesWithExpiredOrNoCache([]string) ([]string, error)
+	UpdateSecurityGroupsFromCapi([]string) error
 	LastUpdated() (int, error)
 }
 
@@ -39,6 +41,32 @@ func (mw *SecurityGroupsMetricsWrapper) BySpaceGuids(spaceGuids []string, page P
 		mw.MetricsSender.SendDuration("SecurityGroupsStoreBySpaceGuidsSuccessTime", allTimeDuration)
 	}
 	return securityGroups, pagination, err
+}
+
+func (mw *SecurityGroupsMetricsWrapper) SpacesWithExpiredOrNoCache(spaceGuids []string) ([]string, error) {
+	startTime := time.Now()
+	securityGroups, err := mw.Store.SpacesWithExpiredOrNoCache(spaceGuids)
+	allTimeDuration := time.Since(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("SecurityGroupsStoreSpacesWithExpiredOrNoCacheError")
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreSpacesWithExpiredOrNoCacheErrorTime", allTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreSpacesWithExpiredOrNoCacheSuccessTime", allTimeDuration)
+	}
+	return securityGroups, err
+}
+
+func (mw *SecurityGroupsMetricsWrapper) UpdateSecurityGroupsFromCapi(spaceGuids []string) error {
+	startTime := time.Now()
+	err := mw.Store.UpdateSecurityGroupsFromCapi(spaceGuids)
+	allTimeDuration := time.Since(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("SecurityGroupsUpdateSecurityGroupsFromCapiStoreError")
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreUpdateSecurityGroupsFromCapiErrorTime", allTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreUpdateSecurityGroupsFromCapiSuccessTime", allTimeDuration)
+	}
+	return err
 }
 
 func (mw *SecurityGroupsMetricsWrapper) LastUpdated() (int, error) {

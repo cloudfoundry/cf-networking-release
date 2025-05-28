@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/store"
 )
@@ -29,6 +30,7 @@ func (h *AsgsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("index-security-group-rules")
 	queryValues := req.URL.Query()
 	spaceGuids := parseSpaceGuids(queryValues)
+	logger.Info("FIXME-retrieving-security-group-rules", lager.Data{"spaces": spaceGuids})
 	from, err := parseIntQueryValue(queryValues, "from")
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "invalid value for 'from' parameter")
@@ -40,16 +42,31 @@ func (h *AsgsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	asgs, pagination, err := h.Store.BySpaceGuids(spaceGuids, store.Page{From: from, Limit: limit})
-	if err != nil {
-		h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
-		return
+	var pagination store.Pagination
+	var asgs store.SecurityGroups
+	if len(spaceGuids) > 0 {
+		expiredSpaces, err := h.Store.SpacesWithExpiredOrNoCache(spaceGuids)
+		if len(expiredSpaces) > 0 {
+			err := h.Store.UpdateSecurityGroupsFromCapi(spaceGuids)
+			if err != nil {
+				h.ErrorResponse.InternalServerError(logger, w, err, "failed updating security groups from capi")
+				return
+			}
+		}
+
+		asgs, pagination, err = h.Store.BySpaceGuids(spaceGuids, store.Page{From: from, Limit: limit})
+		if err != nil {
+			h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
+			return
+		}
 	}
+
 	bytes, err := h.Mapper.AsBytes(asgs, pagination)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map asgs as bytes failed")
 		return
 	}
+	logger.Info("FIXME-returning-asgs-for-spaces", lager.Data{"rawData": bytes})
 
 	w.WriteHeader(http.StatusOK)
 	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS

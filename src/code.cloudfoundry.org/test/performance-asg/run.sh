@@ -10,9 +10,14 @@ export APPS_DIR=../../../example-apps
 
 # Total rules =
 #    (global_asgs * asg_size * total_spaces * apps_per_space) +
+# 20,000,000
 #    (asgs_with_multiple_spaces * asg_size * space_count_for_asgs_with_multiple_spaces  * apps_per_space) +
+# 60,000,000
 #    ((total_asgs - global_asgs - asgs_with_multiple_spaces) * asg_size * apps_per_space)
+# 4,790,000
+# 84,79,0000 total rules
 
+# Size of an asg: asg_size * 64 bytes (roughly 64 bytes per rule, asg_size is number of rules)
 ADMIN_PASSWORD="$(credhub get -n "$(credhub find -n cf_admin_password -j | jq -r .credentials[0].name)" -j | jq -r .value)"
 echo "
 {
@@ -21,15 +26,17 @@ echo "
   \"admin_password\": \"${ADMIN_PASSWORD}\",
   \"skip_ssl_validation\": true,
   \"use_http\": true,
-  \"concurrency\": 12,
+  \"concurrency\": 4,
   \"prefix\":\"scale-asg\",
   \"total_asgs\":25000,
-  \"total_spaces\": 240,
-  \"asg_size\": 100,
+  \"total_spaces\": 2000,
+  \"asg_size\": 200,
   \"global_asgs\": 50,
-  \"asgs_with_multiple_spaces\": 75,
-  \"space_count_for_asgs_with_multiple_spaces\": 100,
-  \"apps_per_space\": 1
+  \"asgs_with_multiple_spaces\": 1000,
+  \"space_count_for_asgs_with_multiple_spaces\": 300,
+  \"apps_per_space\": 1,
+  \"max_app_instances\": 250,
+  \"app_instances_per_app\": 2
 }
 " > $CONFIG
 

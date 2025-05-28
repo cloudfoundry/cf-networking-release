@@ -569,7 +569,7 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the response from the JSON Client", func() {
-			response, err := client.GetSecurityGroupsWithPage("token", 1)
+			response, err := client.GetSecurityGroupsWithPage("token", []string{}, 1)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response).NotTo(BeNil())
 			Expect(response.Resources).NotTo(BeEmpty())
@@ -577,13 +577,13 @@ var _ = Describe("Client", func() {
 		})
 
 		It("makes a JSONClient call with the provided page number", func() {
-			_, err := client.GetSecurityGroupsWithPage("token", 1)
+			_, err := client.GetSecurityGroupsWithPage("token", []string{}, 1)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, route, _, _, _ := fakeExternalJSONClient.DoArgsForCall(0)
 			Expect(route).To(Equal("/v3/security_groups?per_page=5000&page=1"))
 
-			_, err = client.GetSecurityGroupsWithPage("token", 2)
+			_, err = client.GetSecurityGroupsWithPage("token", []string{}, 2)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, route, _, _, _ = fakeExternalJSONClient.DoArgsForCall(1)
@@ -591,7 +591,7 @@ var _ = Describe("Client", func() {
 		})
 
 		It("makes a JSONClient call with the provided page number", func() {
-			_, err := client.GetSecurityGroupsWithPage("token", 1)
+			_, err := client.GetSecurityGroupsWithPage("token", []string{}, 1)
 			Expect(err).NotTo(HaveOccurred())
 			_, _, _, _, token := fakeExternalJSONClient.DoArgsForCall(0)
 			Expect(token).To(Equal("bearer token"))

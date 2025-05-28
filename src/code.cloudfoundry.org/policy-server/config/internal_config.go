@@ -27,6 +27,14 @@ type InternalConfig struct {
 	MaxIdleConnections            int       `json:"max_idle_connections" validate:"min=0"`
 	MaxOpenConnections            int       `json:"max_open_connections" validate:"min=0"`
 	MaxConnectionsLifetimeSeconds int       `json:"connections_max_lifetime_seconds" validate:"min=0"`
+	UAAClient                     string    `json:"uaa_client" validate:"nonzero"`
+	UAAClientSecret               string    `json:"uaa_client_secret" validate:"nonzero"`
+	UAACA                         string    `json:"uaa_ca"`
+	UAAURL                        string    `json:"uaa_url" validate:"nonzero"`
+	UAAPort                       int       `json:"uaa_port" validate:"nonzero"`
+	CCURL                         string    `json:"cc_url" validate:"nonzero"`
+	CCCA                          string    `json:"cc_ca_cert"`
+	SkipSSLValidation             bool      `json:"skip_ssl_validation"`
 }
 
 func (c *InternalConfig) Validate() error {

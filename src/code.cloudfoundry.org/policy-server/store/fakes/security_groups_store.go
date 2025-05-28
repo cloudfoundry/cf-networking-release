@@ -47,6 +47,30 @@ type SecurityGroupsStore struct {
 	replaceReturnsOnCall map[int]struct {
 		result1 error
 	}
+	SpacesWithExpiredOrNoCacheStub        func([]string) ([]string, error)
+	spacesWithExpiredOrNoCacheMutex       sync.RWMutex
+	spacesWithExpiredOrNoCacheArgsForCall []struct {
+		arg1 []string
+	}
+	spacesWithExpiredOrNoCacheReturns struct {
+		result1 []string
+		result2 error
+	}
+	spacesWithExpiredOrNoCacheReturnsOnCall map[int]struct {
+		result1 []string
+		result2 error
+	}
+	UpdateSecurityGroupsFromCapiStub        func([]string) error
+	updateSecurityGroupsFromCapiMutex       sync.RWMutex
+	updateSecurityGroupsFromCapiArgsForCall []struct {
+		arg1 []string
+	}
+	updateSecurityGroupsFromCapiReturns struct {
+		result1 error
+	}
+	updateSecurityGroupsFromCapiReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -246,6 +270,141 @@ func (fake *SecurityGroupsStore) ReplaceReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *SecurityGroupsStore) SpacesWithExpiredOrNoCache(arg1 []string) ([]string, error) {
+	var arg1Copy []string
+	if arg1 != nil {
+		arg1Copy = make([]string, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	fake.spacesWithExpiredOrNoCacheMutex.Lock()
+	ret, specificReturn := fake.spacesWithExpiredOrNoCacheReturnsOnCall[len(fake.spacesWithExpiredOrNoCacheArgsForCall)]
+	fake.spacesWithExpiredOrNoCacheArgsForCall = append(fake.spacesWithExpiredOrNoCacheArgsForCall, struct {
+		arg1 []string
+	}{arg1Copy})
+	stub := fake.SpacesWithExpiredOrNoCacheStub
+	fakeReturns := fake.spacesWithExpiredOrNoCacheReturns
+	fake.recordInvocation("SpacesWithExpiredOrNoCache", []interface{}{arg1Copy})
+	fake.spacesWithExpiredOrNoCacheMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *SecurityGroupsStore) SpacesWithExpiredOrNoCacheCallCount() int {
+	fake.spacesWithExpiredOrNoCacheMutex.RLock()
+	defer fake.spacesWithExpiredOrNoCacheMutex.RUnlock()
+	return len(fake.spacesWithExpiredOrNoCacheArgsForCall)
+}
+
+func (fake *SecurityGroupsStore) SpacesWithExpiredOrNoCacheCalls(stub func([]string) ([]string, error)) {
+	fake.spacesWithExpiredOrNoCacheMutex.Lock()
+	defer fake.spacesWithExpiredOrNoCacheMutex.Unlock()
+	fake.SpacesWithExpiredOrNoCacheStub = stub
+}
+
+func (fake *SecurityGroupsStore) SpacesWithExpiredOrNoCacheArgsForCall(i int) []string {
+	fake.spacesWithExpiredOrNoCacheMutex.RLock()
+	defer fake.spacesWithExpiredOrNoCacheMutex.RUnlock()
+	argsForCall := fake.spacesWithExpiredOrNoCacheArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *SecurityGroupsStore) SpacesWithExpiredOrNoCacheReturns(result1 []string, result2 error) {
+	fake.spacesWithExpiredOrNoCacheMutex.Lock()
+	defer fake.spacesWithExpiredOrNoCacheMutex.Unlock()
+	fake.SpacesWithExpiredOrNoCacheStub = nil
+	fake.spacesWithExpiredOrNoCacheReturns = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *SecurityGroupsStore) SpacesWithExpiredOrNoCacheReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.spacesWithExpiredOrNoCacheMutex.Lock()
+	defer fake.spacesWithExpiredOrNoCacheMutex.Unlock()
+	fake.SpacesWithExpiredOrNoCacheStub = nil
+	if fake.spacesWithExpiredOrNoCacheReturnsOnCall == nil {
+		fake.spacesWithExpiredOrNoCacheReturnsOnCall = make(map[int]struct {
+			result1 []string
+			result2 error
+		})
+	}
+	fake.spacesWithExpiredOrNoCacheReturnsOnCall[i] = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *SecurityGroupsStore) UpdateSecurityGroupsFromCapi(arg1 []string) error {
+	var arg1Copy []string
+	if arg1 != nil {
+		arg1Copy = make([]string, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	fake.updateSecurityGroupsFromCapiMutex.Lock()
+	ret, specificReturn := fake.updateSecurityGroupsFromCapiReturnsOnCall[len(fake.updateSecurityGroupsFromCapiArgsForCall)]
+	fake.updateSecurityGroupsFromCapiArgsForCall = append(fake.updateSecurityGroupsFromCapiArgsForCall, struct {
+		arg1 []string
+	}{arg1Copy})
+	stub := fake.UpdateSecurityGroupsFromCapiStub
+	fakeReturns := fake.updateSecurityGroupsFromCapiReturns
+	fake.recordInvocation("UpdateSecurityGroupsFromCapi", []interface{}{arg1Copy})
+	fake.updateSecurityGroupsFromCapiMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *SecurityGroupsStore) UpdateSecurityGroupsFromCapiCallCount() int {
+	fake.updateSecurityGroupsFromCapiMutex.RLock()
+	defer fake.updateSecurityGroupsFromCapiMutex.RUnlock()
+	return len(fake.updateSecurityGroupsFromCapiArgsForCall)
+}
+
+func (fake *SecurityGroupsStore) UpdateSecurityGroupsFromCapiCalls(stub func([]string) error) {
+	fake.updateSecurityGroupsFromCapiMutex.Lock()
+	defer fake.updateSecurityGroupsFromCapiMutex.Unlock()
+	fake.UpdateSecurityGroupsFromCapiStub = stub
+}
+
+func (fake *SecurityGroupsStore) UpdateSecurityGroupsFromCapiArgsForCall(i int) []string {
+	fake.updateSecurityGroupsFromCapiMutex.RLock()
+	defer fake.updateSecurityGroupsFromCapiMutex.RUnlock()
+	argsForCall := fake.updateSecurityGroupsFromCapiArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *SecurityGroupsStore) UpdateSecurityGroupsFromCapiReturns(result1 error) {
+	fake.updateSecurityGroupsFromCapiMutex.Lock()
+	defer fake.updateSecurityGroupsFromCapiMutex.Unlock()
+	fake.UpdateSecurityGroupsFromCapiStub = nil
+	fake.updateSecurityGroupsFromCapiReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *SecurityGroupsStore) UpdateSecurityGroupsFromCapiReturnsOnCall(i int, result1 error) {
+	fake.updateSecurityGroupsFromCapiMutex.Lock()
+	defer fake.updateSecurityGroupsFromCapiMutex.Unlock()
+	fake.UpdateSecurityGroupsFromCapiStub = nil
+	if fake.updateSecurityGroupsFromCapiReturnsOnCall == nil {
+		fake.updateSecurityGroupsFromCapiReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.updateSecurityGroupsFromCapiReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *SecurityGroupsStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -255,6 +414,10 @@ func (fake *SecurityGroupsStore) Invocations() map[string][][]interface{} {
 	defer fake.lastUpdatedMutex.RUnlock()
 	fake.replaceMutex.RLock()
 	defer fake.replaceMutex.RUnlock()
+	fake.spacesWithExpiredOrNoCacheMutex.RLock()
+	defer fake.spacesWithExpiredOrNoCacheMutex.RUnlock()
+	fake.updateSecurityGroupsFromCapiMutex.RLock()
+	defer fake.updateSecurityGroupsFromCapiMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
