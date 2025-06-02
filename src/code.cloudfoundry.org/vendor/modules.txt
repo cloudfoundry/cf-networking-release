@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.44.0
+# code.cloudfoundry.org/cf-networking-helpers v0.45.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -196,7 +196,7 @@ github.com/google/go-cmp/cmp/internal/value
 github.com/google/go-tpm/legacy/tpm2
 github.com/google/go-tpm/tpmutil
 github.com/google/go-tpm/tpmutil/tbs
-# github.com/google/pprof v0.0.0-20250501235452-c0086092b71a
+# github.com/google/pprof v0.0.0-20250602020802-c6617b811d0e
 ## explicit; go 1.23.0
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1

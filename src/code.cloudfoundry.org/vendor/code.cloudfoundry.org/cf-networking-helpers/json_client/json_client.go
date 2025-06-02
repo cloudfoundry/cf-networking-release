@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager/v3"
@@ -65,7 +66,20 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 		reader = bytes.NewReader(bodyBytes)
 	}
 
-	reqURL := c.Url + route
+	pathURL, err := url.Parse(route)
+	if err != nil {
+		return fmt.Errorf("failed to parse the route: %s", err)
+	}
+
+	hostnameURL, err := url.Parse(c.Url)
+	if err != nil {
+		return fmt.Errorf("failed to parse URL: %s", err)
+	}
+
+	pathURL.Scheme = hostnameURL.Scheme
+	pathURL.Host = hostnameURL.Host
+
+	reqURL := pathURL.String()
 	request, err := http.NewRequest(method, reqURL, reader)
 	if err != nil {
 		return fmt.Errorf("http new request: %s", err)
