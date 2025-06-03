@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
@@ -2006,6 +2007,9 @@ var _ = Describe("migrations", func() {
 		Describe("v82-83 - multi-value indices for security_groups space bindings", func() {
 			var spacesJson string
 			BeforeEach(func() {
+				if isPostgresOrMySQL57(realDb) {
+					Skip("skipping-unsupported-indices on non-mysql or mysql-5.7 database")
+				}
 				migrateTo("81")
 				var guids []string
 				for range 149 {
@@ -2059,7 +2063,11 @@ var _ = Describe("migrations", func() {
 		})
 
 		Describe("v86-91 - removing multi-value indices for security_groups space bindings", func() {
+
 			BeforeEach(func() {
+				if isPostgresOrMySQL57(realDb) {
+					Skip("skipping-unsupported-indices on non-mysql or mysql-5.7 database")
+				}
 				migrateTo("83")
 			})
 			Context("when v82-83 had created multi-value indices already", func() {
@@ -2311,7 +2319,7 @@ func queryTableColumnNames(tableName string, realDb *db.ConnWrapper) []string {
 }
 
 func getMigrationIndex(migrationsProvider *migrations.MigrationsProvider, migrationId string) int {
-	migrationsToPerform, err := migrationsProvider.MigrationsToPerform(false)
+	migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
 	Expect(err).NotTo(HaveOccurred())
 	for i, migration := range migrationsToPerform {
 		if migration.Id == migrationId {
@@ -2320,4 +2328,25 @@ func getMigrationIndex(migrationsProvider *migrations.MigrationsProvider, migrat
 	}
 	Fail("couldn't find migration with id: " + migrationId)
 	return -1
+}
+
+func isPostgresOrMySQL57(realDb *db.ConnWrapper) bool {
+	if realDb.DriverName() == "mysql" {
+		row := realDb.DB.QueryRow("SELECT VERSION()")
+		// if no rows are returned, we're definitely not mysql 8, so short circuit out
+		if row != nil {
+			var version string
+			err := row.Scan(&version)
+			Expect(err).NotTo(HaveOccurred())
+
+			// mysql returns major.minor.patch version number strings
+			// e.g. `5.7.43` would be the data returned for the VERSION() query
+			if strings.HasPrefix(version, "5.7.") {
+				return true
+			} else {
+				return false
+			}
+		}
+	}
+	return true
 }
