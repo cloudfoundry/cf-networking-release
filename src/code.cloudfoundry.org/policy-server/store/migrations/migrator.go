@@ -3,7 +3,6 @@ package migrations
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 	migrate "github.com/rubenv/sql-migrate"
@@ -27,7 +26,7 @@ type MigrationDb interface {
 
 //counterfeiter:generate -o fakes/migrations_provider.go --fake-name MigrationsProvider . migrationsProvider
 type migrationsProvider interface {
-	MigrationsToPerform(bool) (PolicyServerMigrations, error)
+	MigrationsToPerform() (PolicyServerMigrations, error)
 }
 
 type Migrator struct {
@@ -36,27 +35,7 @@ type Migrator struct {
 }
 
 func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb, maxNumMigrations int) (int, error) {
-	var mysql57 bool
-	if driverName == "mysql" {
-		row := migrationDb.QueryRow("SELECT VERSION()")
-		// if no rows are returned, we're definitely not mysql 5.7, so short circuit out
-		if row != nil {
-			var version string
-			err := row.Scan(&version)
-			if err != nil {
-				return 0, fmt.Errorf("Unable to detect MySQL Version: %s", err)
-			}
-			// mysql returns major.minor.patch version number strings
-			// e.g. `5.7.43` would be the data returned for the VERSION() query
-			mysql57 = strings.HasPrefix(version, "5.7.")
-		}
-	}
-	// at this point, the mysql57 bool is false if postgres, false if no rows were returned
-	// for SELECT VERSION(), false if the prefix doesn't start with `5.7.` (in case there's ever a 5.70)
-	// and true if 5.7.x. the above should only have thrown an error if there was a problem talking
-	// to the database to execute the query, or the row couldn't be marshalled into a string variable
-
-	migrationsToPerform, err := m.MigrationsProvider.MigrationsToPerform(mysql57)
+	migrationsToPerform, err := m.MigrationsProvider.MigrationsToPerform()
 	if err != nil {
 		return 0, fmt.Errorf("error retrieving migrations to perform: %s", err)
 	}
@@ -102,9 +81,8 @@ func (s PolicyServerMigrations) supportsDriver(driverName string) bool {
 }
 
 type PolicyServerMigration struct {
-	Id          string
-	SkipMySQL57 bool
-	Up          map[string][]string
+	Id string
+	Up map[string][]string
 }
 
 func (psm *PolicyServerMigration) forDriver(driverName string) *migrate.Migration {

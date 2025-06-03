@@ -13,7 +13,7 @@ type MigrationsProvider struct {
 	Store migrationStore
 }
 
-func (m *MigrationsProvider) MigrationsToPerform(mysql57 bool) (PolicyServerMigrations, error) {
+func (m *MigrationsProvider) MigrationsToPerform() (PolicyServerMigrations, error) {
 	policyServerMigrations := PolicyServerMigrations{}
 
 	hasV1, err := m.Store.HasV1MigrationOccurred()
@@ -67,12 +67,7 @@ func (m *MigrationsProvider) MigrationsToPerform(mysql57 bool) (PolicyServerMigr
 		)
 	}
 
-	for _, migration := range MigrationsToPerform {
-		if mysql57 && migration.SkipMySQL57 {
-			continue
-		}
-		policyServerMigrations = append(policyServerMigrations, migration)
-	}
+	policyServerMigrations = append(policyServerMigrations, MigrationsToPerform...)
 
 	return policyServerMigrations, nil
 }
