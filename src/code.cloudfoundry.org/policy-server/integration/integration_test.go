@@ -258,6 +258,7 @@ var _ = Describe("Integration", func() {
 				Timeout:      1,
 			}
 			conf, _, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
+			conf.DatabaseMigrationTimeout = 1
 			configFilePath := helpers.WriteConfigFile(conf)
 
 			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
@@ -274,7 +275,7 @@ var _ = Describe("Integration", func() {
 
 		It("should log and exit with a timeout error", func() {
 			Eventually(session, 10*time.Second).Should(gexec.Exit())
-			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connect: unable to ping: context deadline exceeded"))
+			Eventually(session.Out).Should(gbytes.Say("db migrations and populating tags failed"))
 		})
 	})
 

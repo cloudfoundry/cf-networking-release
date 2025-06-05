@@ -107,26 +107,28 @@ func main() {
 	destination := &store.DestinationTable{}
 	policy := &store.PolicyTable{}
 
-	logger.Info("getting db connection", lager.Data{})
-	connectionPool, err := db.NewConnectionPool(
-		conf.Database,
-		conf.MaxOpenConnections,
-		conf.MaxIdleConnections,
-		time.Duration(conf.MaxConnectionsLifetimeSeconds)*time.Second,
-		logPrefix,
-		jobPrefix,
-		logger,
-	)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	logger.Info("db connection retrieved", lager.Data{})
-
+	var connectionPool *db.ConnWrapper
 	doneChan := make(chan bool, 1)
 	go func() {
 		for {
-			err := migrateAndPopulateGroupsTable(logger, conf, connectionPool)
+			logger.Info("getting db connection", lager.Data{})
+			connectionPool, err = db.NewConnectionPool(
+				conf.Database,
+				conf.MaxOpenConnections,
+				conf.MaxIdleConnections,
+				time.Duration(conf.MaxConnectionsLifetimeSeconds)*time.Second,
+				logPrefix,
+				jobPrefix,
+				logger,
+			)
+			if err != nil {
+				logger.Error("failed connecting to the database for migrations, retrying", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			logger.Info("db connection retrieved", lager.Data{})
+
+			err = migrateAndPopulateGroupsTable(logger, conf, connectionPool)
 			if err != nil {
 				logger.Error("failed migrating and populating tags, retrying", err)
 				time.Sleep(1 * time.Second)
