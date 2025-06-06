@@ -35,7 +35,6 @@ files:
   - code.cloudfoundry.org/policy-server/asg_syncer/*.go # gosub
   - code.cloudfoundry.org/policy-server/cc_client/*.go # gosub
   - code.cloudfoundry.org/policy-server/cleaner/*.go # gosub
-  - code.cloudfoundry.org/policy-server/cmd/migrate-db/*.go # gosub
   - code.cloudfoundry.org/policy-server/cmd/policy-server/*.go # gosub
   - code.cloudfoundry.org/policy-server/cmd/policy-server-asg-syncer/*.go # gosub
   - code.cloudfoundry.org/policy-server/cmd/policy-server-internal/*.go # gosub
