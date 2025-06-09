@@ -6,7 +6,8 @@ THIS_DIR=$(cd $(dirname $0) && pwd)
 cd $THIS_DIR
 
 export CONFIG=/tmp/test-config.json
-export APPS_DIR=../../../example-apps
+export APPS_DIR=${HOME}
+export APPS_FOLDER=cf-nc-app
 
 # Total rules =
 #    (global_asgs * asg_size * total_spaces * apps_per_space) +
@@ -26,7 +27,7 @@ echo "
   \"admin_password\": \"${ADMIN_PASSWORD}\",
   \"skip_ssl_validation\": true,
   \"use_http\": true,
-  \"concurrency\": 4,
+  \"concurrency\": 24,
   \"prefix\":\"scale-asg\",
   \"total_asgs\":25000,
   \"total_spaces\": 2000,
@@ -34,8 +35,8 @@ echo "
   \"global_asgs\": 50,
   \"asgs_with_multiple_spaces\": 1000,
   \"space_count_for_asgs_with_multiple_spaces\": 300,
-  \"apps_per_space\": 1,
-  \"max_app_instances\": 250,
+  \"apps_per_space\": 4,
+  \"max_app_instances\": 14000,
   \"app_instances_per_app\": 2
 }
 " > $CONFIG

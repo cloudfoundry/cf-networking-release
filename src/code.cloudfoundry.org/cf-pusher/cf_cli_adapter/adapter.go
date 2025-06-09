@@ -272,35 +272,37 @@ func (a *Adapter) CreateSecurityGroup(name, filepath string) error {
 	return a.runCommandWithTimeout(cmd)
 }
 
-type ASG struct {
-	Resources []struct {
-		Entity struct {
-			Rules []struct {
-				Destination string `json:"destination"`
-				Ports       string `json:"ports"`
-				Protocol    string `json:"protocol"`
-			} `json:"rules"`
-		} `json:"entity"`
-	} `json:"resources"`
+type AsgResponse struct {
+	Resources []ASG `json:"resources"`
 }
 
-func (a *Adapter) SecurityGroup(name string) (string, error) {
-	commandArgs := []string{"curl", fmt.Sprintf("/v2/security_groups?q=name%%3A%s", name)}
+type ASG struct {
+	GloballyEnabled struct {
+		Running bool `json:"running"`
+		Staging bool `json:"staging"`
+	} `json:"globally_enabled"`
+	Rules []ASGRule `json:"rules"`
+}
+
+type ASGRule struct {
+	Destination string `json:"destination"`
+	Ports       string `json:"ports"`
+	Protocol    string `json:"protocol"`
+}
+
+func (a *Adapter) SecurityGroup(name string) (ASG, error) {
+	commandArgs := []string{"curl", fmt.Sprintf("/v3/security_groups?names=%s", name)}
 	a.LogCommand(commandArgs)
 	cmd := exec.Command(a.cfCliPath, commandArgs...)
 	bytes, _ := a.runCombinedOutput(cmd)
-	asg := &ASG{}
+	asg := &AsgResponse{}
 	if err := json.Unmarshal(bytes, asg); err != nil {
-		return "", err
+		return ASG{}, err
 	}
 	if len(asg.Resources) == 0 {
-		return "", errors.New("no asgs with the name " + name)
+		return ASG{}, errors.New("no asgs with the name " + name)
 	}
-	rules, err := json.Marshal(asg.Resources[0].Entity.Rules)
-	if err != nil {
-		return "", err
-	}
-	return string(rules), err
+	return asg.Resources[0], nil
 }
 
 func (a *Adapter) BindSecurityGroup(name, org, space string) error {

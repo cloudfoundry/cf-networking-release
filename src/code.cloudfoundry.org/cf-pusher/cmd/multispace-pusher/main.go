@@ -130,9 +130,14 @@ func createSpacesConcurrently(config Config) []string {
 
 func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpaceSetup {
 	appsDir := os.Getenv("APPS_DIR")
+	appFolder := os.Getenv("APP_FOLDER")
 	if appsDir == "" {
 		log.Fatal("APPS_DIR not set")
 	}
+	if appFolder == "" {
+		appFolder = "proxy"
+	}
+
 	orgName := fmt.Sprintf("%s-org", config.Prefix)
 	adapter := generateAdapterWithHome(config.Prefix)
 	var apps []cf_command.Application
@@ -168,7 +173,7 @@ func generateConcurrentSpaceSetup(spaceNumber int, config Config) *ConcurrentSpa
 			Adapter:                 adapter,
 			Concurrency:             config.Concurrency,
 			ManifestPath:            generateAppManifest(appsDir),
-			Directory:               filepath.Join(appsDir, "proxy"),
+			Directory:               filepath.Join(appsDir, appFolder),
 			SkipIfPresent:           true,
 			DesiredRunningInstances: config.AppInstancesPerApp,
 
@@ -228,11 +233,13 @@ func generateAppManifest(appsDir string) string {
 
 func createGlobalASGs(config Config) {
 	sem := make(chan bool, config.Concurrency)
-	for index := 0; index < config.GlobalASGs; index++ {
+	for index := range config.GlobalASGs {
 		sem <- true
 		go func(p string, i int) {
 			defer func() { <-sem }()
 			adapter := generateAdapterWithHome(p)
+			asgChecker := cf_command.ASGChecker{Adapter: adapter}
+			asgInstaller := cf_command.ASGInstaller{Adapter: adapter}
 			asgName := fmt.Sprintf("%s-global-%d-asg", p, i)
 			asgContent := testsupport.BuildASG(config.ASGSize)
 			asgFile, err := testsupport.CreateTempFile(asgContent)
@@ -251,11 +258,9 @@ func createGlobalASGs(config Config) {
 			if err := apiConnector.Connect(); err != nil {
 				log.Fatalf("connecting to api: %s", err)
 			}
-			asgChecker := cf_command.ASGChecker{Adapter: adapter}
-			asgErr := asgChecker.CheckASG(asgName, asgContent)
+			asgErr := asgChecker.CheckASG(asgName, asgContent, true, false)
 			if asgErr != nil {
 				// install ASG
-				asgInstaller := cf_command.ASGInstaller{Adapter: adapter}
 				if err = asgInstaller.InstallGlobalASG(asgName, asgFile); err != nil {
 					log.Fatalf("install asg: %s", err)
 				}
@@ -263,7 +268,7 @@ func createGlobalASGs(config Config) {
 		}(config.Prefix, index)
 	}
 
-	for i := 0; i < cap(sem); i++ {
+	for range cap(sem) {
 		sem <- true
 	}
 }
@@ -276,7 +281,7 @@ func bindASGToThisSpace(asg string, orgName, spaceName string, adapter *cf_cli_a
 
 func createASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter.Adapter) []string {
 	var asgNames []string
-	for i := 0; i < howMany; i++ {
+	for i := range howMany {
 		asgName := fmt.Sprintf("%s-many-%d-asg", prefix, i)
 		asgNames = append(asgNames, asgName)
 		asgContent := testsupport.BuildASG(asgSize)
@@ -287,7 +292,7 @@ func createASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter.Ada
 
 		// check ASG and create if not OK
 		asgChecker := cf_command.ASGChecker{Adapter: adapter}
-		asgErr := asgChecker.CheckASG(asgName, asgContent)
+		asgErr := asgChecker.CheckASG(asgName, asgContent, false, false)
 		if asgErr != nil {
 			// install ASG
 			if err := adapter.DeleteSecurityGroup(asgName); err != nil {
