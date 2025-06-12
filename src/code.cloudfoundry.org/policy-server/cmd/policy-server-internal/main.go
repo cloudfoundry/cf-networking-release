@@ -115,10 +115,11 @@ func main() {
 	)
 
 	securityGroupsStore := &store.SGStore{
-		Conn:      connectionPool,
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
-		Logger:    logger,
+		Conn:        connectionPool,
+		UAAClient:   uaaClient,
+		CCClient:    ccClient,
+		Logger:      logger,
+		CacheExpiry: time.Second * 60,
 	}
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)

@@ -46,6 +46,9 @@ func (h *AsgsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var asgs store.SecurityGroups
 	if len(spaceGuids) > 0 {
 		expiredSpaces, err := h.Store.SpacesWithExpiredOrNoCache(spaceGuids)
+		if err != nil {
+			h.ErrorResponse.InternalServerError(logger, w, err, "failed searching for expired spaces")
+		}
 		if len(expiredSpaces) > 0 {
 			err := h.Store.UpdateSecurityGroupsFromCapi(spaceGuids)
 			if err != nil {

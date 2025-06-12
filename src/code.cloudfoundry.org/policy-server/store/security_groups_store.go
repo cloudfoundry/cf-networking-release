@@ -125,9 +125,10 @@ func (sgs *SGStore) UpdateSecurityGroupsFromCapi(spacesNeedingRefresh []string) 
 // FIXME: purge expired Space caches?
 
 func (sgs *SGStore) SpacesWithExpiredOrNoCache(spaceGuids []string) ([]string, error) {
+	sgs.Logger.Info("FIXME-checking-for-expired-cache-entries")
 	query := `SELECT guid, lastUpdated FROM spaces`
 	if len(spaceGuids) > 0 {
-		whereClause := fmt.Sprintf("(guid IN (%s))",
+		whereClause := fmt.Sprintf("guid IN (%s)",
 			helpers.QuestionMarks(len(spaceGuids)),
 		)
 		query = fmt.Sprintf("%s WHERE %s", query, whereClause)
@@ -139,6 +140,7 @@ func (sgs *SGStore) SpacesWithExpiredOrNoCache(spaceGuids []string) ([]string, e
 	}
 
 	rebindedQuery := helpers.RebindForSQLDialectAndMark(query, sgs.Conn.DriverName(), "%")
+	// FIXME: do the time math in sql?
 
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
@@ -151,12 +153,13 @@ func (sgs *SGStore) SpacesWithExpiredOrNoCache(spaceGuids []string) ([]string, e
 
 	for rows.Next() {
 		var guid string
-		var expiresAt time.Time
-		err = rows.Scan(&guid, &expiresAt)
+		var lastUpdated time.Time
+		err = rows.Scan(&guid, &lastUpdated)
 		if err != nil {
 			return []string{}, err
 		}
 
+		expiresAt := lastUpdated.Add(sgs.CacheExpiry)
 		if time.Now().After(expiresAt) {
 			sgs.Logger.Info("FIXME-space-cache-expired", lager.Data{"space": guid, "expiry": expiresAt})
 			expiredOrNotCachedSpaces = append(expiredOrNotCachedSpaces, guid)
