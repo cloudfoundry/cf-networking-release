@@ -70,8 +70,18 @@ func main() {
 	orgName := fmt.Sprintf("%s-org", config.Prefix)
 
 	var spaceIndex = 0
-	for _, asg := range asgs[0:config.ASGsWithMultipleSpaces] {
-		for range config.SpaceCountForASGsWithMultipleSpaces {
+	if !config.SkipASGCreation {
+		for _, asg := range asgs[0:config.ASGsWithMultipleSpaces] {
+			for range config.SpaceCountForASGsWithMultipleSpaces {
+				if spaceIndex >= len(spaces) {
+					spaceIndex = 0
+				}
+				bindASGToThisSpace(asg, orgName, spaces[spaceIndex], globalAdapter)
+				spaceIndex++
+			}
+		}
+
+		for _, asg := range asgs[config.ASGsWithMultipleSpaces:] {
 			if spaceIndex >= len(spaces) {
 				spaceIndex = 0
 			}
@@ -79,17 +89,6 @@ func main() {
 			spaceIndex++
 		}
 	}
-
-	for _, asg := range asgs[config.ASGsWithMultipleSpaces:] {
-		if spaceIndex >= len(spaces) {
-			spaceIndex = 0
-		}
-		bindASGToThisSpace(asg, orgName, spaces[spaceIndex], globalAdapter)
-		spaceIndex++
-	}
-
-	compileBinary()
-
 }
 
 func createSpacesConcurrently(config Config) []string {

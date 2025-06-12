@@ -6,8 +6,8 @@ THIS_DIR=$(cd $(dirname $0) && pwd)
 cd $THIS_DIR
 
 export CONFIG=/tmp/test-config.json
-export APPS_DIR=${HOME}
-export APPS_FOLDER=cf-nc-app
+export APPS_DIR=${HOME}/workspace
+export APP_FOLDER=cf-nc-app
 
 # Total rules =
 #    (global_asgs * asg_size * total_spaces * apps_per_space) +
