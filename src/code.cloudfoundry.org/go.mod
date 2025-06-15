@@ -12,15 +12,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20250414163106-a163a3b524d2
-	code.cloudfoundry.org/cf-networking-helpers v0.46.0
-	code.cloudfoundry.org/clock v1.39.0
-	code.cloudfoundry.org/debugserver v0.51.0
-	code.cloudfoundry.org/filelock v0.37.0
-	code.cloudfoundry.org/garden v0.0.0-20250604020255-2f07acb6e208
-	code.cloudfoundry.org/lager/v3 v3.38.0
+	code.cloudfoundry.org/cf-networking-helpers v0.47.0
+	code.cloudfoundry.org/clock v1.40.0
+	code.cloudfoundry.org/debugserver v0.52.0
+	code.cloudfoundry.org/filelock v0.38.0
+	code.cloudfoundry.org/garden v0.0.0-20250611020234-e214b0859579
+	code.cloudfoundry.org/lager/v3 v3.39.0
 	code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201
-	code.cloudfoundry.org/policy_client v0.55.0
-	code.cloudfoundry.org/tlsconfig v0.28.0
+	code.cloudfoundry.org/policy_client v0.56.0
+	code.cloudfoundry.org/tlsconfig v0.29.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.5
@@ -54,8 +54,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.56.0 // indirect
-	code.cloudfoundry.org/durationjson v0.42.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.57.0 // indirect
+	code.cloudfoundry.org/durationjson v0.43.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20250505082646-e4c2d772c2ec // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
-	github.com/go-sql-driver/mysql v1.9.2 // indirect
+	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
