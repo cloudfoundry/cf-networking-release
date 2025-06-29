@@ -183,7 +183,7 @@ func loadConfigFromPath(path string, config interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer configFile.Close()
+	defer configFile.Close() // nolint:errcheck
 
 	decoder := json.NewDecoder(configFile)
 	return decoder.Decode(config)
