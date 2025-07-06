@@ -2691,6 +2691,7 @@ func (js *jetStream) monitorStream(mset *stream, sa *streamAssignment, sendSnaps
 				if mset, err = acc.lookupStream(sa.Config.Name); mset != nil {
 					mset.monitorWg.Add(1)
 					defer mset.monitorWg.Done()
+					mset.checkInMonitor()
 					mset.setStreamAssignment(sa)
 					// Make sure to update our updateC which would have been nil.
 					uch = mset.updateC()
@@ -2816,6 +2817,14 @@ func (mset *stream) resetClusteredState(err error) bool {
 	stype, tierName, replicas := mset.cfg.Storage, mset.tier, mset.cfg.Replicas
 	mset.mu.RUnlock()
 
+	// The stream might already be deleted and not assigned to us anymore.
+	// In any case, don't revive the stream if it's already closed.
+	if mset.closed.Load() {
+		s.Warnf("Will not reset stream '%s > %s', stream is closed", acc, mset.name())
+		// Explicitly returning true here, we want the outside to break out of the monitoring loop as well.
+		return true
+	}
+
 	// Stepdown regardless if we are the leader here.
 	if node != nil {
 		node.StepDown()
@@ -2823,19 +2832,19 @@ func (mset *stream) resetClusteredState(err error) bool {
 
 	// If we detect we are shutting down just return.
 	if js != nil && js.isShuttingDown() {
-		s.Debugf("Will not reset stream, JetStream shutting down")
+		s.Debugf("Will not reset stream '%s > %s', JetStream shutting down", acc, mset.name())
 		return false
 	}
 
 	// Server
 	if js.limitsExceeded(stype) {
-		s.Warnf("Will not reset stream, server resources exceeded")
+		s.Warnf("Will not reset stream '%s > %s', server resources exceeded", acc, mset.name())
 		return false
 	}
 
 	// Account
 	if exceeded, _ := jsa.limitsExceeded(stype, tierName, replicas); exceeded {
-		s.Warnf("stream '%s > %s' errored, account resources exceeded", acc, mset.name())
+		s.Warnf("Stream '%s > %s' errored, account resources exceeded", acc, mset.name())
 		return false
 	}
 
