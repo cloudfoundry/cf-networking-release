@@ -27,7 +27,7 @@ type testPaths struct {
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
-	paths.PathToAdapter, err = gexec.Build("code.cloudfoundry.org/garden-external-networker", "-race", "-buildvcs=false")
+	paths.PathToAdapter, err = gexec.Build("code.cloudfoundry.org/garden-external-networker/cmd/garden-external-networker", "-race", "-buildvcs=false")
 	Expect(err).NotTo(HaveOccurred())
 
 	paths.PathToFakeCNIPlugin, err = gexec.Build("code.cloudfoundry.org/garden-external-networker/integration/fake-cni-plugin", "-race", "-buildvcs=false")

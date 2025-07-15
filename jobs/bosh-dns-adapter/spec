@@ -2,6 +2,7 @@
 name: bosh-dns-adapter
 
 templates:
+  pre-start.erb:                bin/pre-start
   aliases.json.erb:             dns/aliases.json
   bpm.yml.erb:                  config/bpm.yml
   client.crt.erb:               config/certs/client.crt

@@ -10,9 +10,10 @@ files:
   - code.cloudfoundry.org/vendor/modules.txt
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/garden/*.go # gosub
-  - code.cloudfoundry.org/garden-external-networker/*.go # gosub
   - code.cloudfoundry.org/garden-external-networker/adapter/*.go # gosub
   - code.cloudfoundry.org/garden-external-networker/bindmount/*.go # gosub
+  - code.cloudfoundry.org/garden-external-networker/cmd/config-validator/*.go # gosub
+  - code.cloudfoundry.org/garden-external-networker/cmd/garden-external-networker/*.go # gosub
   - code.cloudfoundry.org/garden-external-networker/cni/*.go # gosub
   - code.cloudfoundry.org/garden-external-networker/config/*.go # gosub
   - code.cloudfoundry.org/garden-external-networker/ipc/*.go # gosub

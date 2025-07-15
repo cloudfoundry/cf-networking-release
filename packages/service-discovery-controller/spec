@@ -25,8 +25,9 @@ files:
   - code.cloudfoundry.org/policy-server/store/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/helpers/*.go # gosub
   - code.cloudfoundry.org/policy-server/store/migrations/*.go # gosub
-  - code.cloudfoundry.org/service-discovery-controller/*.go # gosub
   - code.cloudfoundry.org/service-discovery-controller/addresstable/*.go # gosub
+  - code.cloudfoundry.org/service-discovery-controller/cmd/config-validator/*.go # gosub
+  - code.cloudfoundry.org/service-discovery-controller/cmd/service-discovery-controller/*.go # gosub
   - code.cloudfoundry.org/service-discovery-controller/config/*.go # gosub
   - code.cloudfoundry.org/service-discovery-controller/localip/*.go # gosub
   - code.cloudfoundry.org/service-discovery-controller/mbus/*.go # gosub

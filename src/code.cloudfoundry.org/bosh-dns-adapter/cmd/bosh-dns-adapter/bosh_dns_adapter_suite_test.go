@@ -17,7 +17,7 @@ func TestBoshDnsAdapter(t *testing.T) {
 var pathToServer string
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	path, err := gexec.Build("code.cloudfoundry.org/bosh-dns-adapter", "-buildvcs=false")
+	path, err := gexec.Build("code.cloudfoundry.org/bosh-dns-adapter/cmd/bosh-dns-adapter", "-buildvcs=false")
 	Expect(err).NotTo(HaveOccurred())
 	SetDefaultEventuallyTimeout(2 * time.Second)
 	return []byte(path)

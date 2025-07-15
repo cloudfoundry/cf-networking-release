@@ -3,6 +3,7 @@ name: service-discovery-controller
 
 templates:
   bpm.yml.erb:                              config/bpm.yml
+  pre-start.erb:                            bin/pre-start
   post-start.erb:                           bin/post-start
   config.json.erb:                          config/config.json
   server.crt.erb:                           config/certs/server.crt
