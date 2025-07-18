@@ -80,7 +80,8 @@ func main() {
 	)
 
 	securityGroupsStore := &store.SGStore{
-		Conn: connectionPool,
+		Logger: logger.Session("security-groups-store"),
+		Conn:   connectionPool,
 	}
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
