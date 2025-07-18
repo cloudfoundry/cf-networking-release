@@ -73,7 +73,8 @@ func main() {
 	}
 
 	securityGroupsStore := &store.SGStore{
-		Conn: connectionPool,
+		Logger: logger.Session("security-groups-store"),
+		Conn:   connectionPool,
 	}
 
 	metricsSender := &metrics.MetricsSender{

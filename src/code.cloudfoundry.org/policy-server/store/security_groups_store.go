@@ -1,11 +1,15 @@
 package store
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/policy-server/store/helpers"
 )
 
@@ -17,56 +21,65 @@ type SecurityGroupsStore interface {
 }
 
 type SGStore struct {
-	Conn Database
+	Logger lager.Logger
+	Conn   Database
+}
+
+func buildBoundASGQuery(table string, spaceGuids []string) string {
+	return fmt.Sprintf("SELECT security_group_guid AS guid FROM %s_security_groups_spaces WHERE space_guid IN (%s)", table, helpers.QuestionMarks(len(spaceGuids)))
 }
 
 func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
-	query := `
-		SELECT
-			id,
-			guid,
-			name,
-			rules,
-			staging_default,
-			running_default,
-			staging_spaces,
-			running_spaces
-		FROM security_groups`
-
-	whereClause := `staging_default=true OR running_default=true`
-
+	var boundASGQuery string
 	if len(spaceGuids) > 0 {
-		whereClause = fmt.Sprintf("%s OR %s OR %s",
-			whereClause,
-			sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
-			sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
-		)
+		boundASGQuery = fmt.Sprintf(`
+	UNION
+		%s
+	UNION
+		%s`, buildBoundASGQuery("staging", spaceGuids), buildBoundASGQuery("running", spaceGuids))
 	}
+	query := fmt.Sprintf(`SELECT
+ sgs.id,
+ sgs.guid,
+ sgs.name,
+ sgs.rules,
+ sgs.staging_default,
+ sgs.running_default,
+ sgs.staging_spaces,
+ sgs.running_spaces
+FROM security_groups AS sgs WHERE guid in (
+	SELECT guid FROM (
+		SELECT guid FROM security_groups WHERE staging_default = true
+	UNION
+		SELECT guid FROM security_groups WHERE running_default = true
+%s
+	) as bound
+)
+`, boundASGQuery)
 
-	query = fmt.Sprintf("%s WHERE (%s)", query, whereClause)
-
-	// one for running and one for staging
-	whereBindings := make([]interface{}, len(spaceGuids)*2)
+	whereBindings := make([]any, len(spaceGuids))
 	for i, spaceGuid := range spaceGuids {
 		whereBindings[i] = spaceGuid
-		whereBindings[i+len(spaceGuids)] = spaceGuid
 	}
+	// add a second set for running space guids
+	whereBindings = append(whereBindings, whereBindings...)
 
 	if page.From > 0 {
-		query = query + " AND id >= %"
+		query = query + " AND sgs.id >= ?"
 		whereBindings = append(whereBindings, page.From)
 	}
-	query = query + " ORDER BY id"
+	query = query + " ORDER BY sgs.id"
 
 	if page.Limit > 0 {
 		// we don't use a placeholder because limit is an integer and it is safe to interpolate it
 		query = fmt.Sprintf(`%s LIMIT %d`, query, page.Limit+1)
 	}
 
-	rebindedQuery := helpers.RebindForSQLDialectAndMark(query, sgs.Conn.DriverName(), "%")
+	rebindedQuery := helpers.RebindForSQLDialect(query, sgs.Conn.DriverName())
 
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
+		sgs.Logger.Error("selecting-security-groups", err, lager.Data{"query": rebindedQuery})
 		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
 	}
 	defer rows.Close()
@@ -98,6 +111,18 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	return result, Pagination{Next: nextId}, nil
 }
 
+func calculateAsgHash(group SecurityGroup) (string, error) {
+	slices.Sort(group.RunningSpaceGuids)
+	slices.Sort(group.StagingSpaceGuids)
+	groupJson, err := json.Marshal(group)
+	if err != nil {
+		return "", fmt.Errorf("failed-marshaling-asg-as-json: %s", err)
+	}
+
+	hash := fmt.Sprintf("%x", sha256.Sum256(groupJson))
+	return hash, nil
+}
+
 func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	tx, err := sgs.Conn.Beginx()
 	if err != nil {
@@ -105,61 +130,95 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	}
 	defer tx.Rollback()
 
-	existingGuids := map[string]bool{}
-	rows, err := tx.Queryx("SELECT guid FROM security_groups")
+	if len(newSecurityGroups) == 0 {
+		_, err = tx.Exec("DELETE FROM security_groups")
+		if err != nil {
+			return fmt.Errorf("deleting ALL security groups: %s", err)
+		}
+		err = tx.Commit()
+		if err != nil {
+			return fmt.Errorf("committing transaction to delete ALL security groups: %s", err)
+		}
+		return nil
+	}
+
+	existingGuids := map[string]string{}
+	rows, err := tx.Queryx("SELECT guid, hash FROM security_groups")
 	if err != nil {
 		return fmt.Errorf("selecting security groups: %s", err)
 	}
 	if rows != nil {
 		defer rows.Close()
 		for rows.Next() {
-			var guid string
-			err := rows.Scan(&guid)
+			var guid, hash string
+			err := rows.Scan(&guid, &hash)
 			if err != nil {
 				return fmt.Errorf("scanning security group result: %s", err)
 			}
-			existingGuids[guid] = true
+			existingGuids[guid] = hash
 		}
 	}
 
-	upsertQuery := tx.Rebind(`
+	upsertQuery := `
 		INSERT INTO security_groups
-		(guid, name, rules, staging_default, running_default, staging_spaces, running_spaces)
-		VALUES(?, ?, ?, ?, ?, ?, ?) ` +
-		sgs.onConflictUpdateSQL() +
-		` name=?, rules=?, staging_default=?, running_default=?, staging_spaces=?, running_spaces=?`)
+		(guid, name, hash, rules, staging_default, running_default, staging_spaces, running_spaces)
+		VALUES`
+	columnsPerRecord := 8
+	onConflictQuery := sgs.onConflictUpdateSQL("name", "hash", "rules", "staging_default", "running_default", "staging_spaces", "running_spaces")
 
+	stagingBindings := map[string][]string{}
+	runningBindings := map[string][]string{}
+	var insertValues []any
 	for _, group := range newSecurityGroups {
+		originalHash := existingGuids[group.Guid]
 		delete(existingGuids, group.Guid)
 
-		_, err := tx.Exec(upsertQuery,
-			group.Guid,
-			group.Name,
-			group.Rules,
-			group.StagingDefault,
-			group.RunningDefault,
-			group.StagingSpaceGuids,
-			group.RunningSpaceGuids,
-			group.Name,
-			group.Rules,
-			group.StagingDefault,
-			group.RunningDefault,
-			group.StagingSpaceGuids,
-			group.RunningSpaceGuids,
-		)
+		newHash, err := calculateAsgHash(group)
 		if err != nil {
-			return fmt.Errorf("saving security group %s (%s): %s", group.Guid, group.Name, err)
+			return fmt.Errorf("failed-calculating-asg-hash: %s", err)
+		}
+		if newHash != originalHash {
+			insertValues = append(insertValues,
+				group.Guid,
+				group.Name,
+				newHash,
+				group.Rules,
+				group.StagingDefault,
+				group.RunningDefault,
+				group.StagingSpaceGuids,
+				group.RunningSpaceGuids,
+			)
+
+			stagingBindings[group.Guid] = group.StagingSpaceGuids
+			runningBindings[group.Guid] = group.RunningSpaceGuids
+		}
+	}
+
+	if len(insertValues) > 0 {
+		sgs.Logger.Debug("updating-existing-security-groups", lager.Data{"": len(insertValues) / columnsPerRecord})
+		err = sgs.BatchPreparedStatement(tx, upsertQuery, onConflictQuery, insertValues, columnsPerRecord)
+		if err != nil {
+			return fmt.Errorf("upserting security groups: %s", err)
+		}
+
+		err = sgs.ReplaceSecurityGroupSpaceAssociations(tx, "staging_security_groups_spaces", stagingBindings)
+		if err != nil {
+			return fmt.Errorf("replacing staging space associations: %s", err)
+		}
+		err = sgs.ReplaceSecurityGroupSpaceAssociations(tx, "running_security_groups_spaces", runningBindings)
+		if err != nil {
+			return fmt.Errorf("replacing running space associations: %s", err)
 		}
 	}
 
 	if len(existingGuids) > 0 {
-		guids := []interface{}{}
+		sgs.Logger.Debug("deleting-stale-security-groups", lager.Data{"num_records": len(insertValues) / columnsPerRecord})
+		guidsToDelete := []any{}
 		for guid := range existingGuids {
-			guids = append(guids, guid)
+			guidsToDelete = append(guidsToDelete, guid)
 		}
-		_, err = tx.Exec(tx.Rebind(`
-			DELETE FROM security_groups WHERE guid IN (`+helpers.QuestionMarks(len(existingGuids))+`)`),
-			guids...)
+
+		err = sgs.BatchPreparedStatement(tx, "DELETE FROM security_groups WHERE guid IN (", ")", guidsToDelete, 1)
 		if err != nil {
 			return fmt.Errorf("deleting security groups: %s", err)
 		}
@@ -169,6 +228,7 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	if err != nil {
 		return fmt.Errorf("updating security_groups_info.last_updated: %s", err)
 	}
+	sgs.Logger.Debug("committing-transaction")
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("committing transaction: %s", err)
@@ -176,31 +236,110 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	return nil
 }
 
-func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) string {
-	switch sgs.Conn.DriverName() {
-	case helpers.MySQL:
-		clauses := []string{}
-		for range filterValues {
-			clauses = append(clauses, fmt.Sprintf(`json_contains(%s, json_quote(?))`, columnName))
-		}
-		return strings.Join(clauses, " OR ")
-	case helpers.Postgres:
-		filterList := helpers.MarksWithSeparator(len(filterValues), "%", ", ")
-		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
-	default:
-		return ""
+func (sgs *SGStore) BatchPreparedStatement(tx db.Transaction, statementStart, statementEnd string, parameterValues []any, parametersPerRecord int) error {
+	if len(parameterValues) == 0 {
+		return nil
 	}
+	// Both mysql + postgres claim to use 16bit integers in the protocol spec to identify how many
+	// parameters are being provided, 0 indicating no parameters, and a max of 65535.
+	parameterLimit := 65535
+
+	maxRecordCount := parameterLimit / parametersPerRecord
+	parametersPerBatch := maxRecordCount * parametersPerRecord
+
+	batchNumber := 1
+	for i := 0; i < len(parameterValues); i += parametersPerBatch {
+		lastIndex := min(i+parametersPerBatch, len(parameterValues))
+		recordCount := min((lastIndex-i)/parametersPerRecord, maxRecordCount)
+		values := parameterValues[i:lastIndex]
+
+		reboundStatement := tx.Rebind(
+			fmt.Sprintf("%s %s %s",
+				statementStart,
+				strings.TrimSuffix(
+					strings.Repeat(fmt.Sprintf("(%s), ", helpers.QuestionMarks(parametersPerRecord)), recordCount),
+					", ",
+				),
+				statementEnd,
+			),
+		)
+
+		sgs.Logger.Debug("executing-batched-statement", lager.Data{"batch": batchNumber, "recordCount": recordCount, "paramCount": len(values)})
+		_, err := tx.Exec(reboundStatement, values...)
+		if err != nil {
+			sgs.Logger.Error("batch-prepared-statement-failed", err, lager.Data{"query": reboundStatement})
+			return fmt.Errorf("executing batched statement: %s", err)
+		}
+		batchNumber++
+	}
+
+	return nil
 }
 
-func (sgs *SGStore) onConflictUpdateSQL() string {
+func (sgs *SGStore) ReplaceSecurityGroupSpaceAssociations(tx db.Transaction, table string, bindings map[string][]string) error {
+	var deleteWhereBindings, insertValues []any
+	var insertTxSize, deleteTxSize int
+	for sgGuid, spaceGuids := range bindings {
+		deleteWhereBindings = append(deleteWhereBindings, sgGuid)
+		deleteTxSize += len(sgGuid)
+
+		for _, spaceGuid := range spaceGuids {
+			insertValues = append(insertValues, sgGuid, spaceGuid)
+			insertTxSize += len(sgGuid) + len(spaceGuid)
+		}
+	}
+
+	deleteQuery := fmt.Sprintf("DELETE FROM %s WHERE security_group_guid IN (", table)
+	err := sgs.BatchPreparedStatement(tx, deleteQuery, ")", deleteWhereBindings, 1)
+	if err != nil {
+		return fmt.Errorf("deleting previous associations: %s", err)
+	}
+
+	replaceQuery := fmt.Sprintf("INSERT INTO %s (security_group_guid, space_guid) VALUES", table)
+	columnsPerRecord := 2
+	err = sgs.BatchPreparedStatement(tx, replaceQuery, "", insertValues, columnsPerRecord)
+	if err != nil {
+		return fmt.Errorf("creating new associations: %s", err)
+	}
+
+	return nil
+}
+
+// func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) string {
+// 	switch sgs.Conn.DriverName() {
+// 	case helpers.MySQL:
+// 		clauses := []string{}
+// 		for range filterValues {
+// 			clauses = append(clauses, fmt.Sprintf(`json_contains(%s, json_quote(?))`, columnName))
+// 		}
+// 		return strings.Join(clauses, " OR ")
+// 	case helpers.Postgres:
+// 		filterList := helpers.MarksWithSeparator(len(filterValues), "%", ", ")
+// 		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
+// 	default:
+// 		return ""
+// 	}
+// }
+
+func (sgs *SGStore) onConflictUpdateSQL(columns ...string) string {
+	var conflictSql string
 	switch sgs.Conn.DriverName() {
 	case helpers.MySQL:
-		return "ON DUPLICATE KEY UPDATE"
+		conflictSql = "ON DUPLICATE KEY UPDATE"
+		for _, column := range columns {
+			conflictSql = fmt.Sprintf("%s %s = VALUES(%s),", conflictSql, column, column)
+		}
+		conflictSql = strings.TrimRight(conflictSql, ",")
 	case helpers.Postgres:
-		return "ON CONFLICT (guid) DO UPDATE SET"
+		conflictSql = "ON CONFLICT (guid) DO UPDATE SET "
+		for _, column := range columns {
+			conflictSql = fmt.Sprintf("%s %s = EXCLUDED.%s,", conflictSql, column, column)
+		}
+		conflictSql = strings.TrimRight(conflictSql, ",")
 	default:
 		return ""
 	}
+	return conflictSql
 }
 
 func (sgs *SGStore) LastUpdated() (int, error) {

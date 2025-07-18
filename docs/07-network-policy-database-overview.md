@@ -61,7 +61,11 @@ Below are all of the tables in the `network_policy` database.
 | gorp_migrations  | Record of which migrations have been run. |
 | groups  | List of all apps that are either the source or destination of a network policy. |
 | policies  | List of source apps and destination metadata for network policies. |
-
+| policies_info | A single row indicating the last update time of any network policy, used to save on DB queries from vxlan-policy-agent |
+| security_groups | Lists all security groups defined in CAPI. This is populated by policy-server-asg-syncer, and is not a source of truth. |
+| security_groups_info | A single row indicating the last update time of any security group info, used to save on DB queries from vxlan-policy-agent |
+| running_security_groups_spaces | A join table associating security groups to the spaces they are bound to for running lifecycle workloads. |
+| staging_security_groups_spaces | A join table associating security groups to the spaes they are bound to for staging lifecycle workloads. |
 
 The following tables were related to dynamic egress, which has been removed
 from the codebase. These tables should no longer present in your database as of
@@ -181,14 +185,91 @@ mysql> select * from policies;           mysql> select * from destinations;
                  |  2 | 5346072e-7265-45f9-b70a-80c42e3f13ae | app  <--+
                  |  3 | NULL                                 | app  |
                  +----+--------------------------------------+------+
-
-
 ```
 
+## <a name="security-groups-tables"</a> Security Group Related Tables
+
+There are three tables storing information about security groups: security_groups, running_security_groups_spaces,
+and staging_security_groups_spaces.
+
+
+### <a name="security-groups-table"></a> security_groups
+This table stores a copy of all security groups found in CAPI, so vxlan-policy-agent can query
+policy-server-internal for this information, rather than overwhelm CAPI with requests. Its data is
+synced and updated via the policy-server-asg-syncer process, and is not a source of truth for ASG data.
+
+```
+mysql> describe security_groups;
++-----------------+--------------+------+-----+---------+----------------+
+| Field           | Type         | Null | Key | Default | Extra          |
++-----------------+--------------+------+-----+---------+----------------+
+| id              | bigint       | NO   | PRI | NULL    | auto_increment |
+| guid            | varchar(36)  | NO   | UNI | NULL    |                |
+| name            | varchar(255) | NO   |     | NULL    |                |
+| rules           | mediumtext   | YES  |     | NULL    |                |
+| staging_default | tinyint(1)   | YES  | MUL | 0       |                |
+| running_default | tinyint(1)   | YES  | MUL | 0       |                |
+| staging_spaces  | json         | YES  |     | NULL    |                |
+| running_spaces  | json         | YES  |     | NULL    |                |
++-----------------+--------------+------+-----+---------+----------------+
+```
+
+| Field | Note |
+|---|---|
+| id | An internal id for each record |
+| guid | The CAPI GUID of the security group |
+| name | The name of the security group as it appears in CAPI |
+| hash | A SHA256 hash of the ASG data, used to check whether records need updating during policy-server-asg-syncer polls |
+| rules | The rules associated with the ASG defined in CAPI |
+| staging_default | Whether or not this is a globally bound security group for `staging` lifecycles |
+| running_default | Whether or not this is a globally bound security group for `running` lifecycles |
+| staging_spaces | A json list of all spaces this security group is bound to for the `staging` lifecycle |
+| running_spaces | A json list of all spaces this security group is bound to for the `running` lifecycle |
+
+### <a name="running-security-groups-spaces-table"></a> running_security_groups_spaces
+This table is a join table to enable faster querying of security_groups when filtering by
+running_space guids. It is synced and updated via the policy-server-asg-syncer process, and is not a source of
+truth for ASG data.
+
+```
+mysql> describe running_security_groups_spaces;
++---------------------+--------------+------+-----+---------+-------+
+| Field               | Type         | Null | Key | Default | Extra |
++---------------------+--------------+------+-----+---------+-------+
+| space_guid          | varchar(255) | NO   | PRI | NULL    |       |
+| security_group_guid | varchar(255) | NO   | PRI | NULL    |       |
++---------------------+--------------+------+-----+---------+-------+
+```
+
+| Field | Note|
+|---|---|
+| space_guid | This value is the CAPI guid for the space bound to a given security group via the `running` app lifecycle |
+| security_group_guid | This value is the CAPI guid for the security group bound to a given space via the `running` app lifecycle |
+
+
+### <a name="staging-security-groups-spaces-table"></a> staging_security_groups_spaces
+This table is a join table to enable faster querying of security_groups when filtering by
+staging_space guids. It is synced and updated via the policy-server-asg-syncer process, and is not a source of
+truth for ASG data.
+
+```
+mysql> describe staging_security_groups_spaces;
++---------------------+--------------+------+-----+---------+-------+
+| Field               | Type         | Null | Key | Default | Extra |
++---------------------+--------------+------+-----+---------+-------+
+| space_guid          | varchar(255) | NO   | PRI | NULL    |       |
+| security_group_guid | varchar(255) | NO   | PRI | NULL    |       |
++---------------------+--------------+------+-----+---------+-------+
+```
+
+| Field | Note|
+|---|---|
+| space_guid | This value is the CAPI guid for the space bound to a given security group via the `staging` app lifecycle |
+| security_group_guid | This value is the CAPI guid for the security group bound to a given space via the `staging` app lifecycle |
 
 ## <a name="migrations-tables"></a> Migration Related Tables
 
-There are two tables related to migraitons: gorp_migrations and gorp_lock. 
+There are two tables related to migrations: gorp_migrations and gorp_lock. 
 
 ### <a name="gorp-mirations-table"></a> gorp_migrations
 This table tracks what database migrations have been applied.

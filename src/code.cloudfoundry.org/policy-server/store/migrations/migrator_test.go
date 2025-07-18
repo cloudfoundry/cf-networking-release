@@ -836,13 +836,13 @@ var _ = Describe("migrations", func() {
 
 					By("inserting new data")
 					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
-						INSERT INTO egress_policies (source_id, destination_id) 
+						INSERT INTO egress_policies (source_id, destination_id)
 						VALUES (?, ?)`), terminalId, terminalId)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row exists")
 					rows, err = realDb.Query(`
-						SELECT id FROM egress_policies 
+						SELECT id FROM egress_policies
 						WHERE source_id=1 AND destination_id=1`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
@@ -850,7 +850,7 @@ var _ = Describe("migrations", func() {
 
 				It("constrains the terminal id to existing rows", func() {
 					_, err := realDb.Exec(`
-						INSERT INTO egress_policies (source_id, destination_id) 
+						INSERT INTO egress_policies (source_id, destination_id)
 						VALUES (42, 23)`)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("violates foreign key constraint"))
@@ -882,13 +882,13 @@ var _ = Describe("migrations", func() {
 
 					By("inserting new data")
 					_, err = realDb.Exec(`
-						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id) 
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id)
 						VALUES ('tcp', '1.2.3.4', '2.3.4.5', ?)`, terminalId)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row exists")
 					rows, err = realDb.Query(`
-						SELECT id FROM ip_ranges 
+						SELECT id FROM ip_ranges
 						WHERE protocol='tcp' AND start_ip='1.2.3.4' AND end_ip='2.3.4.5' AND terminal_id=1`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
@@ -896,7 +896,7 @@ var _ = Describe("migrations", func() {
 
 				It("constrains the policy id to existing rows", func() {
 					_, err := realDb.Exec(`
-						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id) 
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id)
 						VALUES ('tcp', '1.2.3.4', '2.3.4.5', 42)`)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("foreign key constraint fails"))
@@ -926,13 +926,13 @@ var _ = Describe("migrations", func() {
 
 					By("inserting new data")
 					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
-						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id) 
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id)
 						VALUES ('tcp', '1.2.3.4', '2.3.4.5', ?)`), terminalId)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row exists")
 					rows, err = realDb.Query(`
-						SELECT id FROM ip_ranges 
+						SELECT id FROM ip_ranges
 						WHERE protocol='tcp' AND start_ip='1.2.3.4' AND end_ip='2.3.4.5' AND terminal_id=1`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
@@ -940,7 +940,7 @@ var _ = Describe("migrations", func() {
 
 				It("constrains the policy id to existing rows", func() {
 					_, err := realDb.Exec(`
-						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id) 
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id)
 						VALUES ('tcp','1.2.3.4','2.3.4.5',42)`)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("violates foreign key constraint"))
@@ -1011,7 +1011,7 @@ var _ = Describe("migrations", func() {
 
 					By("inserting new data")
 					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
-							INSERT INTO apps (terminal_id, app_guid) 
+							INSERT INTO apps (terminal_id, app_guid)
 							VALUES (?,'an-app-guid')`), terminalId)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -2165,6 +2165,220 @@ var _ = Describe("migrations", func() {
 				Expect(numMigrations).To(Equal(2))
 			})
 		})
+
+		Describe("v92-93 - adding new association tables", func() {
+
+			It("succeeds", func() {
+				migrateTo("93")
+			})
+		})
+		Describe("v94", func() {
+			It("adds a `hash` column to security_groups", func() {
+				migrateTo("94")
+				_, err := realDb.Query("SELECT hash from security_groups")
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+		Describe("v95-100 - migrating json running_spaces/staging_spaces to join tables", func() {
+			BeforeEach(func() {
+				migrateTo("94")
+
+				var rows int
+				err := realDb.QueryRow("SELECT COUNT(*) FROM security_groups").Scan(&rows)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rows).To(Equal(0))
+				err = realDb.QueryRow("SELECT COUNT(*) FROM running_security_groups_spaces").Scan(&rows)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rows).To(Equal(0))
+				err = realDb.QueryRow("SELECT COUNT(*) FROM staging_security_groups_spaces").Scan(&rows)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rows).To(Equal(0))
+			})
+			AfterEach(func() {
+				_, err := realDb.Exec("DELETE FROM security_groups")
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = realDb.Exec("DELETE FROM running_security_groups_spaces")
+				Expect(err).NotTo(HaveOccurred())
+				_, err = realDb.Exec("DELETE FROM staging_security_groups_spaces")
+				Expect(err).NotTo(HaveOccurred())
+			})
+			Context("when no rows exist in the security_groups table", func() {
+				It("migrates without error", func() {
+					migrateTo("100")
+				})
+			})
+			Context("when a security group has running spaces but no staging spaces", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY('space-1', 'space-2'), JSON_ARRAY())`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("adds entries to the running_space join table, but nothing to the staging space join table", func() {
+					migrateTo("100")
+
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-2",
+					}})
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{})
+				})
+			})
+			Context("when a security group has staging spaces but no running spaces", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY(), JSON_ARRAY('space-1', 'space-2'))`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("adds entries to the staging_space join table, but nothing to the running space join table", func() {
+					migrateTo("100")
+
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-2",
+					}})
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{})
+				})
+			})
+			Context("when a security group has no staging spaces or no running spaces", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY(), JSON_ARRAY())`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("adds nothing to the join tables", func() {
+					migrateTo("100")
+
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{})
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{})
+				})
+			})
+			Context("when a security group has staging spaces and running spaces", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY('space-1', 'space-2', 'common-space-1'), JSON_ARRAY('space-3', 'space-4', 'common-space-1'))`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("adds the security group to both tables with the correct running + staging spaces in each", func() {
+					migrateTo("100")
+
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-3",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-4",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "common-space-1",
+					}})
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-2",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "common-space-1",
+					}})
+				})
+			})
+			Context("when the longest number of spaces associated with a security group is in the running_spaces column", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY('space-1', 'space-2', 'space-3'), JSON_ARRAY('space-3', 'space-4')),
+							('guid-2', 'guid-2', JSON_ARRAY('space-1', 'space-2'), JSON_ARRAY('space-3', 'space-4'))
+						`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("is able to migrate successfully", func() {
+					migrateTo("100")
+				})
+			})
+			Context("when the longest number of spaces associated with a security group is in the staginging_spaces column", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY('space-1', 'space-2', 'space-3'), JSON_ARRAY('space-3', 'space-4')),
+							('guid-2', 'guid-2', JSON_ARRAY('space-1', 'space-2'), JSON_ARRAY('space-3', 'space-4', 'space-5', 'space-6'))
+						`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("is able to migrate successfully", func() {
+					migrateTo("100")
+				})
+			})
+			Context("when multiple rows have multiple spaces bound", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(
+						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES
+							('guid-1', 'guid-1', JSON_ARRAY('space-1', 'space-2', 'space-3'), JSON_ARRAY('space-3', 'space-4')),
+							('guid-2', 'guid-2', JSON_ARRAY('space-1', 'space-2'), JSON_ARRAY('space-3', 'space-4', 'space-5', 'space-6')),
+							('guid-3', 'guid-3', JSON_ARRAY(), JSON_ARRAY()),
+							('guid-4', 'guid-4', JSON_ARRAY(), JSON_ARRAY('space-10')),
+							('guid-5', 'guid-5', JSON_ARRAY('space-11'), JSON_ARRAY())
+						`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("adds entries into all relevant join records", func() {
+					migrateTo("100")
+
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-3",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-4",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-3",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-4",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-5",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-6",
+					}, {
+						SecurityGroup: "guid-4",
+						Space:         "space-10",
+					}})
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-2",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-3",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-2",
+					}, {
+						SecurityGroup: "guid-5",
+						Space:         "space-11",
+					}})
+				})
+			})
+		})
 	})
 
 	Describe("Down Migration", func() {
@@ -2349,4 +2563,29 @@ func isPostgresOrMySQL57(realDb *db.ConnWrapper) bool {
 		}
 	}
 	return true
+}
+
+type JoinRow struct {
+	SecurityGroup string
+	Space         string
+}
+
+func ExpectAssociatedSpacesToConsistOf(realDb *db.ConnWrapper, table string, expectedRows []JoinRow) {
+	rows, err := realDb.Query(fmt.Sprintf("SELECT security_group_guid, space_guid FROM %s_security_groups_spaces", table))
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+	if len(expectedRows) == 0 {
+		ExpectWithOffset(1, scanCountRow(rows)).To(Equal(0))
+	} else {
+		var receivedRows []JoinRow
+		for rows.Next() {
+			var sg, space string
+			err := rows.Scan(&sg, &space)
+			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			receivedRows = append(receivedRows, JoinRow{
+				SecurityGroup: sg,
+				Space:         space,
+			})
+		}
+		ExpectWithOffset(1, receivedRows).To(ConsistOf(expectedRows))
+	}
 }
