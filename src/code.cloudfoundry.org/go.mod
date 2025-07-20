@@ -12,15 +12,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20250707190811-521c7abd1edf
-	code.cloudfoundry.org/cf-networking-helpers v0.50.0
-	code.cloudfoundry.org/clock v1.41.0
-	code.cloudfoundry.org/debugserver v0.57.0
-	code.cloudfoundry.org/filelock v0.39.0
-	code.cloudfoundry.org/garden v0.0.0-20250702171543-d3b7c3a6ecb8
-	code.cloudfoundry.org/lager/v3 v3.40.0
+	code.cloudfoundry.org/cf-networking-helpers v0.51.0
+	code.cloudfoundry.org/clock v1.42.0
+	code.cloudfoundry.org/debugserver v0.58.0
+	code.cloudfoundry.org/filelock v0.40.0
+	code.cloudfoundry.org/garden v0.0.0-20250716020550-aabeeb44f19e
+	code.cloudfoundry.org/lager/v3 v3.41.0
 	code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201
-	code.cloudfoundry.org/policy_client v0.60.0
-	code.cloudfoundry.org/tlsconfig v0.30.0
+	code.cloudfoundry.org/policy_client v0.61.0
+	code.cloudfoundry.org/tlsconfig v0.31.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.5
@@ -54,8 +54,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.60.0 // indirect
-	code.cloudfoundry.org/durationjson v0.44.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.61.0 // indirect
+	code.cloudfoundry.org/durationjson v0.45.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20250505082646-e4c2d772c2ec // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
@@ -99,8 +99,8 @@ require (
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250715232539-7130f93afb79 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250715232539-7130f93afb79 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
