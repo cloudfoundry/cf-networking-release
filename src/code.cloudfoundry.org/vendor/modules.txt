@@ -1,9 +1,9 @@
-# code.cloudfoundry.org/bbs v0.0.0-20250729211627-0ed7f355630e
+# code.cloudfoundry.org/bbs v0.0.0-20250731191341-d1ca59879d2a
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.52.0
+# code.cloudfoundry.org/cf-networking-helpers v0.53.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -79,7 +79,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.62.0
+# code.cloudfoundry.org/policy_client v0.63.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.31.0
@@ -269,7 +269,7 @@ github.com/nats-io/go-nats/util
 # github.com/nats-io/jwt/v2 v2.7.4
 ## explicit; go 1.23.0
 github.com/nats-io/jwt/v2
-# github.com/nats-io/nats-server/v2 v2.11.6
+# github.com/nats-io/nats-server/v2 v2.11.7
 ## explicit; go 1.23.0
 github.com/nats-io/nats-server/v2/conf
 github.com/nats-io/nats-server/v2/internal/fastrand

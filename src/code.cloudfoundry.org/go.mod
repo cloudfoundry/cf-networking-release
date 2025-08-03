@@ -11,15 +11,15 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20250729211627-0ed7f355630e
-	code.cloudfoundry.org/cf-networking-helpers v0.52.0
+	code.cloudfoundry.org/bbs v0.0.0-20250731191341-d1ca59879d2a
+	code.cloudfoundry.org/cf-networking-helpers v0.53.0
 	code.cloudfoundry.org/clock v1.43.0
 	code.cloudfoundry.org/debugserver v0.60.0
 	code.cloudfoundry.org/filelock v0.41.0
 	code.cloudfoundry.org/garden v0.0.0-20250730020702-3c607f063fc6
 	code.cloudfoundry.org/lager/v3 v3.42.0
 	code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201
-	code.cloudfoundry.org/policy_client v0.62.0
+	code.cloudfoundry.org/policy_client v0.63.0
 	code.cloudfoundry.org/tlsconfig v0.31.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -34,7 +34,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.11.6
+	github.com/nats-io/nats-server/v2 v2.11.7
 	github.com/nats-io/nats-top v0.6.3
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.23.4
