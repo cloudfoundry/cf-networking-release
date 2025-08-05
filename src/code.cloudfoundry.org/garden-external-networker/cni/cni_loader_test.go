@@ -50,7 +50,7 @@ var _ = Describe("GetNetworkConfig", func() {
 
 		It("returns a meaningful error", func() {
 			_, err := cniLoader.GetNetworkConfig()
-			Expect(err).To(MatchError(HavePrefix("error walking config directory:")))
+			Expect(err).To(MatchError(HavePrefix("error loading config:")))
 		})
 	})
 
@@ -59,6 +59,21 @@ var _ = Describe("GetNetworkConfig", func() {
 			netListCfgs, err := cniLoader.GetNetworkConfig()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(netListCfgs).To(BeNil())
+		})
+	})
+
+	Context("when a valid config file exists", func() {
+		BeforeEach(func() {
+			err = os.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("loads a single network config", func() {
+			netListCfg, err := cniLoader.GetNetworkConfig()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(netListCfg.Name).To(Equal("mynet"))
+			Expect(netListCfg.Plugins).To(HaveLen(1))
+			Expect(*netListCfg.Plugins[0].Network).To(Equal(*expectedBridgeNetwork))
 		})
 	})
 
@@ -86,6 +101,11 @@ var _ = Describe("GetNetworkConfig", func() {
 
 	Context("when multiple valid config and config list files exists", func() {
 		BeforeEach(func() {
+			err = os.WriteFile(filepath.Join(dir, "aaa.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.WriteFile(filepath.Join(dir, "zzz.conf"), []byte(`{ "name": "barnet", "type": "dummy" }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
 
 			err = os.WriteFile(filepath.Join(dir, "ccc.conflist"), []byte(`{ "name": "nopelist", "plugins": [{ "name": "badnet", "type": "bridge" }] }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
@@ -105,7 +125,7 @@ var _ = Describe("GetNetworkConfig", func() {
 		It("logs warning for the skipped files", func() {
 			_, err := cniLoader.GetNetworkConfig()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(logger.String()).To(ContainSubstring("Only one CNI conflist (chain) will be executed"))
+			Expect(logger.String()).To(ContainSubstring("Only one CNI config file or conflist (chain) will be executed"))
 		})
 	})
 })

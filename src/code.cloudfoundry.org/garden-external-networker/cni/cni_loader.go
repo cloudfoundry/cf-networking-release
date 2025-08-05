@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"io"
+	"time"
 
 	"github.com/containernetworking/cni/libcni"
 )
@@ -24,7 +24,10 @@ func (l *CNILoader) GetCNIConfig() *libcni.CNIConfig {
 
 func (l *CNILoader) GetNetworkConfig() (*libcni.NetworkConfigList, error) {
 
-	var confListFilePaths []string
+	var (
+		confFilePaths     []string
+		confListFilePaths []string
+	)
 
 	err := filepath.Walk(l.ConfigDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -35,7 +38,9 @@ func (l *CNILoader) GetNetworkConfig() (*libcni.NetworkConfigList, error) {
 			return nil
 		}
 
-		if strings.HasSuffix(path, ".conflist") {
+		if strings.HasSuffix(path, ".conf") {
+			confFilePaths = append(confFilePaths, path)
+		} else if strings.HasSuffix(path, ".conflist") {
 			confListFilePaths = append(confListFilePaths, path)
 		}
 
@@ -43,7 +48,7 @@ func (l *CNILoader) GetNetworkConfig() (*libcni.NetworkConfigList, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error walking config directory: %s", err)
+		return nil, fmt.Errorf("error loading config: %s", err)
 	}
 
 	var toReturn *libcni.NetworkConfigList
@@ -56,10 +61,27 @@ func (l *CNILoader) GetNetworkConfig() (*libcni.NetworkConfigList, error) {
 		}
 
 		toReturn = confList
+	} else if len(confFilePaths) > 0 {
+		path := confFilePaths[0]
+		//lint:ignore SA1019 - we will address this, but would like to keep units passing
+		conf, err := libcni.ConfFromFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("unable to load config from %s: %s", path, err)
+		}
+
+		//lint:ignore SA1019 - we will address this, but would like to keep units passing
+		confList, err := libcni.ConfListFromConf(conf)
+		if err != nil {
+			// untested, unable to cause failure case.
+			return nil, fmt.Errorf("unable to upconvert from conf to conf list %s: %s", path, err)
+		}
+
+		toReturn = confList
 	}
 
-	if len(confListFilePaths) > 1 {
-		fmt.Fprintf(l.Logger, `%s - Only one CNI conflist (chain) will be executed.
+	if (len(confListFilePaths) + len(confFilePaths)) > 1 {
+		fmt.Fprintf(l.Logger, `%s - Only one CNI config file or conflist (chain) will be executed. 
+							If a conf and conflist file are both present, then the conflist will be executed. 
 							If multiple CNI config files are present, behavior is undefined.`, time.Now().Format(time.RFC3339))
 	}
 
