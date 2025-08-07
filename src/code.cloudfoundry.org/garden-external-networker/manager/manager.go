@@ -54,6 +54,7 @@ type UpInputs struct {
 type UpOutputs struct {
 	Properties struct {
 		ContainerIP      string `json:"garden.network.container-ip"`
+		ContainerIPv6    string `json:"garden.network.container-ipv6,omitempty"`
 		DeprecatedHostIP string `json:"garden.network.host-ip"`
 		MappedPorts      string `json:"garden.network.mapped-ports"`
 		Interface        string `json:"garden.network.interface,omitempty"`
@@ -124,11 +125,12 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 
 	assertedResult := result040.(*types040.Result)
 
-	var containerIP *types040.IPConfig
+	var containerIP, containerIPv6 *types040.IPConfig
 	for _, ip := range assertedResult.IPs {
 		if ip.Version == "4" {
 			containerIP = ip
-			break
+		} else if ip.Version == "6" {
+			containerIPv6 = ip
 		}
 	}
 
@@ -152,6 +154,11 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	outputs.Properties.DeprecatedHostIP = "255.255.255.255"
 	outputs.DNSServers = assertedResult.DNS.Nameservers
 	outputs.SearchDomains = m.SearchDomains
+
+	if containerIPv6 != nil {
+		outputs.Properties.ContainerIPv6 = containerIPv6.Address.IP.String()
+	}
+
 	return &outputs, nil
 }
 
