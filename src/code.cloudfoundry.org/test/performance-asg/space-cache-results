@@ -1,0 +1,34 @@
+total asgs: 25000
+total spaces: 2000
+asg size: 200
+global asgs: 50
+asgs with multiple spaces: 1000
+space count for asgs with multiple spaces: 300
+apps per space: 4
+instances per app: 2
+max AIs: 1400
+
+
+iptables rules per cell: ~300-400k
+apps per cell: 8-10
+spaces per cell: ~10
+
+~ 2 mins to sync changes from capi to policy-server. times vary on number of changes. if few changes, 2 mins. if everything changes, 20-30mins
+~40-100s iptables time 
+50-120s vxlan total sync tmies
+1-11s vxlan-policy-server poll times (usually 1-2s)
+
+mysql slow queries:
+- related to pulling the data back for the sapces table. examining 16 records, returning 8, with 48mb of data. 10s+ at times
+
+not running at 14000 AIs because that will overload iptables for sure. 
+
+simulated vxlan poll query using 40 space GUIDs: 3-5s of vxlan->policy-server poll time. 
+
+
+Notes:
+- can probably speed up iptables time with our various iptables enhancements.
+- unsure why  we still were seeing slow queries even though its all indexed. 
+- sync action from capi is brittle (lots of data, limited by transaction buffer sizes that are shared across all databases at a point in time)
+- massive changes to arch + code requiring lots of new testing
+- unsure how to migrate with no downtime

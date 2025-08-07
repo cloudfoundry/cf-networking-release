@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/policy-server/api"
@@ -41,22 +42,24 @@ func (h *AsgsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.ErrorResponse.InternalServerError(logger, w, err, "invalid value for 'limit' parameter")
 		return
 	}
+	lastChecked, err := parseTimeQueryValue(queryValues, "since")
+	if err != nil {
+		h.ErrorResponse.InternalServerError(logger, w, err, "invalid value for 'since' parameter")
+		return
+	}
+
+	updates, err := h.Store.CheckForASGUpdates(spaceGuids, lastChecked)
+	if err != nil {
+		h.ErrorResponse.InternalServerError(logger, w, err, "checking for updated ASGs failed")
+	}
+	if !updates {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 
 	var pagination store.Pagination
 	var asgs store.SecurityGroups
 	if len(spaceGuids) > 0 {
-		expiredSpaces, err := h.Store.SpacesWithExpiredOrNoCache(spaceGuids)
-		if err != nil {
-			h.ErrorResponse.InternalServerError(logger, w, err, "failed searching for expired spaces")
-		}
-		if len(expiredSpaces) > 0 {
-			err := h.Store.UpdateSecurityGroupsFromCapi(spaceGuids)
-			if err != nil {
-				h.ErrorResponse.InternalServerError(logger, w, err, "failed updating security groups from capi")
-				return
-			}
-		}
-
 		asgs, pagination, err = h.Store.BySpaceGuids(spaceGuids, store.Page{From: from, Limit: limit})
 		if err != nil {
 			h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
@@ -69,7 +72,6 @@ func (h *AsgsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map asgs as bytes failed")
 		return
 	}
-	logger.Info("FIXME-returning-asgs-for-spaces", lager.Data{"rawData": bytes})
 
 	w.WriteHeader(http.StatusOK)
 	// #nosec G104 - ignore errors writing http responses to avoid spamming logs during a DoS
@@ -91,4 +93,13 @@ func parseIntQueryValue(queryValues url.Values, name string) (int, error) {
 		return strconv.Atoi(valStr[0])
 	}
 	return 0, nil
+}
+func parseTimeQueryValue(queryValues url.Values, name string) (time.Time, error) {
+	valStr, ok := queryValues[name]
+	if ok {
+		if timestamp, err := strconv.ParseInt(valStr[0], 10, 64); err == nil {
+			return time.Unix(timestamp, 0), nil
+		}
+	}
+	return time.Time{}, nil
 }

@@ -12,14 +12,25 @@ export APP_FOLDER=cf-nc-app
 # Total rules =
 #    (global_asgs * asg_size * total_spaces * apps_per_space) +
 # 20,000,000
+# 150,000,000
 #    (asgs_with_multiple_spaces * asg_size * space_count_for_asgs_with_multiple_spaces  * apps_per_space) +
 # 60,000,000
+# 1,500,00
 #    ((total_asgs - global_asgs - asgs_with_multiple_spaces) * asg_size * apps_per_space)
 # 4,790,000
+# 2,970,000
+
 # 84,79,0000 total rules
+# 154470000
+# 400k per cell
+# limited by 7k app instances -> 200k per cell.
+
 
 # Size of an asg: asg_size * 64 bytes (roughly 64 bytes per rule, asg_size is number of rules)
-ADMIN_PASSWORD="$(credhub get -n "$(credhub find -n cf_admin_password -j | jq -r .credentials[0].name)" -j | jq -r .value)"
+#ADMIN_PASSWORD="$(credhub get -n "$(credhub find -n cf_admin_password -j | jq -r .credentials[0].name)" -j | jq -r .value)"
+ADMIN_PASSWORD="Evek_edv2bXMy46kxyh_H4R8mikm78aa"
+CF_API=https://api.sys-tpcf-dasg.lvn.broadcom.net
+export CF_DIAL_TIMEOUT=60
 echo "
 {
   \"api\": \"${CF_API}\",
@@ -27,17 +38,18 @@ echo "
   \"admin_password\": \"${ADMIN_PASSWORD}\",
   \"skip_ssl_validation\": true,
   \"use_http\": true,
-  \"concurrency\": 24,
+  \"concurrency\": 12,
   \"prefix\":\"scale-asg\",
-  \"total_asgs\":25000,
-  \"total_spaces\": 2000,
+  \"total_asgs\":40000,
+  \"total_spaces\": 15000,
   \"asg_size\": 200,
   \"global_asgs\": 50,
-  \"asgs_with_multiple_spaces\": 1000,
-  \"space_count_for_asgs_with_multiple_spaces\": 300,
-  \"apps_per_space\": 4,
-  \"max_app_instances\": 14000,
-  \"app_instances_per_app\": 2
+  \"asgs_with_multiple_spaces\": 100,
+  \"space_count_for_asgs_with_multiple_spaces\": 75,
+  \"apps_per_space\": 1,
+  \"max_app_instances\": 7000,
+  \"app_instances_per_app\": 1,
+  \"skip_asg_creation\": true
 }
 " > $CONFIG
 

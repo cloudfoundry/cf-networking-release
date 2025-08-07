@@ -16,6 +16,7 @@ import (
 )
 
 const metricSecurityGroupsRetrievalFromCCDuration = "SecurityGroupsRetrievalFromCCTime"
+const metricSpaceRetrievalFromCCDuration = "SpaceRetrievalFromCCTime"
 const metricSecurityGroupsTotalSyncDuration = "SecurityGroupsTotalSyncTime"
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
@@ -106,19 +107,30 @@ func (a *ASGSyncer) Poll() error {
 		}
 		return err
 	}
-	a.Logger.Info("successfully-fetched-security-groups", lager.Data{"count": len(ccSGs)})
-
 	retrieveEndTime := a.Clock.Now()
 	a.MetricsSender.SendDuration(metricSecurityGroupsRetrievalFromCCDuration, retrieveEndTime.Sub(retrieveStartTime))
 	a.Logger.Debug("successfully-sent-performance-metrics")
+	a.Logger.Info("successfully-fetched-security-groups", lager.Data{"count": len(ccSGs)})
 
-	a.Logger.Debug("updating-local-latest-update-time", lager.Data{"old-local-latest-update-time": a.latestUpdateTime, "new-local-latest-update-time": ccLatestUpdateTime})
+	retrieveStartTime = a.Clock.Now()
+	ccSpaces, err := a.CCClient.GetLiveSpaceGUIDs(token, []string{})
+	if err != nil {
+		return fmt.Errorf("unable to retrieve list of spaces from CAPI: %s", err)
+	}
+	retrieveEndTime = a.Clock.Now()
+	a.MetricsSender.SendDuration(metricSpaceRetrievalFromCCDuration, retrieveEndTime.Sub(retrieveStartTime))
+	a.Logger.Debug("successfully-sent-performance-metrics")
+	a.Logger.Info("successfully-fetched-spaces", lager.Data{"count": len(ccSpaces)})
+
 	a.latestUpdateTime = ccLatestUpdateTime
+	a.Logger.Debug("updating-local-latest-update-time", lager.Data{"old-local-latest-update-time": a.latestUpdateTime, "new-local-latest-update-time": ccLatestUpdateTime})
 
 	a.lastSyncTime = a.Clock.Now()
 	a.Logger.Debug("updating-last-sync-time", lager.Data{"new-last-sync-time": a.lastSyncTime})
 
-	sgs := []store.SecurityGroup{}
+	buildSpaceCacheStartTime := a.Clock.Now()
+	spaceCache := store.SpaceCache{Spaces: map[string]store.Space{}}
+	var globalASGs store.SecurityGroups
 	for _, ccSG := range ccSGs {
 		stagingSpaces := []string{}
 		for _, data := range ccSG.Relationships.StagingSpaces.Data {
@@ -140,7 +152,7 @@ func (a *ASGSyncer) Poll() error {
 		if err != nil {
 			return fmt.Errorf("error converting rules to json for ASG '%s': %s", ccSG.GUID, err)
 		}
-		sgs = append(sgs, store.SecurityGroup{
+		sg := store.SecurityGroup{
 			Guid:              ccSG.GUID,
 			Name:              ccSG.Name,
 			Rules:             string(rules),
@@ -148,13 +160,39 @@ func (a *ASGSyncer) Poll() error {
 			RunningDefault:    ccSG.GloballyEnabled.Running,
 			StagingSpaceGuids: stagingSpaces,
 			RunningSpaceGuids: runningSpaces,
-		})
+		}
+
+		if sg.StagingDefault || sg.RunningDefault {
+			globalASGs = append(globalASGs, sg)
+			continue
+		}
+		for _, spaceGuid := range append(sg.StagingSpaceGuids, sg.RunningSpaceGuids...) {
+			if _, ok := spaceCache.Spaces[spaceGuid]; !ok {
+				spaceCache.Spaces[spaceGuid] = store.Space{
+					Guid: spaceGuid,
+					ASGs: map[string]store.SecurityGroup{},
+				}
+			}
+			spaceCache.Spaces[spaceGuid].ASGs[sg.Guid] = sg
+		}
 	}
 
-	err = a.Store.Replace(sgs)
+	a.MetricsSender.SendDuration("SecurityGroupsBuildSpaceCacheTime", a.Clock.Now().Sub(buildSpaceCacheStartTime))
+	a.Logger.Debug("successfully-sent-performance-metrics")
+
+	err = a.Store.Replace(globalASGs)
+	if err != nil {
+		a.Logger.Error("error-updating-global-asgs", err)
+		return err
+	}
+	err = a.Store.UpdateSpaceCache(spaceCache)
+	if err != nil {
+		a.Logger.Error("error-updating-space-cache", err)
+		return err
+	}
 
 	syncEndTime := a.Clock.Now()
 	a.MetricsSender.SendDuration(metricSecurityGroupsTotalSyncDuration, syncEndTime.Sub(syncStartTime))
 
-	return err
+	return nil
 }

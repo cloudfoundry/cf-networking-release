@@ -64,20 +64,6 @@ type CCClient struct {
 		result1 []cc_client.SecurityGroupResource
 		result2 error
 	}
-	GetSecurityGroupsBySpacesStub        func(string, []string) ([]cc_client.SecurityGroupResource, error)
-	getSecurityGroupsBySpacesMutex       sync.RWMutex
-	getSecurityGroupsBySpacesArgsForCall []struct {
-		arg1 string
-		arg2 []string
-	}
-	getSecurityGroupsBySpacesReturns struct {
-		result1 []cc_client.SecurityGroupResource
-		result2 error
-	}
-	getSecurityGroupsBySpacesReturnsOnCall map[int]struct {
-		result1 []cc_client.SecurityGroupResource
-		result2 error
-	}
 	GetSecurityGroupsLastUpdateStub        func(string) (time.Time, error)
 	getSecurityGroupsLastUpdateMutex       sync.RWMutex
 	getSecurityGroupsLastUpdateArgsForCall []struct {
@@ -91,12 +77,11 @@ type CCClient struct {
 		result1 time.Time
 		result2 error
 	}
-	GetSecurityGroupsWithPageStub        func(string, []string, int) (cc_client.GetSecurityGroupsResponse, error)
+	GetSecurityGroupsWithPageStub        func(string, int) (cc_client.GetSecurityGroupsResponse, error)
 	getSecurityGroupsWithPageMutex       sync.RWMutex
 	getSecurityGroupsWithPageArgsForCall []struct {
 		arg1 string
-		arg2 []string
-		arg3 int
+		arg2 int
 	}
 	getSecurityGroupsWithPageReturns struct {
 		result1 cc_client.GetSecurityGroupsResponse
@@ -427,76 +412,6 @@ func (fake *CCClient) GetSecurityGroupsReturnsOnCall(i int, result1 []cc_client.
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetSecurityGroupsBySpaces(arg1 string, arg2 []string) ([]cc_client.SecurityGroupResource, error) {
-	var arg2Copy []string
-	if arg2 != nil {
-		arg2Copy = make([]string, len(arg2))
-		copy(arg2Copy, arg2)
-	}
-	fake.getSecurityGroupsBySpacesMutex.Lock()
-	ret, specificReturn := fake.getSecurityGroupsBySpacesReturnsOnCall[len(fake.getSecurityGroupsBySpacesArgsForCall)]
-	fake.getSecurityGroupsBySpacesArgsForCall = append(fake.getSecurityGroupsBySpacesArgsForCall, struct {
-		arg1 string
-		arg2 []string
-	}{arg1, arg2Copy})
-	stub := fake.GetSecurityGroupsBySpacesStub
-	fakeReturns := fake.getSecurityGroupsBySpacesReturns
-	fake.recordInvocation("GetSecurityGroupsBySpaces", []interface{}{arg1, arg2Copy})
-	fake.getSecurityGroupsBySpacesMutex.Unlock()
-	if stub != nil {
-		return stub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *CCClient) GetSecurityGroupsBySpacesCallCount() int {
-	fake.getSecurityGroupsBySpacesMutex.RLock()
-	defer fake.getSecurityGroupsBySpacesMutex.RUnlock()
-	return len(fake.getSecurityGroupsBySpacesArgsForCall)
-}
-
-func (fake *CCClient) GetSecurityGroupsBySpacesCalls(stub func(string, []string) ([]cc_client.SecurityGroupResource, error)) {
-	fake.getSecurityGroupsBySpacesMutex.Lock()
-	defer fake.getSecurityGroupsBySpacesMutex.Unlock()
-	fake.GetSecurityGroupsBySpacesStub = stub
-}
-
-func (fake *CCClient) GetSecurityGroupsBySpacesArgsForCall(i int) (string, []string) {
-	fake.getSecurityGroupsBySpacesMutex.RLock()
-	defer fake.getSecurityGroupsBySpacesMutex.RUnlock()
-	argsForCall := fake.getSecurityGroupsBySpacesArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *CCClient) GetSecurityGroupsBySpacesReturns(result1 []cc_client.SecurityGroupResource, result2 error) {
-	fake.getSecurityGroupsBySpacesMutex.Lock()
-	defer fake.getSecurityGroupsBySpacesMutex.Unlock()
-	fake.GetSecurityGroupsBySpacesStub = nil
-	fake.getSecurityGroupsBySpacesReturns = struct {
-		result1 []cc_client.SecurityGroupResource
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *CCClient) GetSecurityGroupsBySpacesReturnsOnCall(i int, result1 []cc_client.SecurityGroupResource, result2 error) {
-	fake.getSecurityGroupsBySpacesMutex.Lock()
-	defer fake.getSecurityGroupsBySpacesMutex.Unlock()
-	fake.GetSecurityGroupsBySpacesStub = nil
-	if fake.getSecurityGroupsBySpacesReturnsOnCall == nil {
-		fake.getSecurityGroupsBySpacesReturnsOnCall = make(map[int]struct {
-			result1 []cc_client.SecurityGroupResource
-			result2 error
-		})
-	}
-	fake.getSecurityGroupsBySpacesReturnsOnCall[i] = struct {
-		result1 []cc_client.SecurityGroupResource
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *CCClient) GetSecurityGroupsLastUpdate(arg1 string) (time.Time, error) {
 	fake.getSecurityGroupsLastUpdateMutex.Lock()
 	ret, specificReturn := fake.getSecurityGroupsLastUpdateReturnsOnCall[len(fake.getSecurityGroupsLastUpdateArgsForCall)]
@@ -561,25 +476,19 @@ func (fake *CCClient) GetSecurityGroupsLastUpdateReturnsOnCall(i int, result1 ti
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetSecurityGroupsWithPage(arg1 string, arg2 []string, arg3 int) (cc_client.GetSecurityGroupsResponse, error) {
-	var arg2Copy []string
-	if arg2 != nil {
-		arg2Copy = make([]string, len(arg2))
-		copy(arg2Copy, arg2)
-	}
+func (fake *CCClient) GetSecurityGroupsWithPage(arg1 string, arg2 int) (cc_client.GetSecurityGroupsResponse, error) {
 	fake.getSecurityGroupsWithPageMutex.Lock()
 	ret, specificReturn := fake.getSecurityGroupsWithPageReturnsOnCall[len(fake.getSecurityGroupsWithPageArgsForCall)]
 	fake.getSecurityGroupsWithPageArgsForCall = append(fake.getSecurityGroupsWithPageArgsForCall, struct {
 		arg1 string
-		arg2 []string
-		arg3 int
-	}{arg1, arg2Copy, arg3})
+		arg2 int
+	}{arg1, arg2})
 	stub := fake.GetSecurityGroupsWithPageStub
 	fakeReturns := fake.getSecurityGroupsWithPageReturns
-	fake.recordInvocation("GetSecurityGroupsWithPage", []interface{}{arg1, arg2Copy, arg3})
+	fake.recordInvocation("GetSecurityGroupsWithPage", []interface{}{arg1, arg2})
 	fake.getSecurityGroupsWithPageMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -593,17 +502,17 @@ func (fake *CCClient) GetSecurityGroupsWithPageCallCount() int {
 	return len(fake.getSecurityGroupsWithPageArgsForCall)
 }
 
-func (fake *CCClient) GetSecurityGroupsWithPageCalls(stub func(string, []string, int) (cc_client.GetSecurityGroupsResponse, error)) {
+func (fake *CCClient) GetSecurityGroupsWithPageCalls(stub func(string, int) (cc_client.GetSecurityGroupsResponse, error)) {
 	fake.getSecurityGroupsWithPageMutex.Lock()
 	defer fake.getSecurityGroupsWithPageMutex.Unlock()
 	fake.GetSecurityGroupsWithPageStub = stub
 }
 
-func (fake *CCClient) GetSecurityGroupsWithPageArgsForCall(i int) (string, []string, int) {
+func (fake *CCClient) GetSecurityGroupsWithPageArgsForCall(i int) (string, int) {
 	fake.getSecurityGroupsWithPageMutex.RLock()
 	defer fake.getSecurityGroupsWithPageMutex.RUnlock()
 	argsForCall := fake.getSecurityGroupsWithPageArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *CCClient) GetSecurityGroupsWithPageReturns(result1 cc_client.GetSecurityGroupsResponse, result2 error) {
@@ -844,8 +753,6 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getLiveSpaceGUIDsMutex.RUnlock()
 	fake.getSecurityGroupsMutex.RLock()
 	defer fake.getSecurityGroupsMutex.RUnlock()
-	fake.getSecurityGroupsBySpacesMutex.RLock()
-	defer fake.getSecurityGroupsBySpacesMutex.RUnlock()
 	fake.getSecurityGroupsLastUpdateMutex.RLock()
 	defer fake.getSecurityGroupsLastUpdateMutex.RUnlock()
 	fake.getSecurityGroupsWithPageMutex.RLock()

@@ -3,6 +3,7 @@ package testsupport
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -13,11 +14,11 @@ func init() {
 	uniquePort = 1
 }
 
-func BuildASG(n int) string {
+func BuildASG(size int) string {
 	portMutex.Lock()
 	defer portMutex.Unlock()
 	asg := "["
-	for i := 1; i < n; i++ {
+	for i := 1; len(asg) < size; i++ {
 		t := `{"protocol": "tcp", "destination": "` + fmt.Sprintf("169.254.%d.%d", i/254, i%254) + `", "ports": "` + fmt.Sprintf("%d", uniquePort) + `" },`
 		asg = asg + t
 		uniquePort++
@@ -26,8 +27,7 @@ func BuildASG(n int) string {
 		}
 	}
 
-	t := `{"protocol": "tcp", "destination": "` + fmt.Sprintf("169.254.%d.%d", n/254, n%254) + `", "ports": "` + fmt.Sprintf("%d", uniquePort) + `" }`
-	return asg + t + "]"
+	return strings.TrimSuffix(asg, ",") + "]"
 }
 
 func CreateTempFile(content string) (string, error) {

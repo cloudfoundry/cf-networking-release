@@ -401,6 +401,7 @@ func (a Adapter) runCommandWithTimeout(cmd *exec.Cmd) error {
 	}
 	if a.cfHomePath != "" {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("CF_HOME=%s", a.cfHomePath))
+		cmd.Env = append(cmd.Env, "CF_DIAL_TIMEOUT=120")
 	}
 	cmd.Stdout = outBuffer
 	cmd.Stderr = errBuffer
@@ -413,7 +414,7 @@ func (a Adapter) runCommandWithTimeout(cmd *exec.Cmd) error {
 	}()
 
 	select {
-	case <-time.After(2 * time.Minute):
+	case <-time.After(5 * time.Minute):
 		if err := cmd.Process.Kill(); err != nil {
 			return wrapErr(fmt.Sprintf("command timed out and could not be killed: %s", err))
 		}

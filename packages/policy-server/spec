@@ -68,6 +68,8 @@ files:
   - code.cloudfoundry.org/vendor/github.com/go-gorp/gorp/v3/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/go-sql-driver/mysql/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/gogo/protobuf/proto/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/hashicorp/errwrap/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/hashicorp/go-multierror/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/*.go # gosub

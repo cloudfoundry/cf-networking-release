@@ -1,0 +1,31 @@
+Current plan:
+- *done* remove lastupdated check from vxlan-agent
+    - and see how things perform:
+        * Failures saving data from conflicting updates
+            - solution, call from central spot (asg-syncer)
+        * 5s for a call to capi
+            - unsure? cpu is low on db + api. query is indexed. 
+        * 3s to return data from policy server
+        * 25-40s to refresh cache for 40 spaces
+- scale interval up to every second 
+    - + see how things perform
+
+Backup plan:
+- ~have policy-server-internal contact capi of the cache is missing for a space, but don't save to DB to avoid breaking asg-syncer transactions that take a while~ don't do this because its too hard with pagination and race conditions?
+- ~have last-updated on policy-server-internal take list of spaces, and pull last updated from spaces table so cells only get stuff if their SGs changed~
+- asg syncer updated to:
+      ~get all ASGs and start looping
+        ~find all globals and save them to an array~
+        ~for specifically bond things, add them to spaces~
+        ~if space didn't exist yet, add it to the list of spaces~
+      get all space guids with same pagination/change logic that getting ASGs has
+      ~loop over all spaces~
+        ~if any new, add globals to each and add hashes~
+      ~Get existing space record hashes ~
+      loop spaces and find spaces to update and things to delete
+      ~perform bulk update + delete transaction~ - don't do this cause its to obig for mysql
+
+profile policy-server-internal, asg-syncer, vxlan-agent on a vm, optimize results
+
+
+

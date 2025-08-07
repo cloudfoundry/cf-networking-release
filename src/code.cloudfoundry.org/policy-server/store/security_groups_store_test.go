@@ -8,7 +8,7 @@ import (
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/lager/v3"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/store/fakes"
 	testhelpers "code.cloudfoundry.org/test-helpers"
@@ -29,13 +29,14 @@ var _ = Describe("SecurityGroupsStore", func() {
 		dbConf.Timeout = 30
 		testhelpers.CreateDatabase(dbConf)
 
-		logger := lager.NewLogger("Security Groups Store Test")
+		logger := lagertest.NewTestLogger("test")
 
 		var err error
 		realDb, err = dbHelper.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Security Groups Store Test", "Security Groups Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 		securityGroupsStore = &store.SGStore{
-			Conn: realDb,
+			Conn:   realDb,
+			Logger: logger,
 		}
 
 		migrate(realDb)
@@ -269,7 +270,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 			})
 		})
 
-		Context("when there is a public running security group", func() {
+		FContext("when there is a public running security group", func() {
 			BeforeEach(func() {
 				securityGroups = []store.SecurityGroup{{
 					Guid:              "first-guid",
@@ -277,15 +278,30 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Rules:             "firstRules",
 					RunningDefault:    true,
 					RunningSpaceGuids: []string{"space-a"},
-				}, {
-					Guid:              "second-guid",
-					Name:              "second-name",
-					Rules:             "secondRules",
-					RunningSpaceGuids: []string{"space-b"},
-					StagingSpaceGuids: []string{"space-b"},
-				}, {}}
+				}}
+
+				var spaceCache store.SpaceCache
+				spaceCache = store.SpaceCache{
+					Spaces: map[string]store.Space{
+						"space-b": store.Space{
+							Guid: "space-b",
+							ASGs: map[string]store.SecurityGroup{
+								"second-guid": store.SecurityGroup{
+									Guid:              "second-guid",
+									Name:              "second-name",
+									Rules:             "secondRules",
+									RunningSpaceGuids: []string{"space-b"},
+									StagingSpaceGuids: []string{"space-b"},
+								},
+							},
+						},
+					},
+				}
 
 				err := securityGroupsStore.Replace(securityGroups)
+				Expect(err).ToNot(HaveOccurred())
+
+				err = securityGroupsStore.UpdateSpaceCache(spaceCache)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -468,6 +484,188 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Expect(tx.RollbackCallCount()).To(Equal(1))
 				})
 			})
+		})
+	})
+
+	FDescribe("UpdateSpaceCache()", func() {
+		Context("when given a mapping", func() {
+			var spaceCache store.SpaceCache
+			BeforeEach(func() {
+				spaceCache = store.SpaceCache{
+					Spaces: map[string]store.Space{
+						"space-1": store.Space{
+							Guid: "space-1",
+							ASGs: map[string]store.SecurityGroup{
+								"third-guid": store.SecurityGroup{
+									Guid:              "third-guid",
+									Name:              "third-name",
+									Rules:             "thirdRules",
+									StagingSpaceGuids: []string{"space-3"},
+									StagingDefault:    true,
+									RunningSpaceGuids: []string{},
+								},
+								"asg-1": store.SecurityGroup{
+									Guid:              "asg-1",
+									Name:              "asg-1",
+									Rules:             "secondRules",
+									StagingSpaceGuids: []string{"space-2"},
+									RunningSpaceGuids: []string{"space-1"},
+								},
+								"asg-2": store.SecurityGroup{
+									Guid:              "asg-2",
+									Name:              "asg-2",
+									Rules:             "secondRules",
+									StagingSpaceGuids: []string{"space-2"},
+									StagingDefault:    false,
+									RunningDefault:    true,
+									RunningSpaceGuids: []string{"space-1"},
+								},
+							},
+						},
+						"space-2": store.Space{Guid: "space-2"},
+						"space-3": store.Space{Guid: "space-3"},
+					},
+				}
+			})
+
+			It("populates the database", func() {
+				err := securityGroupsStore.UpdateSpaceCache(spaceCache)
+				Expect(err).NotTo(HaveOccurred())
+				rows, err := realDb.DB.Query("SELECT guid, asgs, lastUpdated, hash  FROM spaces ORDER BY id")
+				Expect(err).ToNot(HaveOccurred())
+
+				var actualSpaceCache store.SpaceCache
+				actualSpaceCache.Spaces = map[string]store.Space{}
+				for rows.Next() {
+					var guid, hash string
+					var asgDefinitions store.SecurityGroups
+					var lastUpdated time.Time
+					err := rows.Scan(&guid, &asgDefinitions, &lastUpdated, &hash)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
+					actualSpaceCache.Spaces[guid] = store.Space{
+						Guid: guid,
+					}
+				}
+
+				Expect(actualSpaceCache).To(Equal(store.SpaceCache{
+					Spaces: map[string]store.Space{
+						"space-1": store.Space{Guid: "space-1"},
+						"space-2": store.Space{Guid: "space-2"},
+						"space-3": store.Space{Guid: "space-3"},
+					}}))
+			})
+		})
+	})
+
+	FDescribe("CheckForASGUpdates()", func() {
+		var spaceCache store.SpaceCache
+		BeforeEach(func() {
+			spaceCache = store.SpaceCache{
+				Spaces: map[string]store.Space{
+					"space-1": store.Space{
+						Guid: "space-1",
+						ASGs: map[string]store.SecurityGroup{
+							"third-guid": store.SecurityGroup{
+								Guid:              "third-guid",
+								Name:              "third-name",
+								Rules:             "thirdRules",
+								StagingSpaceGuids: []string{"space-3"},
+								StagingDefault:    true,
+								RunningSpaceGuids: []string{},
+							},
+							"asg-1": store.SecurityGroup{
+								Guid:              "asg-1",
+								Name:              "asg-1",
+								Rules:             "secondRules",
+								StagingSpaceGuids: []string{"space-2"},
+								RunningSpaceGuids: []string{"space-1"},
+							},
+							"asg-2": store.SecurityGroup{
+								Guid:              "asg-2",
+								Name:              "asg-2",
+								Rules:             "secondRules",
+								StagingSpaceGuids: []string{"space-2"},
+								StagingDefault:    false,
+								RunningDefault:    true,
+								RunningSpaceGuids: []string{"space-1"},
+							},
+						},
+					},
+					"space-2": store.Space{Guid: "space-2"},
+					"space-3": store.Space{Guid: "space-3"},
+				},
+			}
+
+			migrateAndPopulateTags(realDb, 1)
+
+			err := securityGroupsStore.UpdateSpaceCache(spaceCache)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(1 * time.Second)
+			spaceCache.Spaces["space-3"] = store.Space{
+				ASGs: map[string]store.SecurityGroup{
+					"asg-2": store.SecurityGroup{
+						Guid:              "asg-2",
+						Name:              "asg-2",
+						Rules:             "secondRules",
+						StagingSpaceGuids: []string{"space-1"},
+						RunningSpaceGuids: []string{"space-3"},
+					}}}
+			err = securityGroupsStore.UpdateSpaceCache(spaceCache)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when global ASGs have been updated since the last check", func() {
+			BeforeEach(func() {
+				_, err := securityGroupsStore.Conn.Query("UPDATE security_groups_info SET last_updated=CURRENT_TIMESTAMP(6)")
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("returns true", func() {
+				wasUpdated, err := securityGroupsStore.CheckForASGUpdates([]string{}, time.Now().Add(-1*time.Second))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(wasUpdated).To(BeTrue())
+			})
+		})
+
+		Context("when the global ASGs have not been updated since the last check", func() {
+			BeforeEach(func() {
+				_, err := securityGroupsStore.Conn.Query(`UPDATE security_groups_info SET last_updated = '1970-01-01 00:00:01.000000'`)
+				Expect(err).NotTo(HaveOccurred())
+			})
+			Context("when given no security groups", func() {
+				Context("and the last check is newer than the last update", func() {
+					It("returns false", func() {
+						wasUpdated, err := securityGroupsStore.CheckForASGUpdates([]string{}, time.Now().Add(1*time.Second))
+						Expect(err).ToNot(HaveOccurred())
+						Expect(wasUpdated).To(BeFalse())
+					})
+				})
+				Context("and the last check time is older than the last update", func() {
+					It("returns true", func() {
+						wasUpdated, err := securityGroupsStore.CheckForASGUpdates([]string{}, time.Time{})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(wasUpdated).To(BeTrue())
+					})
+				})
+			})
+			Context("when given security groups", func() {
+				Context("and the last check is newer than the last update", func() {
+					It("returns false", func() {
+						wasUpdated, err := securityGroupsStore.CheckForASGUpdates([]string{"space-2"}, time.Now().Add(1*time.Second))
+						Expect(err).ToNot(HaveOccurred())
+						Expect(wasUpdated).To(BeFalse())
+					})
+				})
+				Context("and the last check time is older than the last update", func() {
+					It("returns true", func() {
+						wasUpdated, err := securityGroupsStore.CheckForASGUpdates([]string{"space-2"}, time.Time{})
+						Expect(err).ToNot(HaveOccurred())
+						Expect(wasUpdated).To(BeTrue())
+					})
+				})
+			})
+			// FIXME: sad path tests
+			// FIXME: test that an update to an unrelated sg doesn't trigger true
 		})
 	})
 

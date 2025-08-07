@@ -7,9 +7,9 @@ import (
 type securityGroupsStore interface {
 	Replace([]SecurityGroup) error
 	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)
-	SpacesWithExpiredOrNoCache([]string) ([]string, error)
-	UpdateSecurityGroupsFromCapi([]string) error
+	UpdateSpaceCache(SpaceCache) error
 	LastUpdated() (int, error)
+	CheckForASGUpdates([]string, time.Time) (bool, error)
 }
 
 type SecurityGroupsMetricsWrapper struct {
@@ -43,28 +43,28 @@ func (mw *SecurityGroupsMetricsWrapper) BySpaceGuids(spaceGuids []string, page P
 	return securityGroups, pagination, err
 }
 
-func (mw *SecurityGroupsMetricsWrapper) SpacesWithExpiredOrNoCache(spaceGuids []string) ([]string, error) {
+func (mw *SecurityGroupsMetricsWrapper) CheckForASGUpdates(spaceGuids []string, since time.Time) (bool, error) {
 	startTime := time.Now()
-	securityGroups, err := mw.Store.SpacesWithExpiredOrNoCache(spaceGuids)
+	updates, err := mw.Store.CheckForASGUpdates(spaceGuids, since)
 	allTimeDuration := time.Since(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("SecurityGroupsStoreSpacesWithExpiredOrNoCacheError")
-		mw.MetricsSender.SendDuration("SecurityGroupsStoreSpacesWithExpiredOrNoCacheErrorTime", allTimeDuration)
+		mw.MetricsSender.IncrementCounter("SecurityGroupsStoreCheckForASGUpdatesError")
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreCheckForASGUpdatesErrorTime", allTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("SecurityGroupsStoreSpacesWithExpiredOrNoCacheSuccessTime", allTimeDuration)
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreCheckForASGUpdatesSuccessTime", allTimeDuration)
 	}
-	return securityGroups, err
+	return updates, err
 }
 
-func (mw *SecurityGroupsMetricsWrapper) UpdateSecurityGroupsFromCapi(spaceGuids []string) error {
+func (mw *SecurityGroupsMetricsWrapper) UpdateSpaceCache(spaceCache SpaceCache) error {
 	startTime := time.Now()
-	err := mw.Store.UpdateSecurityGroupsFromCapi(spaceGuids)
+	err := mw.Store.UpdateSpaceCache(spaceCache)
 	allTimeDuration := time.Since(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("SecurityGroupsUpdateSecurityGroupsFromCapiStoreError")
-		mw.MetricsSender.SendDuration("SecurityGroupsStoreUpdateSecurityGroupsFromCapiErrorTime", allTimeDuration)
+		mw.MetricsSender.IncrementCounter("SecurityGroupsUpdateSpaceCacheStoreError")
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreUpdateSpaceCacheErrorTime", allTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("SecurityGroupsStoreUpdateSecurityGroupsFromCapiSuccessTime", allTimeDuration)
+		mw.MetricsSender.SendDuration("SecurityGroupsStoreUpdateSpaceCacheSuccessTime", allTimeDuration)
 	}
 	return err
 }

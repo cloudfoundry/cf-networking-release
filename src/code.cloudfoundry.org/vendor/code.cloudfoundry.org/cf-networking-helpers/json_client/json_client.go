@@ -122,9 +122,9 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 		}
 	}
 
-	c.Logger.Debug("http-do", lager.Data{
-		"body": string(respBytes),
-	})
+	// c.Logger.Debug("http-do", lager.Data{
+	// 	"body": string(respBytes),
+	// })
 
 	if respData != nil {
 		err = c.Unmarshaler.Unmarshal(respBytes, respData)

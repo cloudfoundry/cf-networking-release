@@ -6,13 +6,6 @@ import (
 	"errors"
 )
 
-type SpaceCache struct {
-	Id   int
-	Guid string
-	Name string
-	ASGs SecurityGroups
-}
-
 type SecurityGroups []SecurityGroup
 
 type SecurityGroup struct {

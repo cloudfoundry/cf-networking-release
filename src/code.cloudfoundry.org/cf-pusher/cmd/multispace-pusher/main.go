@@ -214,12 +214,11 @@ func generateAppManifest(appsDir string) string {
 	manifestGenerator := &manifest_generator.ManifestGenerator{}
 	appManifest := models.Manifest{
 		Applications: []models.Application{{
-			Name:      "proxy",
-			Memory:    "32M",
-			DiskQuota: "32M",
+			Name:      "cf-nc-app",
+			Memory:    "8M",
+			DiskQuota: "8M",
 			BuildPack: "binary_buildpack",
 			Instances: 1,
-			Command:   "./proxy",
 		}},
 	}
 	manifestPath, err := manifestGenerator.Generate(appManifest)
