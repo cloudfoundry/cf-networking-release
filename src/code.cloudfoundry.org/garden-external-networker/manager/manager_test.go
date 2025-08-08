@@ -376,6 +376,25 @@ var _ = Describe("Manager", func() {
 				Expect(err).To(MatchError("proxy redirect apply: bang"))
 			})
 		})
+
+		Context("when there is an IPv6 address in the CNI result", func() {
+			BeforeEach(func() {
+				cniUpResult.IPs = append(cniUpResult.IPs, &types040.IPConfig{
+					Version: "6",
+					Address: net.IPNet{
+						IP:   net.ParseIP("2001:db8::68"),
+						Mask: net.CIDRMask(64, 128),
+					},
+				})
+			})
+
+			It("should return the IPv6 address in the CNI result as a property", func() {
+				out, err := mgr.Up(containerHandle, upInputs)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(out.Properties.ContainerIPv6).To(Equal("2001:db8::68"))
+			})
+		})
 	})
 
 	Describe("Down", func() {
