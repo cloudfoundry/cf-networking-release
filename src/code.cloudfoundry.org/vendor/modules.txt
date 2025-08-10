@@ -3,7 +3,7 @@
 code.cloudfoundry.org/bbs/db/sqldb/helpers
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/bbs/guidprovider
-# code.cloudfoundry.org/cf-networking-helpers v0.53.0
+# code.cloudfoundry.org/cf-networking-helpers v0.54.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
@@ -26,7 +26,7 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 ## explicit; go 1.23.0
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.60.0
+# code.cloudfoundry.org/debugserver v0.61.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/debugserver
 # code.cloudfoundry.org/diego-logging-client v0.63.0
@@ -79,10 +79,10 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.63.0
+# code.cloudfoundry.org/policy_client v0.64.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/policy_client
-# code.cloudfoundry.org/tlsconfig v0.31.0
+# code.cloudfoundry.org/tlsconfig v0.32.0
 ## explicit; go 1.23.0
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
@@ -266,7 +266,7 @@ github.com/nats-io/go-nats
 github.com/nats-io/go-nats/bench
 github.com/nats-io/go-nats/encoders/builtin
 github.com/nats-io/go-nats/util
-# github.com/nats-io/jwt/v2 v2.7.4
+# github.com/nats-io/jwt/v2 v2.8.0
 ## explicit; go 1.23.0
 github.com/nats-io/jwt/v2
 # github.com/nats-io/nats-server/v2 v2.11.7
@@ -385,7 +385,7 @@ github.com/tedsuo/rata
 # github.com/vishvananda/netns v0.0.5
 ## explicit; go 1.17
 github.com/vishvananda/netns
-# go.step.sm/crypto v0.68.0
+# go.step.sm/crypto v0.69.0
 ## explicit; go 1.23.0
 go.step.sm/crypto/fingerprint
 go.step.sm/crypto/internal/bcrypt_pbkdf
@@ -402,7 +402,7 @@ go.uber.org/automaxprocs
 go.uber.org/automaxprocs/internal/cgroups
 go.uber.org/automaxprocs/internal/runtime
 go.uber.org/automaxprocs/maxprocs
-# golang.org/x/crypto v0.40.0
+# golang.org/x/crypto v0.41.0
 ## explicit; go 1.23.0
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blake2b
@@ -422,7 +422,7 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.42.0
+# golang.org/x/net v0.43.0
 ## explicit; go 1.23.0
 golang.org/x/net/context
 golang.org/x/net/dns/dnsmessage
@@ -444,7 +444,7 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.16.0
 ## explicit; go 1.23.0
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.34.0
+# golang.org/x/sys v0.35.0
 ## explicit; go 1.23.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
@@ -454,7 +454,7 @@ golang.org/x/sys/windows/svc
 golang.org/x/sys/windows/svc/debug
 golang.org/x/sys/windows/svc/eventlog
 golang.org/x/sys/windows/svc/mgr
-# golang.org/x/text v0.27.0
+# golang.org/x/text v0.28.0
 ## explicit; go 1.23.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -483,17 +483,17 @@ golang.org/x/text/width
 # golang.org/x/time v0.12.0
 ## explicit; go 1.23.0
 golang.org/x/time/rate
-# golang.org/x/tools v0.35.0
+# golang.org/x/tools v0.36.0
 ## explicit; go 1.23.0
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/edge
 golang.org/x/tools/go/ast/inspector
-# google.golang.org/genproto/googleapis/api v0.0.0-20250728155136-f173205681a0
+# google.golang.org/genproto/googleapis/api v0.0.0-20250804133106-a7a43d27e69b
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.74.2
@@ -559,7 +559,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.36.6
+# google.golang.org/protobuf v1.36.7
 ## explicit; go 1.22
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
