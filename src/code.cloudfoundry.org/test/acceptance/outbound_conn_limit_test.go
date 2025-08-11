@@ -30,7 +30,7 @@ var (
 
 var _ = Describe("Outbound connection limit", func() {
 	BeforeEach(func() {
-		proxyName = testConfig.Prefix + "-proxy"
+		proxyName = testConfig.Prefix + "-nginx"
 		spammerName = testConfig.Prefix + "-spammer"
 		if !testConfig.RunExperimentalOutboundConnLimitTest {
 			Skip("Skipping outbound connection limit test")
@@ -54,8 +54,8 @@ var _ = Describe("Outbound connection limit", func() {
 			app_helpers.AppReport(proxyName)
 		})
 		It("the connections get rate limited", func() {
-			By("pushing proxy")
-			pushProxy(proxyName)
+			By("pushing nginx proxy")
+			pushNginx(proxyName)
 
 			By("pushing spammer")
 			pushSpammer(spammerName)
@@ -81,6 +81,14 @@ func pushSpammer(spammerName string) {
 
 	session = cf.Cf("start", spammerName)
 	Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+}
+
+func pushNginx(appName string) {
+	Expect(cf.Cf(
+		"push", appName,
+		"-p", appDir("nginx"),
+		"-f", defaultManifest("nginx"),
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
 func spam() *spamAPI.SpamResp {
