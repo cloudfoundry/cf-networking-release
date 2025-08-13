@@ -1,8 +1,0 @@
-applications:
-- name: my-nginx-app
-  memory: 64M
-  instances: 1
-  buildpacks:
-    - nginx_buildpack
-  path: .
-
