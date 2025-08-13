@@ -19,7 +19,7 @@ const (
 	spaceName = "outbound-conn-limit-test-space"
 
 	setEnvTimeoutInSec = 10
-	burst              = 60
+	burst              = 30
 	burstVariance      = 1
 )
 
