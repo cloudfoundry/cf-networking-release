@@ -26,10 +26,10 @@ This document is intended to help people who are poking around the `network_poli
 
 ## <a name="access-db"></a> How to access an internal database
 1. Bosh ssh onto the VM where the `policy-server` is running. You can figure out what machine by running `bosh is --ps | grep policy-server`.
-2. Grab the mysql config. 
+2. Grab the mysql config.
    ```
    $ cat /var/vcap/jobs/policy-server/config/policy-server.json | grep \"database\" -A 11
-   
+
     "database": {
        "type": "mysql",
        "user": "USER",
@@ -43,7 +43,7 @@ This document is intended to help people who are poking around the `network_poli
        "skip_hostname_validation": false
     },
    ```
-   
+
 3. Bosh ssh onto the database VM.
 4. Connect to the mysql instance.
    ```
@@ -84,7 +84,7 @@ v3.6.0.
 
 ## <a name="network-policy-tables"></a> Network Policy Related Tables
 
-There are three tables related to cf networking policies: policies, groups, and destinations. 
+There are four tables related to cf networking policies: policies, groups, destinations, and policies_info.
 
 ### <a name="groups-table"></a> Groups
 
@@ -156,11 +156,25 @@ mysql> describe policies;
 | group_id | This is the id for the group table entry that represents the source app. |
 | destination_id | This is the id for the destinations table entry that represents the destination metadata. |
 
+### <a name="policies_info"></a> policies_info
+This table is a single row with a single value that represents the last updated timestamp of policy data,
+to allow VXLAN Policy Agent to short-circuit its sync loop if no changes were made.
+
+```
+mysql> describe policies_info;
++--------------+--------------+------+-----+----------------------+-------------------+
+| Field        | Type         | Null | Key | Default              | Extra             |
++--------------+--------------+------+-----+----------------------+-------------------+
+| id           | int          | NO   | PRI | NULL                 | auto_increment    |
+| last_updated | timestamp(6) | NO   |     | CURRENT_TIMESTAMP(6) | DEFAULT_GENERATED |
++--------------+--------------+------+-----+----------------------+-------------------+
+```
+
 
 ## <a name="network-policy-example"></a> Networking Policy Example
 
-In this example: 
-* There is a network policy from AppA to AppB. 
+In this example:
+* There is a network policy from AppA to AppB.
 * AppA has guid `2ffe4b0f-b03c-48bb-a4fa-bf22657d34a2`
 * AppB has guid `5346072e-7265-45f9-b70a-80c42e3f13ae`
 
@@ -189,8 +203,8 @@ mysql> select * from policies;           mysql> select * from destinations;
 
 ## <a name="security-groups-tables"</a> Security Group Related Tables
 
-There are three tables storing information about security groups: security_groups, running_security_groups_spaces,
-and staging_security_groups_spaces.
+There are four tables storing information about security groups: security_groups, running_security_groups_spaces,
+staging_security_groups_spaces, and security_groups_info.
 
 
 ### <a name="security-groups-table"></a> security_groups
@@ -220,15 +234,21 @@ mysql> describe security_groups;
 | guid | The CAPI GUID of the security group |
 | name | The name of the security group as it appears in CAPI |
 | hash | A SHA256 hash of the ASG data, used to check whether records need updating during policy-server-asg-syncer polls |
-| rules | The rules associated with the ASG defined in CAPI |
+| rules | The rules (in JSON) associated with the ASG defined in CAPI |
 | staging_default | Whether or not this is a globally bound security group for `staging` lifecycles |
 | running_default | Whether or not this is a globally bound security group for `running` lifecycles |
-| staging_spaces | A json list of all spaces this security group is bound to for the `staging` lifecycle |
-| running_spaces | A json list of all spaces this security group is bound to for the `running` lifecycle |
+| staging_spaces | A json list of CAPI guids for all spaces this security group is bound to for the `staging` lifecycle. This column duplicates data in the `staging_security_groups_spaces` table, but is already in JSON format so we pull it out for faster data presentation when serving queries from VXLAN Policy Agent, while filtering via the `staging_security_groups_spaces` table. |
+| running_spaces | A json list of CAPI guids for all spaces this security group is bound to for the `running` lifecycle. This column duplicates data in the `running_security_groups_spaces` table, but is already in JSON format so we pull it out for faster data presentation when serving queries from VXLAN Policy Agent, while filtering via the `running_security_groups_spaces` table. |
 
 ### <a name="running-security-groups-spaces-table"></a> running_security_groups_spaces
 This table is a join table to enable faster querying of security_groups when filtering by
-running_space guids. It is synced and updated via the policy-server-asg-syncer process, and is not a source of
+running_space guids. It is used by the BySpaceGuids() store function, when returning lists
+of ASGs for a given set of space guids. Querying the space associations directly in the security_groups
+table results in unindexed queries, and giant full-table scans which topple databases with thousands of
+ASGs. Adding this table enables indexed lookups of space guids to find the security group they're bound to,
+drasticly speeding up query times for VXLAN Policy Agent requests.
+
+It is synced and updated via the policy-server-asg-syncer process, and is not a source of
 truth for ASG data.
 
 ```
@@ -249,7 +269,13 @@ mysql> describe running_security_groups_spaces;
 
 ### <a name="staging-security-groups-spaces-table"></a> staging_security_groups_spaces
 This table is a join table to enable faster querying of security_groups when filtering by
-staging_space guids. It is synced and updated via the policy-server-asg-syncer process, and is not a source of
+staging_space guids. It is used by the BySpaceGuids() store function, when returning lists
+of ASGs for a given set of space guids. Querying the space associations directly in the security_groups
+table results in unindexed queries, and giant full-table scans which topple databases with thousands of
+ASGs. Adding this table enables indexed lookups of space guids to find the security group they're bound to,
+drasticly speeding up query times for VXLAN Policy Agent requests.
+
+It is synced and updated via the policy-server-asg-syncer process, and is not a source of
 truth for ASG data.
 
 ```
@@ -267,9 +293,23 @@ mysql> describe staging_security_groups_spaces;
 | space_guid | This value is the CAPI guid for the space bound to a given security group via the `staging` app lifecycle |
 | security_group_guid | This value is the CAPI guid for the security group bound to a given space via the `staging` app lifecycle |
 
+### <a name="security_groups_info"></a> security_groups_info
+This table is a single row with a single value that represents the last updated timestamp of security group data,
+to allow VXLAN Policy Agent to short-circuit its sync loop if no changes were made.
+
+```
+mysql> describe security_groups_info;
++--------------+--------------+------+-----+----------------------+-------------------+
+| Field        | Type         | Null | Key | Default              | Extra             |
++--------------+--------------+------+-----+----------------------+-------------------+
+| id           | int          | NO   | PRI | NULL                 | auto_increment    |
+| last_updated | timestamp(6) | NO   |     | CURRENT_TIMESTAMP(6) | DEFAULT_GENERATED |
++--------------+--------------+------+-----+----------------------+-------------------+
+```
+
 ## <a name="migrations-tables"></a> Migration Related Tables
 
-There are two tables related to migrations: gorp_migrations and gorp_lock. 
+There are two tables related to migrations: gorp_migrations and gorp_lock.
 
 ### <a name="gorp-mirations-table"></a> gorp_migrations
 This table tracks what database migrations have been applied.

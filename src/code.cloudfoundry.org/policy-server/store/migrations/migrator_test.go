@@ -2307,7 +2307,7 @@ var _ = Describe("migrations", func() {
 					migrateTo("100")
 				})
 			})
-			Context("when the longest number of spaces associated with a security group is in the staginging_spaces column", func() {
+			Context("when the longest number of spaces associated with a security group is in the staging_spaces column", func() {
 				BeforeEach(func() {
 					_, err := realDb.Exec(
 						`INSERT INTO security_groups (name, guid, running_spaces, staging_spaces) VALUES

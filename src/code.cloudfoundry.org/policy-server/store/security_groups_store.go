@@ -305,22 +305,6 @@ func (sgs *SGStore) ReplaceSecurityGroupSpaceAssociations(tx db.Transaction, tab
 	return nil
 }
 
-// func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) string {
-// 	switch sgs.Conn.DriverName() {
-// 	case helpers.MySQL:
-// 		clauses := []string{}
-// 		for range filterValues {
-// 			clauses = append(clauses, fmt.Sprintf(`json_contains(%s, json_quote(?))`, columnName))
-// 		}
-// 		return strings.Join(clauses, " OR ")
-// 	case helpers.Postgres:
-// 		filterList := helpers.MarksWithSeparator(len(filterValues), "%", ", ")
-// 		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
-// 	default:
-// 		return ""
-// 	}
-// }
-
 func (sgs *SGStore) onConflictUpdateSQL(columns ...string) string {
 	var conflictSql string
 	switch sgs.Conn.DriverName() {
