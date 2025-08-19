@@ -29,6 +29,7 @@ type Config struct {
 	TotalSpaces                         int  `json:"total_spaces"`
 	AppsPerSpace                        int  `json:"apps_per_space"`
 	SkipASGCreation                     bool `json:"skip_asg_creation"`
+	SkipSpaceCreation                   bool `json:"skip_space_creation"`
 }
 
 type ConcurrentSpaceSetup struct {
@@ -60,9 +61,9 @@ func main() {
 	if !config.SkipASGCreation {
 		// Create global asgs
 		createGlobalASGs(config)
-		// Create a bunch of bindable ASGs
-		asgs = createASGs(config.TotalASGs-config.GlobalASGs, config.ASGSize, config.Prefix, globalAdapter)
 	}
+	// Create a bunch of bindable ASGs
+	asgs = createASGs(config.TotalASGs-config.GlobalASGs, config.ASGSize, config.Prefix, globalAdapter, config.SkipASGCreation)
 	spaces = createSpacesConcurrently(config)
 
 	orgName := fmt.Sprintf("%s-org", config.Prefix)
@@ -94,30 +95,34 @@ func createSpacesConcurrently(config Config) []string {
 	sem := make(chan bool, config.Concurrency)
 	var spaceNames []string
 	for i := 0; i < config.TotalSpaces; i++ {
-		sem <- true
 		setup := generateConcurrentSpaceSetup(i, config)
 		spaceNames = append(spaceNames, setup.OrgSpaceCreator.Space)
-		go func(s *ConcurrentSpaceSetup, c Config, index int) {
-			defer func() { <-sem }()
+		if !config.SkipSpaceCreation {
+			sem <- true
+			go func(s *ConcurrentSpaceSetup, c Config, index int) {
+				defer func() { <-sem }()
 
-			// Connect to the api with this adapter
-			if err := s.ApiConnector.Connect(); err != nil {
-				log.Fatalf("connecting to api: %s", err)
-			}
+				// Connect to the api with this adapter
+				if err := s.ApiConnector.Connect(); err != nil {
+					log.Fatalf("connecting to api: %s", err)
+				}
 
-			// Create and target the space
-			if err := s.OrgSpaceCreator.Create(); err != nil {
-				log.Fatalf("creating org and space: %s", err)
-			}
+				// Create and target the space
+				if err := s.OrgSpaceCreator.Create(); err != nil {
+					log.Fatalf("creating org and space: %s", err)
+				}
 
-			// Push apps for this space
-			if err := s.AppPusher.Push(); err != nil {
-				log.Printf("Got an error while pushing proxy apps: %s", err)
-			}
-		}(setup, config, i)
+				// Push apps for this space
+				if err := s.AppPusher.Push(); err != nil {
+					log.Printf("Got an error while pushing proxy apps: %s", err)
+				}
+			}(setup, config, i)
+		}
 	}
-	for i := 0; i < cap(sem); i++ {
-		sem <- true
+	if !config.SkipSpaceCreation {
+		for i := 0; i < cap(sem); i++ {
+			sem <- true
+		}
 	}
 	return spaceNames
 }
@@ -268,27 +273,29 @@ func bindASGToThisSpace(asg string, orgName, spaceName string, adapter *cf_cli_a
 	}
 }
 
-func createASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter.Adapter) []string {
+func createASGs(howMany, asgSize int, prefix string, adapter *cf_cli_adapter.Adapter, skipASGCreation bool) []string {
 	var asgNames []string
 	for i := 0; i < howMany; i++ {
 		asgName := fmt.Sprintf("%s-many-%d-asg", prefix, i)
 		asgNames = append(asgNames, asgName)
-		asgContent := testsupport.BuildASG(asgSize)
-		asgFile, err := testsupport.CreateTempFile(asgContent)
-		if err != nil {
-			log.Fatalf("creating asg file: %s", err)
-		}
-
-		// check ASG and create if not OK
-		asgChecker := cf_command.ASGChecker{Adapter: adapter}
-		asgErr := asgChecker.CheckASG(asgName, asgContent)
-		if asgErr != nil {
-			// install ASG
-			if err := adapter.DeleteSecurityGroup(asgName); err != nil {
-				log.Fatalf("deleting security group: %s", err)
+		if !skipASGCreation {
+			asgContent := testsupport.BuildASG(asgSize)
+			asgFile, err := testsupport.CreateTempFile(asgContent)
+			if err != nil {
+				log.Fatalf("creating asg file: %s", err)
 			}
-			if err := adapter.CreateSecurityGroup(asgName, asgFile); err != nil {
-				log.Fatalf("creating security group: %s", err)
+
+			// check ASG and create if not OK
+			asgChecker := cf_command.ASGChecker{Adapter: adapter}
+			asgErr := asgChecker.CheckASG(asgName, asgContent)
+			if asgErr != nil {
+				// install ASG
+				if err := adapter.DeleteSecurityGroup(asgName); err != nil {
+					log.Fatalf("deleting security group: %s", err)
+				}
+				if err := adapter.CreateSecurityGroup(asgName, asgFile); err != nil {
+					log.Fatalf("creating security group: %s", err)
+				}
 			}
 		}
 	}
