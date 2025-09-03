@@ -2208,6 +2208,59 @@ var _ = Describe("migrations", func() {
 					migrateTo("100")
 				})
 			})
+			Context("when a security group has duplicated staging spaces", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(`INSERT INTO security_groups (name, guid, staging_spaces, running_spaces) VALUES
+						('guid-1', 'guid-1', JSON_ARRAY('space-1', 'space-1', 'space-2'), JSON_ARRAY()),
+						('guid-2', 'guid-2', JSON_ARRAY('space-1', 'space-2'), JSON_ARRAY())
+						`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("migrates without error and populates the join table", func() {
+					migrateTo("100")
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-2",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-2",
+					}})
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{})
+				})
+			})
+			Context("when a security group has duplicated running spaces", func() {
+				BeforeEach(func() {
+					_, err := realDb.Exec(`INSERT INTO security_groups (name, guid, staging_spaces, running_spaces) VALUES
+						('guid-1', 'guid-1', JSON_ARRAY(), JSON_ARRAY('space-1', 'space-1', 'space-2')),
+						('guid-2', 'guid-2', JSON_ARRAY(), JSON_ARRAY('space-1', 'space-2'))
+					`)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("migrates without error and populates the join table", func() {
+					migrateTo("100")
+
+					ExpectAssociatedSpacesToConsistOf(realDb, "running", []JoinRow{{
+						SecurityGroup: "guid-1",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-1",
+						Space:         "space-2",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-1",
+					}, {
+						SecurityGroup: "guid-2",
+						Space:         "space-2",
+					}})
+					ExpectAssociatedSpacesToConsistOf(realDb, "staging", []JoinRow{})
+				})
+			})
 			Context("when a security group has running spaces but no staging spaces", func() {
 				BeforeEach(func() {
 					_, err := realDb.Exec(
