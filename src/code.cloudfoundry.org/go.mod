@@ -10,14 +10,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20250731191341-d1ca59879d2a
-	code.cloudfoundry.org/cf-networking-helpers v0.58.0
-	code.cloudfoundry.org/clock v1.47.0
-	code.cloudfoundry.org/debugserver v0.66.0
+	code.cloudfoundry.org/cf-networking-helpers v0.60.0
+	code.cloudfoundry.org/clock v1.48.0
+	code.cloudfoundry.org/debugserver v0.67.0
 	code.cloudfoundry.org/filelock v0.46.0
-	code.cloudfoundry.org/garden v0.0.0-20250910021241-ba9233db87fe
-	code.cloudfoundry.org/lager/v3 v3.47.0
+	code.cloudfoundry.org/garden v0.0.0-20250916215733-c693739b5ca4
+	code.cloudfoundry.org/lager/v3 v3.48.0
 	code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201
-	code.cloudfoundry.org/policy_client v0.69.0
+	code.cloudfoundry.org/policy_client v0.70.0
 	code.cloudfoundry.org/tlsconfig v0.35.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -52,8 +52,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.67.0 // indirect
-	code.cloudfoundry.org/durationjson v0.50.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.69.0 // indirect
+	code.cloudfoundry.org/durationjson v0.51.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20250909124000-1dfc755f0d96 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/antithesishq/antithesis-sdk-go v0.5.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20250909082137-fc1b731b62ac // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20250915135239-ebea5d8dc26e // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -72,8 +72,8 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-tpm v0.9.5 // indirect
-	github.com/google/pprof v0.0.0-20250903194437-c28834ac2320 // indirect
+	github.com/google/go-tpm v0.9.6 // indirect
+	github.com/google/pprof v0.0.0-20250919162441-8b542baf5bcf // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect

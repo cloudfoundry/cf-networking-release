@@ -1,6 +1,7 @@
 package diego_logging_client
 
 import (
+	"cmp"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 // Config is the shared configuration between v1 and v2 clients.
 type Config struct {
 	UseV2API      bool   `json:"loggregator_use_v2_api"`
+	APIHost       string `json:"loggregator_api_host"`
 	APIPort       int    `json:"loggregator_api_port"`
 	CACertPath    string `json:"loggregator_ca_path"`
 	CertPath      string `json:"loggregator_cert_path"`
@@ -27,6 +29,10 @@ type Config struct {
 	BatchFlushInterval time.Duration
 
 	AppMetricExclusionFilter []string `json:"loggregator_app_metric_exclusion_filter"`
+}
+
+func (c Config) APIAddr() string {
+	return fmt.Sprintf("%s:%d", cmp.Or(c.APIHost, "127.0.0.1"), c.APIPort)
 }
 
 // A ContainerMetric records resource usage of an app in a container.
@@ -107,7 +113,7 @@ func newV2IngressClient(config Config) (IngressClient, error) {
 	}
 
 	if config.APIPort != 0 {
-		opts = append(opts, loggregator.WithAddr(fmt.Sprintf("127.0.0.1:%d", config.APIPort)))
+		opts = append(opts, loggregator.WithAddr(config.APIAddr()))
 	}
 
 	//lint:ignore SA1019 - we can't use grpc.WithContextDial until loggregator is updated for grpc.DialContext
