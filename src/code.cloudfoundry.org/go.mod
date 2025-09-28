@@ -10,14 +10,14 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20250731191341-d1ca59879d2a
-	code.cloudfoundry.org/cf-networking-helpers v0.60.0
-	code.cloudfoundry.org/clock v1.48.0
-	code.cloudfoundry.org/debugserver v0.67.0
-	code.cloudfoundry.org/filelock v0.46.0
-	code.cloudfoundry.org/garden v0.0.0-20250916215733-c693739b5ca4
-	code.cloudfoundry.org/lager/v3 v3.48.0
+	code.cloudfoundry.org/cf-networking-helpers v0.61.0
+	code.cloudfoundry.org/clock v1.49.0
+	code.cloudfoundry.org/debugserver v0.68.0
+	code.cloudfoundry.org/filelock v0.48.0
+	code.cloudfoundry.org/garden v0.0.0-20250924021457-81a82acd3d4b
+	code.cloudfoundry.org/lager/v3 v3.49.0
 	code.cloudfoundry.org/locket v0.0.0-20250423181647-b2b48694f201
-	code.cloudfoundry.org/policy_client v0.70.0
+	code.cloudfoundry.org/policy_client v0.71.0
 	code.cloudfoundry.org/tlsconfig v0.35.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -32,7 +32,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.11.9
+	github.com/nats-io/nats-server/v2 v2.12.0
 	github.com/nats-io/nats-top v0.6.3
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.25.3
@@ -52,8 +52,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.69.0 // indirect
-	code.cloudfoundry.org/durationjson v0.51.0 // indirect
+	code.cloudfoundry.org/diego-logging-client v0.70.0 // indirect
+	code.cloudfoundry.org/durationjson v0.52.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20250909124000-1dfc755f0d96 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.6 // indirect
-	github.com/google/pprof v0.0.0-20250919162441-8b542baf5bcf // indirect
+	github.com/google/pprof v0.0.0-20250923004556-9e5a51aed1e8 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
@@ -100,8 +100,8 @@ require (
 	golang.org/x/text v0.29.0 // indirect
 	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.37.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250908214217-97024824d090 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250908214217-97024824d090 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250922171735-9219d122eba9 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250922171735-9219d122eba9 // indirect
 	google.golang.org/grpc v1.75.1 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
