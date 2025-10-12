@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"cmp"
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
@@ -18,16 +19,25 @@ import (
 // defines the length of the result returned by GROUP_CONCAT() function
 // default value 1024 only allows 282 instance indexes to be concatenated
 // this will allow 10_000_000 instance indexes
-const MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
+const (
+	MYSQL_GROUP_CONCAT_MAX_LEN = 78888889
+	defaultTimeout             = 10 * time.Minute
+)
+
+type BBSDBParam struct {
+	DriverName                    string
+	DatabaseConnectionString      string
+	SqlCACertFile                 string
+	SqlEnableIdentityVerification bool
+	ConnectionTimeout             time.Duration
+	ReadTimeout                   time.Duration
+	WriteTimeout                  time.Duration
+}
 
 func Connect(
-	logger lager.Logger,
-	driverName,
-	databaseConnectionString,
-	sqlCACertFile string,
-	sqlEnableIdentityVerification bool,
-) (*sql.DB, error) {
-	connString := addTLSParams(logger, driverName, databaseConnectionString, sqlCACertFile, sqlEnableIdentityVerification)
+	logger lager.Logger, bbsDBParam *BBSDBParam) (*sql.DB, error) {
+	connString := addTLSParams(logger, bbsDBParam)
+	driverName := bbsDBParam.DriverName
 
 	if driverName == "postgres" {
 		driverName = "pgx"
@@ -38,25 +48,22 @@ func Connect(
 
 // addTLSParams appends necessary extra parameters to the
 // connection string if tls verifications is enabled.  If
-// sqlEnableIdentityVerification is true, turn on hostname/identity
+// SqlEnableIdentityVerification is true, turn on hostname/identity
 // verification, otherwise only ensure that the server certificate is signed by
-// one of the CAs in sqlCACertFile.
+// one of the CAs in SqlCACertFile.
 func addTLSParams(
 	logger lager.Logger,
-	driverName,
-	databaseConnectionString,
-	sqlCACertFile string,
-	sqlEnableIdentityVerification bool,
+	bbsDBParam *BBSDBParam,
 ) string {
-
-	switch driverName {
+	dbConnectionString := bbsDBParam.DatabaseConnectionString
+	switch bbsDBParam.DriverName {
 	case "mysql":
-		cfg, err := mysql.ParseDSN(databaseConnectionString)
+		cfg, err := mysql.ParseDSN(dbConnectionString)
 		if err != nil {
-			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
+			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": dbConnectionString})
 		}
 
-		tlsConfig := generateTLSConfig(logger, sqlCACertFile, sqlEnableIdentityVerification)
+		tlsConfig := generateTLSConfig(logger, bbsDBParam.SqlCACertFile, bbsDBParam.SqlEnableIdentityVerification)
 		if tlsConfig != nil {
 			err = mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
 			if err != nil {
@@ -65,31 +72,32 @@ func addTLSParams(
 			cfg.TLSConfig = "bbs-tls"
 		}
 
-		cfg.Timeout = 10 * time.Minute
-		cfg.ReadTimeout = 10 * time.Minute
-		cfg.WriteTimeout = 10 * time.Minute
+		cfg.ReadTimeout = cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout)
+		cfg.WriteTimeout = cmp.Or(bbsDBParam.WriteTimeout, defaultTimeout)
+		cfg.Timeout = cmp.Or(bbsDBParam.ConnectionTimeout, defaultTimeout)
+
 		cfg.Params = map[string]string{
 			"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
 		}
-		databaseConnectionString = cfg.FormatDSN()
+		dbConnectionString = cfg.FormatDSN()
 	case "postgres":
-		config, err := pgx.ParseConfig(databaseConnectionString)
+		config, err := pgx.ParseConfig(dbConnectionString)
 		if err != nil {
-			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": databaseConnectionString})
+			logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": dbConnectionString})
 		}
 
-		tlsConfig := generateTLSConfig(logger, sqlCACertFile, sqlEnableIdentityVerification)
+		tlsConfig := generateTLSConfig(logger, bbsDBParam.SqlCACertFile, bbsDBParam.SqlEnableIdentityVerification)
 		config.TLSConfig = tlsConfig
 
-		databaseConnectionString = config.ConnString()
+		dbConnectionString = config.ConnString()
 	default:
-		logger.Fatal("invalid-driver-name", nil, lager.Data{"driver-name": driverName})
+		logger.Fatal("invalid-driver-name", nil, lager.Data{"driver-name": bbsDBParam.DriverName})
 	}
 
-	return databaseConnectionString
+	return dbConnectionString
 }
 
-func generateTLSConfig(logger lager.Logger, sqlCACertPath string, sqlEnableIdentityVerification bool) *tls.Config {
+func generateTLSConfig(logger lager.Logger, sqlCACertPath string, SqlEnableIdentityVerification bool) *tls.Config {
 	var tlsConfig *tls.Config
 
 	if sqlCACertPath == "" {
@@ -106,7 +114,7 @@ func generateTLSConfig(logger lager.Logger, sqlCACertPath string, sqlEnableIdent
 		logger.Fatal("failed-to-parse-sql-ca", err)
 	}
 
-	if sqlEnableIdentityVerification {
+	if SqlEnableIdentityVerification {
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: false,
 			RootCAs:            caCertPool,
