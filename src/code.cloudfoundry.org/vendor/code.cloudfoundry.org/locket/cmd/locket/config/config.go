@@ -14,6 +14,9 @@ type LocketConfig struct {
 	CaFile                        string                `json:"ca_file"`
 	CertFile                      string                `json:"cert_file"`
 	DatabaseConnectionString      string                `json:"database_connection_string"`
+	DBConnectionTimeout           durationjson.Duration `json:"db_connection_timeout,omitempty"`
+	DBReadTimeout                 durationjson.Duration `json:"db_read_timeout,omitempty"`
+	DBWriteTimeout                durationjson.Duration `json:"db_write_timeout,omitempty"`
 	MaxOpenDatabaseConnections    int                   `json:"max_open_database_connections,omitempty"`
 	MaxDatabaseConnectionLifetime durationjson.Duration `json:"max_database_connection_lifetime,omitempty"`
 	DatabaseDriver                string                `json:"database_driver,omitempty"`

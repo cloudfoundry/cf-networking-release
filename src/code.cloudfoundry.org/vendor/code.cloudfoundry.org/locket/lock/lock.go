@@ -127,7 +127,7 @@ func (l *lockRunner) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 				logger.Error("failed-to-create-context", err)
 				return err
 			}
-			ctx, cancel := context.WithTimeout(ctx, time.Duration(l.ttlInSeconds)*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, l.retryInterval)
 			start := time.Now()
 			_, err = l.locker.Lock(ctx, &models.LockRequest{Resource: l.lock, TtlInSeconds: l.ttlInSeconds}, grpc.WaitForReady(true))
 			cancel()
