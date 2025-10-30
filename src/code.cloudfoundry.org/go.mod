@@ -13,6 +13,7 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.63.0
 	code.cloudfoundry.org/clock v1.53.0
 	code.cloudfoundry.org/debugserver v0.73.0
+	code.cloudfoundry.org/diego-logging-client v0.77.0
 	code.cloudfoundry.org/filelock v0.49.0
 	code.cloudfoundry.org/garden v0.0.0-20251029021825-d47b35eadfbb
 	code.cloudfoundry.org/lager/v3 v3.53.0
@@ -52,7 +53,6 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-logging-client v0.77.0 // indirect
 	code.cloudfoundry.org/durationjson v0.56.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20251027221130-fc49a49e17eb // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
