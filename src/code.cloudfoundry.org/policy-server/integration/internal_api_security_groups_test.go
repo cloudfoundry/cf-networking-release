@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
+	loggingclient "code.cloudfoundry.org/diego-logging-client"
+	logginghelper "code.cloudfoundry.org/diego-logging-client/testhelpers"
 	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
 	lockettestrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
 	"code.cloudfoundry.org/policy-server/api"
@@ -19,6 +22,7 @@ import (
 	"code.cloudfoundry.org/policy-server/config"
 	"code.cloudfoundry.org/policy-server/integration/helpers"
 	testhelpers "code.cloudfoundry.org/test-helpers"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -28,22 +32,40 @@ import (
 
 var _ = Describe("Internal API Listing security groups", func() {
 	var (
-		sessions                  []*gexec.Session
-		asgSyncerSession          *gexec.Session
-		asgSyncerConfig           config.ASGSyncerConfig
-		tlsConfig                 *tls.Config
-		policyServerConfs         []config.Config
-		policyServerInternalConfs []config.InternalConfig
-		internalConf              config.InternalConfig
-		dbConf                    db.Config
-		locketDBConf              db.Config
-		locketProcess             ifrit.Process
+		sessions                                                []*gexec.Session
+		asgSyncerSession                                        *gexec.Session
+		asgSyncerConfig                                         config.ASGSyncerConfig
+		tlsConfig                                               *tls.Config
+		policyServerConfs                                       []config.Config
+		policyServerInternalConfs                               []config.InternalConfig
+		internalConf                                            config.InternalConfig
+		dbConf                                                  db.Config
+		locketDBConf                                            db.Config
+		locketProcess                                           ifrit.Process
+		signalMetricsChan                                       chan struct{}
+		testIngressServer                                       *logginghelper.TestIngressServer
+		metronCAFile, metronServerCertFile, metronServerKeyFile string
 
 		fakeMetron   metrics.FakeMetron
 		mockCCServer *helpers.ConfigurableMockCCServer
 	)
 
 	BeforeEach(func() {
+		fixturesPath := "fixtures"
+
+		var err error
+		metronCAFile = filepath.Join(fixturesPath, "metron", "CA.crt")
+		metronServerCertFile = filepath.Join(fixturesPath, "metron", "metron.crt")
+		metronServerKeyFile = filepath.Join(fixturesPath, "metron", "metron.key")
+		testIngressServer, err = logginghelper.NewTestIngressServer(metronServerCertFile, metronServerKeyFile, metronCAFile)
+		Expect(err).NotTo(HaveOccurred())
+
+		receiversChan := testIngressServer.Receivers()
+		testIngressServer.Start()
+
+		_, signalMetricsChan = logginghelper.TestMetricChan(receiversChan)
+		metricsPort, _ := testIngressServer.Port()
+
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -108,6 +130,12 @@ var _ = Describe("Internal API Listing security groups", func() {
 			cfg.ListenAddress = locketAddress
 			cfg.DatabaseDriver = dbConf.Type
 			cfg.DatabaseConnectionString = locketDBConnectionString
+			cfg.LoggregatorConfig = loggingclient.Config{
+				APIPort:    metricsPort,
+				CACertPath: metronCAFile,
+				CertPath:   metronServerCertFile,
+				KeyPath:    metronServerKeyFile,
+			}
 		})
 
 		locketProcess = ifrit.Invoke(locketRunner)
@@ -140,6 +168,9 @@ var _ = Describe("Internal API Listing security groups", func() {
 		fakeMetron.Close()
 		ginkgomon.Interrupt(locketProcess, 5*time.Second)
 		testhelpers.RemoveDatabase(locketDBConf)
+
+		testIngressServer.Stop()
+		close(signalMetricsChan)
 	})
 
 	Describe("listing security groups", func() {
