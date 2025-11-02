@@ -622,8 +622,8 @@ code.cloudfoundry.org/lager/v3 v3.53.0 h1:8W/h5Byo6LTBxcHKtVM/6BCQFzK+3ThzMXHCAA
 code.cloudfoundry.org/lager/v3 v3.53.0/go.mod h1:DitYgIlWKF1cn+U4mKohEuU5k4L3i9uefQyt83p3uSk=
 code.cloudfoundry.org/locket v0.0.0-20251028190928-8f3817b47d6f h1:QQJJHVATi00MC4pvBnv0sHWdF9ulDj48uL/4FYIwlNY=
 code.cloudfoundry.org/locket v0.0.0-20251028190928-8f3817b47d6f/go.mod h1:AwHLRkdXtttLXNB8RHgLfErJ2kKafH62AR2OClhy6xI=
-code.cloudfoundry.org/policy_client v0.75.0 h1:U6UyEj3LyOsfoqOZN6LI319QyImwvScJKR/ZTOprf1g=
-code.cloudfoundry.org/policy_client v0.75.0/go.mod h1:VGn4uzRowXtv6oIUEvsN2Q9joYLkzD7QjZJFkK0JtFo=
+code.cloudfoundry.org/policy_client v0.76.0 h1:27tf9IEGgQslOwfmoXTovr74MmBcKSFSEtoLXJ3WqGE=
+code.cloudfoundry.org/policy_client v0.76.0/go.mod h1:goCOkfRWVtyPgHRcXXaiIGmN9ansHgq6dKtAyWyZ6CY=
 code.cloudfoundry.org/tlsconfig v0.37.0 h1:dmIkkwHstPvgoJoRtVoSB4Bgdq9CPJ21lIDjGYorw8I=
 code.cloudfoundry.org/tlsconfig v0.37.0/go.mod h1:4PyIxvW8Py/AgQeWU2pSZhPKwVbyxfjPXyQcV8rrW30=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

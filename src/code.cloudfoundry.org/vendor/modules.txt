@@ -80,7 +80,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.75.0
+# code.cloudfoundry.org/policy_client v0.76.0
 ## explicit; go 1.24.0
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.37.0

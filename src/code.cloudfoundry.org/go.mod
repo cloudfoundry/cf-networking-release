@@ -18,7 +18,7 @@ require (
 	code.cloudfoundry.org/garden v0.0.0-20251029021825-d47b35eadfbb
 	code.cloudfoundry.org/lager/v3 v3.53.0
 	code.cloudfoundry.org/locket v0.0.0-20251028190928-8f3817b47d6f
-	code.cloudfoundry.org/policy_client v0.75.0
+	code.cloudfoundry.org/policy_client v0.76.0
 	code.cloudfoundry.org/tlsconfig v0.37.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
