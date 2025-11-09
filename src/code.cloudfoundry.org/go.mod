@@ -9,17 +9,17 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20251029140956-4e01df8b0ac1
-	code.cloudfoundry.org/cf-networking-helpers v0.63.0
+	code.cloudfoundry.org/bbs v0.0.0-20251106171121-3498d5173ea1
+	code.cloudfoundry.org/cf-networking-helpers v0.65.0
 	code.cloudfoundry.org/clock v1.53.0
-	code.cloudfoundry.org/debugserver v0.73.0
-	code.cloudfoundry.org/diego-logging-client v0.77.0
-	code.cloudfoundry.org/filelock v0.49.0
+	code.cloudfoundry.org/debugserver v0.74.0
+	code.cloudfoundry.org/diego-logging-client v0.78.0
+	code.cloudfoundry.org/filelock v0.50.0
 	code.cloudfoundry.org/garden v0.0.0-20251029021825-d47b35eadfbb
 	code.cloudfoundry.org/lager/v3 v3.53.0
 	code.cloudfoundry.org/locket v0.0.0-20251028190928-8f3817b47d6f
-	code.cloudfoundry.org/policy_client v0.76.0
-	code.cloudfoundry.org/tlsconfig v0.37.0
+	code.cloudfoundry.org/policy_client v0.77.0
+	code.cloudfoundry.org/tlsconfig v0.38.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.5
@@ -47,14 +47,14 @@ require (
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.46.0
-	golang.org/x/sys v0.37.0
+	golang.org/x/sys v0.38.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	code.cloudfoundry.org/durationjson v0.56.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20251027221130-fc49a49e17eb // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20251104091851-073f3ed25a89 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
@@ -91,17 +91,17 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
-	go.step.sm/crypto v0.73.0 // indirect
+	go.step.sm/crypto v0.74.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/oauth2 v0.32.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/oauth2 v0.33.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251029180050-ab9386a59fda // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251103181224-f26f9409b101 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	google.golang.org/grpc v1.76.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
