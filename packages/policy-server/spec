@@ -84,7 +84,6 @@ files:
   - code.cloudfoundry.org/vendor/github.com/tedsuo/ifrit/http_server/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/tedsuo/rata/*.go # gosub
-  - code.cloudfoundry.org/vendor/golang.org/x/net/context/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/net/http/httpguts/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/net/http2/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/net/http2/hpack/*.go # gosub
@@ -109,7 +108,6 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/grpclb/state/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/pickfirst/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/pickfirst/internal/*.go # gosub
-  - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/pickfirst/pickfirstleaf/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/balancer/roundrobin/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/binarylog/grpc_binarylog_v1/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/channelz/*.go # gosub
@@ -118,6 +116,7 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/credentials/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/credentials/insecure/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/internal/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/proto/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/experimental/stats/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/grpclog/*.go # gosub
