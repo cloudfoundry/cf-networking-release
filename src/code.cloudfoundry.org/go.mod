@@ -10,7 +10,7 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20251117222647-2ba9ab4f8077
-	code.cloudfoundry.org/cf-networking-helpers v0.66.0
+	code.cloudfoundry.org/cf-networking-helpers v0.67.0
 	code.cloudfoundry.org/clock v1.55.0
 	code.cloudfoundry.org/debugserver v0.76.0
 	code.cloudfoundry.org/diego-logging-client v0.79.0
@@ -18,7 +18,7 @@ require (
 	code.cloudfoundry.org/garden v0.0.0-20251119022154-f0775181931d
 	code.cloudfoundry.org/lager/v3 v3.55.0
 	code.cloudfoundry.org/locket v0.0.0-20251117222557-be612341b29d
-	code.cloudfoundry.org/policy_client v0.78.0
+	code.cloudfoundry.org/policy_client v0.79.0
 	code.cloudfoundry.org/tlsconfig v0.40.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -42,7 +42,7 @@ require (
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
 	github.com/pkg/errors v0.9.1
-	github.com/rubenv/sql-migrate v1.8.0
+	github.com/rubenv/sql-migrate v1.8.1
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
@@ -85,7 +85,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/minio/highwayhash v1.0.4-0.20251030100505-070ab1a87a76 // indirect
 	github.com/nats-io/jwt/v2 v2.8.0 // indirect
-	github.com/nats-io/nkeys v0.4.11 // indirect
+	github.com/nats-io/nkeys v0.4.12 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
@@ -93,7 +93,7 @@ require (
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.step.sm/crypto v0.74.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/oauth2 v0.33.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
