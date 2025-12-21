@@ -9,17 +9,17 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20251213000348-62ea4fbbcea4
-	code.cloudfoundry.org/cf-networking-helpers v0.69.0
-	code.cloudfoundry.org/clock v1.55.0
-	code.cloudfoundry.org/debugserver v0.77.0
-	code.cloudfoundry.org/diego-logging-client v0.82.0
-	code.cloudfoundry.org/filelock v0.53.0
-	code.cloudfoundry.org/garden v0.0.0-20251210022550-6e36fe55e273
-	code.cloudfoundry.org/lager/v3 v3.55.0
+	code.cloudfoundry.org/bbs v0.0.0-20251217153307-594acdbd18f6
+	code.cloudfoundry.org/cf-networking-helpers v0.70.0
+	code.cloudfoundry.org/clock v1.56.0
+	code.cloudfoundry.org/debugserver v0.78.0
+	code.cloudfoundry.org/diego-logging-client v0.83.0
+	code.cloudfoundry.org/filelock v0.54.0
+	code.cloudfoundry.org/garden v0.0.0-20251217022801-f5e0d83c4fa9
+	code.cloudfoundry.org/lager/v3 v3.56.0
 	code.cloudfoundry.org/locket v0.0.0-20251117222557-be612341b29d
-	code.cloudfoundry.org/policy_client v0.81.0
-	code.cloudfoundry.org/tlsconfig v0.41.0
+	code.cloudfoundry.org/policy_client v0.82.0
+	code.cloudfoundry.org/tlsconfig v0.42.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.5
@@ -33,7 +33,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.12.2
+	github.com/nats-io/nats-server/v2 v2.12.3
 	github.com/nats-io/nats-top v0.6.3
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.27.3
@@ -53,8 +53,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/durationjson v0.58.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20251124091730-becfb70ab838 // indirect
+	code.cloudfoundry.org/durationjson v0.59.0 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20251217145408-467f62baff7d // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/antithesishq/antithesis-sdk-go v0.5.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20251124090431-33e3494ff82b // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20251217143644-d1670a435f2a // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
