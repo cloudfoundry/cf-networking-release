@@ -6,4 +6,4 @@ applications:
     buildpacks: [go_buildpack]
     env:
       GOPACKAGENAME: proxy
-      GOVERSION: latest
+      GOVERSION: go1.23
