@@ -13,7 +13,7 @@ require (
 	code.cloudfoundry.org/cf-networking-helpers v0.70.0
 	code.cloudfoundry.org/clock v1.56.0
 	code.cloudfoundry.org/debugserver v0.79.0
-	code.cloudfoundry.org/diego-logging-client v0.84.0
+	code.cloudfoundry.org/diego-logging-client v0.85.0
 	code.cloudfoundry.org/filelock v0.54.0
 	code.cloudfoundry.org/garden v0.0.0-20251217022801-f5e0d83c4fa9
 	code.cloudfoundry.org/lager/v3 v3.56.0
@@ -72,7 +72,7 @@ require (
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-tpm v0.9.7 // indirect
+	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/pprof v0.0.0-20251213031049-b05bdaca462f // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
