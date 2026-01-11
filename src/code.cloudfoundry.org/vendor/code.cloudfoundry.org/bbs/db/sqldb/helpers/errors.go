@@ -34,6 +34,14 @@ func (h *sqlHelper) ConvertSQLError(err error) error {
 			return h.convertMySQLError(e)
 		case *pgconn.PgError:
 			return h.convertPostgresError(e)
+		case *pgconn.PrepareError:
+			subError := e.Unwrap()
+			if errors.Is(subError, &pgconn.PrepareError{}) {
+				// don't recurse if someone has mistakenly wrapped a PrepareError in a PrepareError
+				// to ensure we avoid invinite looping
+				return err
+			}
+			return h.ConvertSQLError(e.Unwrap())
 		}
 
 		if err == sql.ErrNoRows {
