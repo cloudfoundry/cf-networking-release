@@ -1,4 +1,4 @@
 name: cf-networking-healthchecker
-fingerprint: 9239b75ab47f60947526b8bd19d30bb9e9c04165bacf91db78678df7f5b8f80c
+fingerprint: b0f01d8a491721727fd08b95df410e8986ba4d5c2af984d8466628cb0d39e0f3
 dependencies:
 - cf-networking-golang-1.25-linux
