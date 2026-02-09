@@ -1,0 +1,112 @@
+name: cf-networking
+version: 3.100.0
+commit_hash: 9720e562
+uncommitted_changes: false
+jobs:
+- name: bbr-cfnetworkingdb
+  version: c43957837844d889c2eee15b3bc9e8b5d032731785f231c5e2e2f387428de303
+  fingerprint: c43957837844d889c2eee15b3bc9e8b5d032731785f231c5e2e2f387428de303
+  sha1: sha256:37740e4fad3221317c990178ce3fa577afbeedc93a16de7fff8acf86e07f9202
+  packages: []
+- name: bosh-dns-adapter
+  version: 952eaf801c799bde60d791005ec95b1b2697cecc7c49fe94ce8349a6c05bf922
+  fingerprint: 952eaf801c799bde60d791005ec95b1b2697cecc7c49fe94ce8349a6c05bf922
+  sha1: sha256:0538ffb4dde37a2062e18f10cb0e7c5279812392c8408de7ed2544b7e1009a9c
+  packages:
+  - bosh-dns-adapter
+  - cf-networking-healthchecker
+- name: garden-cni
+  version: f291b4eedeb7feb88c620eee9466794b64911c43b8402ad472180d52d40043ba
+  fingerprint: f291b4eedeb7feb88c620eee9466794b64911c43b8402ad472180d52d40043ba
+  sha1: sha256:c7db022a8dc472361829bb384a1c369e6c60007bd7f62d1e03191ff7e23c75c0
+  packages:
+  - runc-cni
+- name: performance-test-sd
+  version: 2e05a6adf8cf2a8be5de4c635925cb28068a82afd6d4a66522b48eaeb218a1b6
+  fingerprint: 2e05a6adf8cf2a8be5de4c635925cb28068a82afd6d4a66522b48eaeb218a1b6
+  sha1: sha256:9b5192f8ce37615c598dff5e9e55d033049b85a6a3e8c4508b1add44a2738794
+  packages:
+  - golang-1.25-linux
+  - performance-test-sd
+- name: policy-server
+  version: 0717f110189e83cf99e25d26d14eafee192ada36a2042bda97063bc228682a02
+  fingerprint: 0717f110189e83cf99e25d26d14eafee192ada36a2042bda97063bc228682a02
+  sha1: sha256:25c178640cae34d751f76e0981440e38edf768989ada2eeddfe1184db35752ee
+  packages:
+  - policy-server
+  - networking-ctl-utils
+- name: policy-server-asg-syncer
+  version: 313679dc558e123275466ce6759cb62ade58415d76c8f302e223be5fb7cd9594
+  fingerprint: 313679dc558e123275466ce6759cb62ade58415d76c8f302e223be5fb7cd9594
+  sha1: sha256:27d38cbead549a5692012d3f7315efac0cf8de2f4e1b4442b8345cdbb7bb7ea2
+  packages:
+  - policy-server
+- name: policy-server-internal
+  version: d02e28056fb9d00c578ea5098c210a52d875cf801c1c5464a4321945c272db58
+  fingerprint: d02e28056fb9d00c578ea5098c210a52d875cf801c1c5464a4321945c272db58
+  sha1: sha256:dd31199219ca62583d202c3addf6c9a04245a0c96f17765227e2a8e53f0d26b4
+  packages:
+  - policy-server
+  - networking-ctl-utils
+- name: service-discovery-controller
+  version: d625ede4c02799d8966b625df85e597054a00093072fb10f13e70582160b8a6b
+  fingerprint: d625ede4c02799d8966b625df85e597054a00093072fb10f13e70582160b8a6b
+  sha1: sha256:1d8542a214e57187f77383fd142bb82bae7b0c6104a347b45ca07a0e7addfdee
+  packages:
+  - service-discovery-controller
+packages:
+- name: bosh-dns-adapter
+  version: d77ef284b16f90f2876f4a21b1ad88a75d01c3aac1fb610a5d9f2bc87a41bca7
+  fingerprint: d77ef284b16f90f2876f4a21b1ad88a75d01c3aac1fb610a5d9f2bc87a41bca7
+  sha1: sha256:d466c1db35c37b041762615f4439abdd43541ec328b1b7250fda73be012648f2
+  dependencies:
+  - golang-1.25-linux
+- name: cf-networking-golang-1.25-linux
+  version: d0ebe850814c70d6cf36bcf1421dc4c430fda8b6f53a2696678f158a6b74fb5c
+  fingerprint: d0ebe850814c70d6cf36bcf1421dc4c430fda8b6f53a2696678f158a6b74fb5c
+  sha1: sha256:a732f14a39e695f0af24b5a0e4657a4e6fd58b3438f97511348dc389bc5005b1
+  dependencies: []
+- name: cf-networking-healthchecker
+  version: 29504a2470799c38a6737ce6223831017ad9a55bbc3725e9c9749e08273dab03
+  fingerprint: 29504a2470799c38a6737ce6223831017ad9a55bbc3725e9c9749e08273dab03
+  sha1: sha256:18a76ed92e2fc58a41aad2dc761690535f2e2e2c4b30025e656eec7d640d35df
+  dependencies:
+  - cf-networking-golang-1.25-linux
+- name: golang-1.25-linux
+  version: d0ebe850814c70d6cf36bcf1421dc4c430fda8b6f53a2696678f158a6b74fb5c
+  fingerprint: d0ebe850814c70d6cf36bcf1421dc4c430fda8b6f53a2696678f158a6b74fb5c
+  sha1: sha256:a732f14a39e695f0af24b5a0e4657a4e6fd58b3438f97511348dc389bc5005b1
+  dependencies: []
+- name: networking-ctl-utils
+  version: aa49b291cffdc94783580a51803f3cdeca57664f2f934af5e88b8e2d3671e276
+  fingerprint: aa49b291cffdc94783580a51803f3cdeca57664f2f934af5e88b8e2d3671e276
+  sha1: sha256:7364dd4688d78dbdf8de68a5ca3a9c2484a604fa34f9960f18c022ed945b49d2
+  dependencies: []
+- name: performance-test-sd
+  version: 3cbe4596c0351d19a1016358edf1676c73c211e7f932271cb9dee4d7d7210cf2
+  fingerprint: 3cbe4596c0351d19a1016358edf1676c73c211e7f932271cb9dee4d7d7210cf2
+  sha1: sha256:3bfc93639a7a2119b7dda6ed16444d2c14c1ebfb3ed28594ce9324904f68620e
+  dependencies: []
+- name: policy-server
+  version: a1896aaaba6f4e108c6cc7046cbb40f71faae3b773ffedd3362665a1e543c81e
+  fingerprint: a1896aaaba6f4e108c6cc7046cbb40f71faae3b773ffedd3362665a1e543c81e
+  sha1: sha256:241192bb64abec66bd69000210ca2086d0f1ba0b21b86dd76d808325fc0f7ea0
+  dependencies:
+  - golang-1.25-linux
+- name: runc-cni
+  version: 2b4efa9d5f45a0ed11444400a5a84134be90030784c516ccaaa303847f1ff8bd
+  fingerprint: 2b4efa9d5f45a0ed11444400a5a84134be90030784c516ccaaa303847f1ff8bd
+  sha1: sha256:04380ebbceedb9891f73890dd73c40f6a1a9b9055bf9170b1320fe3f661617c7
+  dependencies:
+  - golang-1.25-linux
+- name: service-discovery-controller
+  version: 88a76fa81954775d92e9d858be34c8d55a086d53277d6361fa1db1a7fbefe602
+  fingerprint: 88a76fa81954775d92e9d858be34c8d55a086d53277d6361fa1db1a7fbefe602
+  sha1: sha256:67315608aa419fe9c31d0f0fe67b7523e4ce2deaeabb38bf9380056d6733f263
+  dependencies:
+  - golang-1.25-linux
+license:
+  version: 6c36e43187d69232e95e1bc0fadca8a51c0f5d23fdc4ab5785ec823cff67fe80
+  fingerprint: 6c36e43187d69232e95e1bc0fadca8a51c0f5d23fdc4ab5785ec823cff67fe80
+  sha1: sha256:f9be553e9526d19d055bcc26409111dc787461d490ac8af626e88ea9493bb35f
+no_compression: false
