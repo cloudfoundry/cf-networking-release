@@ -22,24 +22,24 @@ code.cloudfoundry.org/cf-networking-helpers/poller
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/clock v1.61.0
-## explicit; go 1.24.9
+# code.cloudfoundry.org/clock v1.62.0
+## explicit; go 1.25.0
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.86.0
-## explicit; go 1.24.9
+# code.cloudfoundry.org/debugserver v0.87.0
+## explicit; go 1.25.0
 code.cloudfoundry.org/debugserver
-# code.cloudfoundry.org/diego-logging-client v0.93.0
+# code.cloudfoundry.org/diego-logging-client v0.94.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/diego-logging-client
 code.cloudfoundry.org/diego-logging-client/testhelpers
-# code.cloudfoundry.org/durationjson v0.64.0
-## explicit; go 1.24.9
+# code.cloudfoundry.org/durationjson v0.65.0
+## explicit; go 1.25.0
 code.cloudfoundry.org/durationjson
-# code.cloudfoundry.org/filelock v0.58.0
-## explicit; go 1.24.9
+# code.cloudfoundry.org/filelock v0.59.0
+## explicit; go 1.25.0
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20260226175352-633a5049c174
+# code.cloudfoundry.org/garden v0.0.0-20260304024058-46dd12e5cd10
 ## explicit; go 1.25.0
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/go-diodes v0.0.0-20260209061029-a81ffbc46978
@@ -48,8 +48,8 @@ code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-log-cache/v3 v3.1.1
 ## explicit; go 1.23.0
 code.cloudfoundry.org/go-log-cache/v3/rpc/logcache_v1
-# code.cloudfoundry.org/go-loggregator/v10 v10.2.0
-## explicit; go 1.23.0
+# code.cloudfoundry.org/go-loggregator/v10 v10.3.1
+## explicit; go 1.25.0
 code.cloudfoundry.org/go-loggregator/v10/rpc/loggregator_v2
 # code.cloudfoundry.org/go-loggregator/v9 v9.2.1
 ## explicit; go 1.21
@@ -58,8 +58,8 @@ code.cloudfoundry.org/go-loggregator/v9/rpc/loggregator_v2
 code.cloudfoundry.org/go-loggregator/v9/runtimeemitter
 # code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953
 ## explicit
-# code.cloudfoundry.org/lager/v3 v3.61.0
-## explicit; go 1.24.9
+# code.cloudfoundry.org/lager/v3 v3.62.0
+## explicit; go 1.25.0
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
 code.cloudfoundry.org/lager/v3/lagerctx
@@ -80,7 +80,7 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/policy_client v0.91.0
+# code.cloudfoundry.org/policy_client v0.92.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/tlsconfig v0.46.0
@@ -204,7 +204,7 @@ github.com/google/go-cmp/cmp/internal/value
 github.com/google/go-tpm/legacy/tpm2
 github.com/google/go-tpm/tpmutil
 github.com/google/go-tpm/tpmutil/tbs
-# github.com/google/pprof v0.0.0-20260202012954-cb029daf43ef
+# github.com/google/pprof v0.0.0-20260302011040-a15ffb7f9dcc
 ## explicit; go 1.24.0
 github.com/google/pprof/profile
 # github.com/gorilla/context v1.1.1
@@ -530,7 +530,7 @@ google.golang.org/genproto/googleapis/api/httpbody
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.79.1
+# google.golang.org/grpc v1.79.2
 ## explicit; go 1.24.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes

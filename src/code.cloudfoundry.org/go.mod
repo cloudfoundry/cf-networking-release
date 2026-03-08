@@ -11,14 +11,14 @@ replace (
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20260218135931-a998cae3b567
 	code.cloudfoundry.org/cf-networking-helpers v0.77.0
-	code.cloudfoundry.org/clock v1.61.0
-	code.cloudfoundry.org/debugserver v0.86.0
-	code.cloudfoundry.org/diego-logging-client v0.93.0
-	code.cloudfoundry.org/filelock v0.58.0
-	code.cloudfoundry.org/garden v0.0.0-20260226175352-633a5049c174
-	code.cloudfoundry.org/lager/v3 v3.61.0
+	code.cloudfoundry.org/clock v1.62.0
+	code.cloudfoundry.org/debugserver v0.87.0
+	code.cloudfoundry.org/diego-logging-client v0.94.0
+	code.cloudfoundry.org/filelock v0.59.0
+	code.cloudfoundry.org/garden v0.0.0-20260304024058-46dd12e5cd10
+	code.cloudfoundry.org/lager/v3 v3.62.0
 	code.cloudfoundry.org/locket v0.0.0-20251117222557-be612341b29d
-	code.cloudfoundry.org/policy_client v0.91.0
+	code.cloudfoundry.org/policy_client v0.92.0
 	code.cloudfoundry.org/tlsconfig v0.46.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -53,10 +53,10 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/durationjson v0.64.0 // indirect
+	code.cloudfoundry.org/durationjson v0.65.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260209061029-a81ffbc46978 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
-	code.cloudfoundry.org/go-loggregator/v10 v10.2.0 // indirect
+	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
-	github.com/google/pprof v0.0.0-20260202012954-cb029daf43ef // indirect
+	github.com/google/pprof v0.0.0-20260302011040-a15ffb7f9dcc // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
@@ -102,7 +102,7 @@ require (
 	golang.org/x/tools v0.42.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
-	google.golang.org/grpc v1.79.1 // indirect
+	google.golang.org/grpc v1.79.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
