@@ -272,11 +272,11 @@ func (c client) SendAppMetrics(m ContainerMetric) error {
 	c.client.EmitGauge(opts...)
 
 	if m.RxBytes != nil && !contains(c.appMetricExclusionFilter, "rx_bytes") {
-		c.client.EmitCounter("rx_bytes", loggregator.WithCounterSourceInfo(m.Tags["source_id"], m.Tags["instance_id"]), loggregator.WithTotal(*m.RxBytes))
+		c.client.EmitCounter("rx_bytes", loggregator.WithCounterSourceInfo(m.Tags["source_id"], m.Tags["instance_id"]), loggregator.WithTotal(*m.RxBytes), loggregator.WithEnvelopeTags(m.Tags))
 	}
 
 	if m.TxBytes != nil && !contains(c.appMetricExclusionFilter, "tx_bytes") {
-		c.client.EmitCounter("tx_bytes", loggregator.WithCounterSourceInfo(m.Tags["source_id"], m.Tags["instance_id"]), loggregator.WithTotal(*m.TxBytes))
+		c.client.EmitCounter("tx_bytes", loggregator.WithCounterSourceInfo(m.Tags["source_id"], m.Tags["instance_id"]), loggregator.WithTotal(*m.TxBytes), loggregator.WithEnvelopeTags(m.Tags))
 	}
 
 	return nil
