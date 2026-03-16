@@ -463,9 +463,8 @@ func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error
 	}
 
 	if err != nil {
-		return []SecurityGroupResource{}, fmt.Errorf("Ran out of retry attempts. Last error was: %s\n", err.Error())
+		return []SecurityGroupResource{}, fmt.Errorf("Ran out of retry attempts. Last error was: %w", err)
 	}
-
 	return securityGroups, nil
 }
 

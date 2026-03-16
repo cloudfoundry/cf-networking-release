@@ -4,6 +4,7 @@ package asg_syncer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -98,9 +99,10 @@ func (a *ASGSyncer) Poll() error {
 	retrieveStartTime := a.Clock.Now()
 	ccSGs, err := a.CCClient.GetSecurityGroups(token)
 	if err != nil {
-		if _, ok := err.(cc_client.UnstableSecurityGroupListError); ok {
+		var unstableErr cc_client.UnstableSecurityGroupListError
+		if errors.As(err, &unstableErr) {
 			if a.Clock.Now().After(a.lastSyncTime.Add(a.RetryDeadline)) {
-				return fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '%s': %s", a.RetryDeadline, err)
+				return fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '%s': %s", a.RetryDeadline, unstableErr)
 			}
 			return nil
 		}

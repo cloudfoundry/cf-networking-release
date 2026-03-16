@@ -340,7 +340,9 @@ var _ = Describe("ASGSyncer", func() {
 				})
 				Context("if changes are detected during capi pagination", func() {
 					BeforeEach(func() {
-						fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{}, error(cc_client.NewUnstableSecurityGroupListError(fmt.Errorf("unstable list"))))
+						innerErr := cc_client.NewUnstableSecurityGroupListError(fmt.Errorf("unstable list"))
+						wrappedErr := fmt.Errorf("Ran out of retry attempts: %w", innerErr)
+						fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{}, wrappedErr)
 					})
 					It("doesn't return an error", func() {
 						err := asgSyncer.Poll()
