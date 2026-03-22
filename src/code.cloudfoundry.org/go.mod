@@ -9,17 +9,17 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20260218135931-a998cae3b567
-	code.cloudfoundry.org/cf-networking-helpers v0.77.0
-	code.cloudfoundry.org/clock v1.63.0
-	code.cloudfoundry.org/debugserver v0.88.0
-	code.cloudfoundry.org/diego-logging-client v0.96.0
-	code.cloudfoundry.org/filelock v0.59.0
-	code.cloudfoundry.org/garden v0.0.0-20260311024225-613a89da1275
-	code.cloudfoundry.org/lager/v3 v3.63.0
+	code.cloudfoundry.org/bbs v0.0.0-20260319204745-f9b7322ba965
+	code.cloudfoundry.org/cf-networking-helpers v0.79.0
+	code.cloudfoundry.org/clock v1.64.0
+	code.cloudfoundry.org/debugserver v0.89.0
+	code.cloudfoundry.org/diego-logging-client v0.97.0
+	code.cloudfoundry.org/filelock v0.60.0
+	code.cloudfoundry.org/garden v0.0.0-20260318024418-0ddea73e969e
+	code.cloudfoundry.org/lager/v3 v3.64.0
 	code.cloudfoundry.org/locket v0.0.0-20251117222557-be612341b29d
-	code.cloudfoundry.org/policy_client v0.93.0
-	code.cloudfoundry.org/tlsconfig v0.47.0
+	code.cloudfoundry.org/policy_client v0.94.0
+	code.cloudfoundry.org/tlsconfig v0.48.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.6
@@ -53,7 +53,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/durationjson v0.66.0 // indirect
+	code.cloudfoundry.org/durationjson v0.67.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260209061029-a81ffbc46978 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
@@ -61,7 +61,7 @@ require (
 	code.cloudfoundry.org/inigo v0.0.0-20230228171622-18bab030e953 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
-	github.com/antithesishq/antithesis-sdk-go v0.6.0 // indirect
+	github.com/antithesishq/antithesis-sdk-go v0.7.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20251217143644-d1670a435f2a // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
@@ -79,19 +79,19 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.8.0 // indirect
+	github.com/jackc/pgx/v5 v5.9.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
-	github.com/lib/pq v1.11.2 // indirect
-	github.com/minio/highwayhash v1.0.4-0.20251030100505-070ab1a87a76 // indirect
-	github.com/nats-io/jwt/v2 v2.8.0 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
+	github.com/lib/pq v1.12.0 // indirect
+	github.com/minio/highwayhash v1.0.4 // indirect
+	github.com/nats-io/jwt/v2 v2.8.1 // indirect
 	github.com/nats-io/nkeys v0.4.15 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
-	go.step.sm/crypto v0.76.2 // indirect
+	go.step.sm/crypto v0.77.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/mod v0.34.0 // indirect
@@ -100,9 +100,9 @@ require (
 	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260316180232-0b37fe3546d5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260316180232-0b37fe3546d5 // indirect
-	google.golang.org/grpc v1.79.2 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260319201613-d00831a3d3e7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260319201613-d00831a3d3e7 // indirect
+	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
