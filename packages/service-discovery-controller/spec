@@ -56,10 +56,13 @@ files:
   - code.cloudfoundry.org/vendor/github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/internal/pgpass/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/lib/pq/internal/pgservice/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/internal/pqsql/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/lib/pq/internal/pqtime/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/internal/pqutil/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/internal/proto/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/oid/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/lib/pq/pqerror/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/lib/pq/scram/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/nats-io/go-nats/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/nats-io/go-nats/encoders/builtin/*.go # gosub
