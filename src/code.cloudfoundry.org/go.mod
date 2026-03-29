@@ -9,17 +9,17 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20260319204745-f9b7322ba965
+	code.cloudfoundry.org/bbs v0.0.0-20260323203855-1402bd61fc46
 	code.cloudfoundry.org/cf-networking-helpers v0.79.0
 	code.cloudfoundry.org/clock v1.64.0
-	code.cloudfoundry.org/debugserver v0.89.0
-	code.cloudfoundry.org/diego-logging-client v0.97.0
-	code.cloudfoundry.org/filelock v0.60.0
+	code.cloudfoundry.org/debugserver v0.90.0
+	code.cloudfoundry.org/diego-logging-client v0.98.0
+	code.cloudfoundry.org/filelock v0.61.0
 	code.cloudfoundry.org/garden v0.0.0-20260318024418-0ddea73e969e
 	code.cloudfoundry.org/lager/v3 v3.64.0
 	code.cloudfoundry.org/locket v0.0.0-20251117222557-be612341b29d
-	code.cloudfoundry.org/policy_client v0.94.0
-	code.cloudfoundry.org/tlsconfig v0.48.0
+	code.cloudfoundry.org/policy_client v0.95.0
+	code.cloudfoundry.org/tlsconfig v0.49.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.6
@@ -30,11 +30,11 @@ require (
 	github.com/containernetworking/plugins v1.9.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/montanaflynn/stats v0.8.2
+	github.com/montanaflynn/stats v0.9.0
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.12.5
-	github.com/nats-io/nats-top v0.6.3
+	github.com/nats-io/nats-server/v2 v2.12.6
+	github.com/nats-io/nats-top v0.6.4
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
@@ -79,7 +79,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.9.0 // indirect
+	github.com/jackc/pgx/v5 v5.9.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/lib/pq v1.12.0 // indirect
