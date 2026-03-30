@@ -1,10 +1,18 @@
 name: unit-integration-tests
 
 on:
-  push:
-  pull_request_target:
-    types:
-    - labeled
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches:
+      - develop
+    paths:
+      - 'src/**'
+      - 'packages/**'
+      - 'jobs/**'
+      - 'config/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - '.github/helpers/**'
 env:
   MAPPING: |
     build_nats_server=src/code.cloudfoundry.org/vendor/github.com/nats-io/nats-server/v2
@@ -29,18 +37,17 @@ env:
   DB: ""
 jobs:
   repo-clone:
-    if: github.event.label.name == 'ready-to-run'
     runs-on: ubuntu-latest
     steps:
     - name: cf-networking-release-repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.3.1
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         submodules: recursive
         path: repo
     - name: Check out wg-appruntime code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.3.1
       with:
         repository: cloudfoundry/wg-app-platform-runtime-ci
         path: ci
@@ -55,14 +62,27 @@ jobs:
         path: |
           repo-artifact.tar.gz
           ci-artifact.tar.gz
+  determine-image-tag:
+    if: contains(github.event.pull_request.labels.*.name, 'ready-to-run')
+    runs-on: ubuntu-latest
+    outputs:
+      go_version: ${{ steps.get-version.outputs.go_version }}
+    steps:
+    - name: checkout ci repo
+      uses: actions/checkout@v4.3.1
+      with:
+        repository: cloudfoundry/wg-app-platform-runtime-ci
+        sparse-checkout: go-version.json
+        sparse-checkout-cone-mode: false
+    - name: get-version
+      id: get-version
+      run: |
+        version=$(jq -r '.releases["cf-networking"] // .default' go-version.json)
+        echo "go_version=${version}" >> "$GITHUB_OUTPUT"
   template-tests:
     runs-on: ubuntu-latest
-    needs: repo-clone
-    container:
-      image: us-central1-docker.pkg.dev/app-runtime-platform-wg/dockerhub-mirror/cloudfoundry/tas-runtime-build
-      credentials:
-        username: _json_key
-        password: ${{ secrets.GCP_SERVICE_ACCOUNT_TAS_RUNTIME_BUILD_IMAGE_READER }}
+    needs: [repo-clone]
+    container: cloudfoundry/tas-runtime-build:latest
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v4
@@ -74,25 +94,42 @@ jobs:
     - name: template-tests
       run: |
         "${GITHUB_WORKSPACE}"/ci/shared/tasks/run-tests-templates/task.bash
-  test-on-mysql-5-7:
+  lint-repo:
     runs-on: ubuntu-latest
+    needs: [repo-clone]
+    container: cloudfoundry/tas-runtime-build:latest
     env:
-      BUILD_IMAGE: us-central1-docker.pkg.dev/app-runtime-platform-wg/dockerhub-mirror/cloudfoundry/tas-runtime-mysql-5.7
-    needs: repo-clone
+      LINTERS: |
+        sync-package-specs.bash
+        sync-submodule-config.bash
+        match-golang-os-package-versions.bash
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         name: repo
-    - name: Authenticate with GCP
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_TAS_RUNTIME_BUILD_IMAGE_READER }}
-    - name: Configure Docker to use gcloud
+    - run: |
+        tar -xzvf repo-artifact.tar.gz
+        tar -xzvf ci-artifact.tar.gz
+    - name: lint-repo
       run: |
-        gcloud auth configure-docker us-central1-docker.pkg.dev
-        docker pull "$BUILD_IMAGE"
-    - run: "tar -xzvf repo-artifact.tar.gz\ntar -xzvf ci-artifact.tar.gz \n"
+        "${GITHUB_WORKSPACE}"/ci/shared/tasks/lint-repo/task.bash
+  test-on-mysql-5-7:
+    if: contains(github.event.pull_request.labels.*.name, 'ready-to-run')
+    runs-on: ubuntu-latest
+    needs: [repo-clone, determine-image-tag]
+    env:
+      BUILD_IMAGE: cloudfoundry/tas-runtime-mysql-5.7:${{ needs.determine-image-tag.outputs.go_version }}
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: repo
+    - run: |
+        tar -xzvf repo-artifact.tar.gz
+        tar -xzvf ci-artifact.tar.gz
+    - name: pull image
+      run: docker pull "$BUILD_IMAGE"
     - name: policy-server-mysql
       env:
         DIR: src/code.cloudfoundry.org/policy-server
@@ -100,24 +137,21 @@ jobs:
       run: |
         ./repo/.github/helpers/test.bash ${{ github.workspace }} "$BUILD_IMAGE"
   test-repos-withoutdb:
+    if: contains(github.event.pull_request.labels.*.name, 'ready-to-run')
     runs-on: ubuntu-latest
-    needs: repo-clone
+    needs: [repo-clone, determine-image-tag]
     env:
-      BUILD_IMAGE: us-central1-docker.pkg.dev/app-runtime-platform-wg/dockerhub-mirror/cloudfoundry/tas-runtime-build
+      BUILD_IMAGE: cloudfoundry/tas-runtime-build:${{ needs.determine-image-tag.outputs.go_version }}
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         name: repo
-    - name: Authenticate with GCP
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_TAS_RUNTIME_BUILD_IMAGE_READER }}
-    - name: Configure Docker to use gcloud
-      run: "gcloud auth configure-docker us-central1-docker.pkg.dev\ndocker pull \"$BUILD_IMAGE\" \n"
     - run: |
         tar -xzvf repo-artifact.tar.gz
         tar -xzvf ci-artifact.tar.gz
+    - name: pull image
+      run: docker pull "$BUILD_IMAGE"
     - name: bosh-dns-adapter
       env:
         DIR: src/code.cloudfoundry.org/bosh-dns-adapter
@@ -149,51 +183,43 @@ jobs:
         export DIR=$DIR
         ./repo/.github/helpers/test.bash ${{ github.workspace }} "$BUILD_IMAGE"
   test-on-postgres:
+    if: contains(github.event.pull_request.labels.*.name, 'ready-to-run')
     runs-on: ubuntu-latest
-    needs: repo-clone
+    needs: [repo-clone, determine-image-tag]
     env:
-      BUILD_IMAGE: us-central1-docker.pkg.dev/app-runtime-platform-wg/dockerhub-mirror/cloudfoundry/tas-runtime-postgres
+      BUILD_IMAGE: cloudfoundry/tas-runtime-postgres:${{ needs.determine-image-tag.outputs.go_version }}
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         name: repo
-    - name: Authenticate with GCP
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_TAS_RUNTIME_BUILD_IMAGE_READER }}
-    - name: Configure Docker to use gcloud
-      run: "gcloud auth configure-docker us-central1-docker.pkg.dev\ndocker pull \"$BUILD_IMAGE\" \n"
     - run: |
         tar -xzvf repo-artifact.tar.gz
         tar -xzvf ci-artifact.tar.gz
-    - name: policy-server-mysql
+    - name: pull image
+      run: docker pull "$BUILD_IMAGE"
+    - name: policy-server-postgres
       env:
         DIR: src/code.cloudfoundry.org/policy-server
         DB: postgres
       run: |
         ./repo/.github/helpers/test.bash ${{ github.workspace }} "$BUILD_IMAGE"
   test-on-mysql-8-0:
+    if: contains(github.event.pull_request.labels.*.name, 'ready-to-run')
     runs-on: ubuntu-latest
-    needs: repo-clone
+    needs: [repo-clone, determine-image-tag]
     env:
-      BUILD_IMAGE: us-central1-docker.pkg.dev/app-runtime-platform-wg/dockerhub-mirror/cloudfoundry/tas-runtime-mysql-8.0
+      BUILD_IMAGE: cloudfoundry/tas-runtime-mysql-8.0:${{ needs.determine-image-tag.outputs.go_version }}
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         name: repo
-    - name: Authenticate with GCP
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_TAS_RUNTIME_BUILD_IMAGE_READER }}
-    - name: Configure Docker to use gcloud
-      run: |
-        gcloud auth configure-docker us-central1-docker.pkg.dev
-        docker pull "$BUILD_IMAGE"
     - run: |
         tar -xzvf repo-artifact.tar.gz
         tar -xzvf ci-artifact.tar.gz
+    - name: pull image
+      run: docker pull "$BUILD_IMAGE"
     - name: policy-server-mysql
       env:
         DIR: src/code.cloudfoundry.org/policy-server
