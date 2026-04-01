@@ -62,12 +62,12 @@ var _ = Describe("Service Discovery Controller process", func() {
 		).Client(
 			tlsconfig.WithAuthorityFromFile(natsServerCAPath),
 		)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 		natsTlsConfig, err = tlsconfig.Build(
 			tlsconfig.WithIdentity(natsServerCert),
 			tlsconfig.WithInternalServiceDefaults(),
 		).Server(tlsconfig.WithClientAuthenticationFromFile(natsClientCAPath))
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 		natsServerPort = ports.PickAPort()
 		natsServer = RunNatsServerOnPort(natsServerPort, natsTlsConfig)
 
@@ -119,7 +119,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			startCmd := exec.Command(pathToServer, "-c", configPath)
 			var err error
 			session, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(session, 6*time.Second).Should(gbytes.Say("service-discovery-controller.server-started"))
 
@@ -139,7 +139,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			register(routeEmitter, "192.168.0.11", "large-id.internal.local.")
 			register(routeEmitter, "192.168.0.12", "large-id.internal.local.")
 			register(routeEmitter, "192.168.0.13", "large-id.internal.local.")
-			Expect(routeEmitter.Flush()).ToNot(HaveOccurred())
+			Expect(routeEmitter.Flush()).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -160,7 +160,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			requestLogChange("debug", logLevelEndpointPort)
 
 			unregister(routeEmitter, "192.168.0.1", "app-id.internal.local.")
-			Expect(routeEmitter.Flush()).ToNot(HaveOccurred())
+			Expect(routeEmitter.Flush()).NotTo(HaveOccurred())
 
 			client := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert)
 			Eventually(func() string {
@@ -170,7 +170,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 					return "server is not listening yet"
 				}
 				respBody, err := io.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				return string(respBody)
 			}).Should(MatchJSON(`{
 				"env": "",
@@ -226,9 +226,9 @@ var _ = Describe("Service Discovery Controller process", func() {
 		It("should return a http app json", func() {
 			url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 			resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			respBody, err := io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(respBody).To(MatchJSON(`{
 				"env": "",
@@ -258,9 +258,9 @@ var _ = Describe("Service Discovery Controller process", func() {
 		It("should return a http large json", func() {
 			url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/large-id.internal.local.", port)
 			resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			respBody, err := io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(respBody).To(MatchJSON(`{
 				"env": "",
@@ -394,10 +394,10 @@ var _ = Describe("Service Discovery Controller process", func() {
 			Eventually(func() []byte {
 				url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 				resp, err := client.Get(url)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				respBody, err := io.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				return respBody
 			}, waitDuration).Should(MatchJSON(`{ "env": "", "hosts": [], "service": "" }`))
@@ -407,9 +407,9 @@ var _ = Describe("Service Discovery Controller process", func() {
 			It("should return a map of all hostnames to ips", func() {
 				url := fmt.Sprintf("https://127.0.0.1:%d/routes", port)
 				resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				respBody, err := io.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(respBody).To(Or(MatchJSON(`{
 					"addresses": [{
@@ -510,9 +510,9 @@ var _ = Describe("Service Discovery Controller process", func() {
 				Eventually(func() string {
 					url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 					resp, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					respBody, err := io.ReadAll(resp.Body)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					return string(respBody)
 				}).Should(MatchJSON(`{
 					"env": "",
@@ -563,7 +563,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				JustBeforeEach(func() {
 					url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 					_, err := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert).Get(url)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("emits a dns request metric", func() {
@@ -600,10 +600,10 @@ var _ = Describe("Service Discovery Controller process", func() {
 					Consistently(func() []byte {
 						url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 						resp, err := client.Get(url)
-						Expect(err).ToNot(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred())
 
 						respBody, err := io.ReadAll(resp.Body)
-						Expect(err).ToNot(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred())
 
 						return respBody
 					}, waitDuration).Should(MatchJSON(`{
@@ -636,10 +636,10 @@ var _ = Describe("Service Discovery Controller process", func() {
 					Eventually(func() []byte {
 						url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 						resp, err := client.Get(url)
-						Expect(err).ToNot(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred())
 
 						respBody, err := io.ReadAll(resp.Body)
-						Expect(err).ToNot(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred())
 
 						return respBody
 					}, waitDuration).Should(MatchJSON(`{
@@ -681,9 +681,9 @@ var _ = Describe("Service Discovery Controller process", func() {
 				client := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert)
 				url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 				_, err := client.Get(url)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
-				Expect(session).ToNot(gbytes.Say("HTTPServer access"))
+				Expect(session).NotTo(gbytes.Say("HTTPServer access"))
 			})
 
 			It("logs at debug level when configured", func() {
@@ -691,7 +691,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				client := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert)
 				url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 				_, err := client.Get(url)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(session).Should(gbytes.Say("HTTPServer access"))
 			})
@@ -703,9 +703,9 @@ var _ = Describe("Service Discovery Controller process", func() {
 				client := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert)
 				url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 				_, err := client.Get(url)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
-				Expect(session).ToNot(gbytes.Say("HTTPServer access"))
+				Expect(session).NotTo(gbytes.Say("HTTPServer access"))
 			})
 		})
 
@@ -746,12 +746,12 @@ var _ = Describe("Service Discovery Controller process", func() {
 				url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 				client := testhelpers.NewClient(testhelpers.CertPool(caFile), clientCert)
 				resp, err := client.Get(url)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
 
 				Eventually(func() int {
 					resp, err := client.Get(url)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					return resp.StatusCode
 				}).Should(Equal(http.StatusOK))
 			})
@@ -773,7 +773,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			startCmd := exec.Command(pathToServer, "-c", configPath)
 			var err error
 			session, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(session).Should(gexec.Exit(2))
 			Eventually(session, 5*time.Second).Should(gbytes.Say("service-discovery-controller.log-level-server.Listen and serve exited with error:"))
@@ -813,7 +813,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			startCmd := exec.Command(pathToServer, "-c", configPath)
 			var err error
 			session, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 5*time.Second).Should(gexec.Exit(2))
 			Expect(session).To(gbytes.Say("service-discovery-controller.*unable to create nats connection: nats: no servers available for connection"))
 		})
@@ -825,7 +825,7 @@ func requestLogChange(logLevel string, port int) *http.Response {
 	postBody := strings.NewReader(logLevel)
 	url := fmt.Sprintf("http://localhost:%d/log-level", port)
 	response, err := client.Post(url, "text/plain", postBody)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 	return response
 }
 
@@ -835,7 +835,7 @@ func register(routeEmitter *nats.Conn, ip string, url string) {
 		Data:    []byte(fmt.Sprintf(`{"host": "%s","uris":["%s"]}`, ip, url)),
 	}
 
-	Expect(routeEmitter.PublishMsg(&natsRegistryMsg)).ToNot(HaveOccurred())
+	Expect(routeEmitter.PublishMsg(&natsRegistryMsg)).NotTo(HaveOccurred())
 }
 
 func unregister(routeEmitter *nats.Conn, ip string, url string) {
@@ -844,7 +844,7 @@ func unregister(routeEmitter *nats.Conn, ip string, url string) {
 		Data:    []byte(fmt.Sprintf(`{"host": "%s","uris":["%s"]}`, ip, url)),
 	}
 
-	Expect(routeEmitter.PublishMsg(&natsRegistryMsg)).ToNot(HaveOccurred())
+	Expect(routeEmitter.PublishMsg(&natsRegistryMsg)).NotTo(HaveOccurred())
 }
 
 func newFakeRouteEmitter(natsUrl string, natsClientTlsConfig *tls.Config) *nats.Conn {
@@ -855,12 +855,12 @@ func newFakeRouteEmitter(natsUrl string, natsClientTlsConfig *tls.Config) *nats.
 
 func writeConfigFile(configJson string) string {
 	configFile, err := os.CreateTemp(os.TempDir(), "sd_config")
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 
 	configPath := configFile.Name()
 
 	err = os.WriteFile(configPath, []byte(configJson), os.ModePerm)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 
 	return configPath
 }

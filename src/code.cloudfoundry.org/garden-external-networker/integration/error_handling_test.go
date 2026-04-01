@@ -33,7 +33,7 @@ var _ = Describe("Garden External Networker errors", func() {
 		Expect(configFile.Close()).To(Succeed())
 
 		dir, err := os.MkdirTemp("", "fake-cni-dir")
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		stateFilePath, err := os.CreateTemp("", "external-networker-state.json")
 		Expect(err).NotTo(HaveOccurred())

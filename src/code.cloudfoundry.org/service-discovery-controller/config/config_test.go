@@ -51,7 +51,7 @@ var _ = Describe("Config", func() {
 	Context("when created from valid JSON", func() {
 		It("contains the values in the JSON", func() {
 			parsedConfig, err := NewConfig(configJSON)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(parsedConfig.Address).To(Equal("example.com"))
 			Expect(parsedConfig.Port).To(Equal("80053"))
@@ -77,13 +77,13 @@ var _ = Describe("Config", func() {
 		It("interprets the configuration correctly", func() {
 			var configBeingAltered Config
 			err := json.Unmarshal(configJSON, &configBeingAltered)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			_, serverCertPath, _, serverCert := testhelpers.GenerateCaAndMutualTlsCerts()
 			_, clientCertPath, clientKeyPath, clientCert := testhelpers.GenerateCaAndMutualTlsCerts()
 
 			parsedCert, err := x509.ParseCertificate(serverCert.Certificate[0])
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			expectedSubject := parsedCert.RawSubject
 
 			configBeingAltered.Nats = NatsConfig{
@@ -104,10 +104,10 @@ var _ = Describe("Config", func() {
 			}
 
 			configJSON, err = json.Marshal(configBeingAltered)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			parsedConfig, err := NewConfig(configJSON)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(parsedConfig.NatsServers()).To(ConsistOf([]string{
 				"nats://tls-nats-server-1:33",
@@ -116,7 +116,7 @@ var _ = Describe("Config", func() {
 
 			Expect(parsedConfig.Nats.TLSEnabled).To(Equal(true))
 
-			Expect(parsedConfig.Nats.CAPool).ToNot(BeNil())
+			Expect(parsedConfig.Nats.CAPool).NotTo(BeNil())
 			//lint:ignore SA1019 - ignoring tlsCert.RootCAs.Subjects is deprecated ERR because cert does not come from SystemCertPool.
 			poolSubjects := parsedConfig.Nats.CAPool.Subjects()
 			Expect(string(poolSubjects[0])).To(Equal(string(expectedSubject)))

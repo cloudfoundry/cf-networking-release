@@ -104,13 +104,13 @@ var _ = Describe("Main", func() {
 		)
 
 		tempConfigFile, err = os.CreateTemp(os.TempDir(), "sd")
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 		_, err = tempConfigFile.Write([]byte(configFileContents))
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		startCmd := exec.Command(pathToServer, "-c", tempConfigFile.Name())
 		session, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -227,7 +227,7 @@ var _ = Describe("Main", func() {
 			startCmd := exec.Command(pathToServer, "-c", tempConfigFile.Name())
 			var err error
 			session2, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -338,7 +338,7 @@ var _ = Describe("Main", func() {
 			startCmd := exec.Command(pathToServer, "-c", "/non-existent-path")
 			var err error
 			session2, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -370,7 +370,7 @@ var _ = Describe("Main", func() {
 			startCmd := exec.Command(pathToServer)
 			var err error
 			session2, err = gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -387,15 +387,15 @@ var _ = Describe("Main", func() {
 			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
 			url := fmt.Sprintf("http://127.0.0.1:%s?type=16&name=app-id.internal.local.", dnsAdapterPort)
 			request, err := http.NewRequest("GET", url, nil)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			resp, err := http.DefaultClient.Do(request)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 			all, err := io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(all)).To(MatchJSON(`{
 					"Status": 0,
@@ -560,12 +560,12 @@ var _ = Describe("Main", func() {
 		It("logs at info level by default", func() {
 			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.internal.local.", dnsAdapterPort)
 			request, err := http.NewRequest("GET", url, nil)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			resp, err := http.DefaultClient.Do(request)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
-			Expect(session).ToNot(gbytes.Say("bosh-dns-adapter.serve-request"))
+			Expect(session).NotTo(gbytes.Say("bosh-dns-adapter.serve-request"))
 		})
 
 		It("logs at debug level when configured", func() {
@@ -573,9 +573,9 @@ var _ = Describe("Main", func() {
 
 			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.internal.local.", dnsAdapterPort)
 			request, err := http.NewRequest("GET", url, nil)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			resp, err := http.DefaultClient.Do(request)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(resp.StatusCode).To(Equal(200))
 
 			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.serve-request"))
@@ -588,15 +588,15 @@ func requestLogChange(logLevel string, port int) *http.Response {
 	postBody := strings.NewReader(logLevel)
 	url := fmt.Sprintf("http://localhost:%d/log-level", port)
 	response, err := client.Post(url, "text/plain", postBody)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 	return response
 }
 
 func makeDNSRequest(url string, expectedResponseCode int) {
 	request, err := http.NewRequest("GET", url, nil)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 	resp, err := http.DefaultClient.Do(request)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(expectedResponseCode))
 }
 

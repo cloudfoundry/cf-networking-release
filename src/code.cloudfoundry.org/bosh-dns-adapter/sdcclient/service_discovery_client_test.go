@@ -126,7 +126,7 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 
 			It("returns the ips in the server response", func() {
 				actualIPs, err := client.IPs("app-id.apps.internal.")
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(actualIPs).To(ConsistOf("192.168.0.1", "192.168.0.2"))
 			})
@@ -168,14 +168,14 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 							}],
 							"service": ""
 						}`))
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
 			It("shuffles them to return them in random order", func() {
 				Eventually(func() []string {
 					ips, err := client.IPs("app-id.apps.internal.")
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					return ips
 				}).Should(Equal([]string{"192.168.0.3", "192.168.0.1", "192.168.0.2"}))
 			})
@@ -238,7 +238,7 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 			It("retries and returns the successful response", func() {
 				startTime := time.Now()
 				actualIPs, err := client.IPs("app-id.apps.internal.")
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(actualIPs).To(ConsistOf("192.168.0.1", "192.168.0.2"))
 

@@ -229,7 +229,7 @@ func findTwoInstancesOnTheSameHost(apps []AppInstance) (AppInstance, AppInstance
 		hostsToApps[app.hostIdentifier] = app
 	}
 
-	Expect(errors.New("failed to find two instances on the same host")).ToNot(HaveOccurred())
+	Expect(errors.New("failed to find two instances on the same host")).NotTo(HaveOccurred())
 	return AppInstance{}, AppInstance{}
 }
 
@@ -240,6 +240,6 @@ func findTwoInstancesOnDifferentHosts(apps []AppInstance) (AppInstance, AppInsta
 		}
 	}
 
-	Expect(errors.New("failed to find two instances on different hosts")).ToNot(HaveOccurred())
+	Expect(errors.New("failed to find two instances on different hosts")).NotTo(HaveOccurred())
 	return AppInstance{}, AppInstance{}
 }

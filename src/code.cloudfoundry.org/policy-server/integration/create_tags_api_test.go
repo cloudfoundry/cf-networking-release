@@ -70,7 +70,7 @@ var _ = Describe("Create Tags API", func() {
 		It("creates a new tag", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBody, err := io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(string(responseBody)).To(MatchJSON(`{"type":"router-type","id":"router-guid","tag":"0001"}`))
 		})
 
@@ -89,7 +89,7 @@ var _ = Describe("Create Tags API", func() {
 			It("returns the same tag", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseBody, err := io.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(string(responseBody)).To(MatchJSON(`{"type":"router-type","id":"router-guid","tag":"0001"}`))
 			})
 		})

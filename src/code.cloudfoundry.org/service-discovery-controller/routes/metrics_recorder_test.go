@@ -57,7 +57,7 @@ var _ = Describe("MetricsRecorder", func() {
 		It("should not race", func() {
 			Eventually(func() float64 {
 				count, err := metricsRecorder.Getter()
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				return count
 			}, "2s").Should(Equal(float64(2)))
 		})

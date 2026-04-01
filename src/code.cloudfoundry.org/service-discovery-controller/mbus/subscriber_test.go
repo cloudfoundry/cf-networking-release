@@ -48,12 +48,12 @@ var _ = Describe("Subscriber", func() {
 
 		startMsgChan = make(chan *nats.Msg, 1)
 		_, err := fakeRouteEmitter.ChanSubscribe("service-discovery.start", startMsgChan)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		greetMsgChan = make(chan *nats.Msg, 1)
 
 		_, err = fakeRouteEmitter.ChanSubscribe("service-discovery.greet.test.response", greetMsgChan)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		Expect(fakeRouteEmitter.Flush()).To(Succeed())
 
@@ -74,7 +74,7 @@ var _ = Describe("Subscriber", func() {
 		warmingDuration = time.Duration(60) * time.Second
 
 		subscriber = NewSubscriber(provider, subOpts, warmingDuration, addressTable, localIP, messageRecorder, subcriberLogger, fakeClock)
-		Expect(subscriber.RunOnce()).ToNot(HaveOccurred())
+		Expect(subscriber.RunOnce()).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -97,15 +97,15 @@ var _ = Describe("Subscriber", func() {
 
 		Eventually(startMsgChan, 4).Should(Receive(&msg))
 
-		Expect(msg).ToNot(BeNil())
+		Expect(msg).NotTo(BeNil())
 
 		err := json.Unmarshal(msg.Data, &serviceDiscoveryData)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		Expect(serviceDiscoveryData.Id).To(Equal(subOpts.ID))
 		Expect(serviceDiscoveryData.MinimumRegisterIntervalInSeconds).To(Equal(subOpts.MinimumRegisterIntervalInSeconds))
 		Expect(serviceDiscoveryData.PruneThresholdInSeconds).To(Equal(subOpts.PruneThresholdInSeconds))
-		Expect(serviceDiscoveryData.Host).ToNot(BeEmpty())
+		Expect(serviceDiscoveryData.Host).NotTo(BeEmpty())
 
 		Eventually(subcriberLogger).Should(glager.HaveLogged(
 			glager.Info(
@@ -120,15 +120,15 @@ var _ = Describe("Subscriber", func() {
 		var msg *nats.Msg
 		var serviceDiscoveryData ServiceDiscoveryStartMessage
 		Eventually(greetMsgChan, 10*time.Second).Should(Receive(&msg))
-		Expect(msg).ToNot(BeNil())
+		Expect(msg).NotTo(BeNil())
 
 		err := json.Unmarshal(msg.Data, &serviceDiscoveryData)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		Expect(serviceDiscoveryData.Id).To(Equal(subOpts.ID))
 		Expect(serviceDiscoveryData.MinimumRegisterIntervalInSeconds).To(Equal(subOpts.MinimumRegisterIntervalInSeconds))
 		Expect(serviceDiscoveryData.PruneThresholdInSeconds).To(Equal(subOpts.PruneThresholdInSeconds))
-		Expect(serviceDiscoveryData.Host).ToNot(BeEmpty())
+		Expect(serviceDiscoveryData.Host).NotTo(BeEmpty())
 
 		Eventually(subcriberLogger).Should(glager.HaveLogged(
 			glager.Info(
@@ -141,25 +141,25 @@ var _ = Describe("Subscriber", func() {
 			msgChan := make(chan *nats.Msg, 1)
 
 			_, err := fakeRouteEmitter.ChanSubscribe("service-discovery.greet-1.test.response", msgChan)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeRouteEmitter.Flush()).To(Succeed())
 
 			err = fakeRouteEmitter.PublishRequest("service-discovery.greet", "service-discovery.greet-1.test.response", []byte{})
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeRouteEmitter.Flush()).To(Succeed())
 
 			var msg *nats.Msg
 			var serviceDiscoveryData ServiceDiscoveryStartMessage
 			Eventually(msgChan, 4*time.Second).Should(Receive(&msg))
-			Expect(msg).ToNot(BeNil())
+			Expect(msg).NotTo(BeNil())
 
 			err = json.Unmarshal(msg.Data, &serviceDiscoveryData)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(serviceDiscoveryData.Id).To(Equal(subOpts.ID))
 			Expect(serviceDiscoveryData.MinimumRegisterIntervalInSeconds).To(Equal(subOpts.MinimumRegisterIntervalInSeconds))
 			Expect(serviceDiscoveryData.PruneThresholdInSeconds).To(Equal(subOpts.PruneThresholdInSeconds))
-			Expect(serviceDiscoveryData.Host).ToNot(BeEmpty())
+			Expect(serviceDiscoveryData.Host).NotTo(BeEmpty())
 		})
 	})
 
@@ -198,7 +198,7 @@ var _ = Describe("Subscriber", func() {
 		BeforeEach(func() {
 			msgChan = make(chan *nats.Msg, 1)
 			_, err := fakeRouteEmitter.ChanSubscribe("service-discovery.start", msgChan)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeRouteEmitter.Flush()).To(Succeed())
 
 			By("gnatsd server stops", func() {
@@ -221,15 +221,15 @@ var _ = Describe("Subscriber", func() {
 			var serviceDiscoveryData ServiceDiscoveryStartMessage
 			Eventually(msgChan, 30*time.Second).Should(Receive(&msg))
 
-			Expect(msg).ToNot(BeNil())
+			Expect(msg).NotTo(BeNil())
 
 			err := json.Unmarshal(msg.Data, &serviceDiscoveryData)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(serviceDiscoveryData.Id).To(Equal(subOpts.ID))
 			Expect(serviceDiscoveryData.MinimumRegisterIntervalInSeconds).To(Equal(subOpts.MinimumRegisterIntervalInSeconds))
 			Expect(serviceDiscoveryData.PruneThresholdInSeconds).To(Equal(subOpts.PruneThresholdInSeconds))
-			Expect(serviceDiscoveryData.Host).ToNot(BeEmpty())
+			Expect(serviceDiscoveryData.Host).NotTo(BeEmpty())
 			Expect(serviceDiscoveryData.Host).To(Equal("192.168.0.1"))
 		})
 		It("logs a message", func() {

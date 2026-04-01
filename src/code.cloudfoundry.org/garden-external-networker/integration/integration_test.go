@@ -192,7 +192,7 @@ var _ = Describe("Garden External Networker", func() {
 		cniPluginNames := []string{"plugin-0", "plugin-1", "plugin-2", "plugin-3"}
 		for _, name := range cniPluginNames {
 			err = link(paths.PathToFakeCNIPlugin, filepath.Join(cniPluginDir, name))
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		}
 
 		config = map[string]interface{}{
@@ -461,7 +461,7 @@ func runAndWait(cmd *exec.Cmd) *gexec.Session {
 
 func createNetworkNamespace() ns.NetNS {
 	networkNS, err := nstestutils.NewNS()
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 	return networkNS
 }
 

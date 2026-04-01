@@ -1299,5 +1299,5 @@ func migrate(realDb *db.ConnWrapper) {
 		},
 	}
 	_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 }

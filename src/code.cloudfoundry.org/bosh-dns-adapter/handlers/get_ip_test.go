@@ -160,7 +160,7 @@ var _ = Describe("GetIP", func() {
 	Context("when requesting anything but an A record", func() {
 		It("should return a successful response with no answers", func() {
 			request, err := http.NewRequest("GET", "?type=16&name=app-id.internal.local.", nil)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			getIP.ServeHTTP(resp, request)
 

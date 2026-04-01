@@ -61,7 +61,7 @@ var _ = Describe("Application Security Groups", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		respBytes, err := io.ReadAll(resp.Body)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 		resp.Body.Close()
 		Expect(respBytes).To(MatchRegexp("refused"))
 
@@ -77,7 +77,7 @@ var _ = Describe("Application Security Groups", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				respBytes, err = io.ReadAll(resp.Body)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				resp.Body.Close()
 				return string(respBytes)
 			}).Should(MatchRegexp("refused"))
@@ -91,7 +91,7 @@ var _ = Describe("Application Security Groups", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			respBytes, err = io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			resp.Body.Close()
 			return string(respBytes)
 		}).WithTimeout(180 * time.Second).Should(MatchRegexp("version"))
@@ -106,7 +106,7 @@ var _ = Describe("Application Security Groups", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			respBytes, err = io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			resp.Body.Close()
 			response := string(respBytes)
 			Expect(response).To(MatchRegexp("version"))
@@ -120,7 +120,7 @@ var _ = Describe("Application Security Groups", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			respBytes, err = io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			resp.Body.Close()
 			return string(respBytes)
 		}).WithTimeout(180 * time.Second).Should(MatchRegexp("refused"))

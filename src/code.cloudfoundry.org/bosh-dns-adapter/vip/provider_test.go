@@ -28,7 +28,7 @@ var _ = Describe("Provider", func() {
 	})
 
 	It("returns a parsable IP", func() {
-		Expect(net.ParseIP(provider.Get("a-hostname.apps.internal"))).ToNot(BeNil())
+		Expect(net.ParseIP(provider.Get("a-hostname.apps.internal"))).NotTo(BeNil())
 	})
 
 	Specify("the same hostname always returns the same VIP", func() {
