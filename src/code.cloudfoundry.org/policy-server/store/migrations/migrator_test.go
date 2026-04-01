@@ -2014,12 +2014,12 @@ var _ = Describe("migrations", func() {
 				var guids []string
 				for range 149 {
 					guid, err := uuid.NewV4()
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					guids = append(guids, guid.String())
 				}
 				array, err := json.Marshal(guids)
 				spacesJson = string(array)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 			})
 			It("no longer adds indices", func() {
 				By("performing migration")
@@ -2625,7 +2625,7 @@ type JoinRow struct {
 
 func ExpectAssociatedSpacesToConsistOf(realDb *db.ConnWrapper, table string, expectedRows []JoinRow) {
 	rows, err := realDb.Query(fmt.Sprintf("SELECT security_group_guid, space_guid FROM %s_security_groups_spaces", table))
-	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 	if len(expectedRows) == 0 {
 		ExpectWithOffset(1, scanCountRow(rows)).To(Equal(0))
 	} else {
@@ -2633,7 +2633,7 @@ func ExpectAssociatedSpacesToConsistOf(realDb *db.ConnWrapper, table string, exp
 		for rows.Next() {
 			var sg, space string
 			err := rows.Scan(&sg, &space)
-			ExpectWithOffset(1, err).ToNot(HaveOccurred())
+			ExpectWithOffset(1, err).NotTo(HaveOccurred())
 			receivedRows = append(receivedRows, JoinRow{
 				SecurityGroup: sg,
 				Space:         space,

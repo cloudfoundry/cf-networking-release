@@ -46,7 +46,7 @@ func TestPerformance(t *testing.T) {
 				"-v", fmt.Sprintf("nats_password=%s", config.NatsPassword),
 				"-v", fmt.Sprintf("nats_ip=%s", config.NatsURL))
 			session, err := gexec.Start(cmd, os.Stdout, os.Stderr)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(session, 20*time.Minute).Should(gexec.Exit(0))
 		})

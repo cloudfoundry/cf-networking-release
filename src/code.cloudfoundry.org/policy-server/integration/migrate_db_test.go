@@ -102,7 +102,7 @@ func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
 	if conn.DriverName() == "mysql" {
 		var version string
 		err := conn.QueryRow("SELECT VERSION()").Scan(&version)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 	}
 
 	var migrationCount int

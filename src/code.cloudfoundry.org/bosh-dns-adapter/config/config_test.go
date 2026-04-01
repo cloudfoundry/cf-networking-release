@@ -30,7 +30,7 @@ var _ = Describe("Config", func() {
 				"log_level_port": 9090
 			}`)
 			parsedConfig, err = NewConfig(configJSON)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("contains the values in the JSON", func() {

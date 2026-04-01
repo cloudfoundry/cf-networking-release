@@ -54,7 +54,7 @@ var _ = Describe("Authentication middleware", func() {
 			unprotectedCallCount += 1
 			By("passing the token data to the unprotected request")
 			data := r.Context().Value(handlers.TokenDataKey)
-			Expect(data).ToNot(BeNil())
+			Expect(data).NotTo(BeNil())
 			Expect(data).To(Equal(tokenResponse))
 
 			Expect(w).To(Equal(resp))

@@ -28,9 +28,9 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 	getNumRecords := func(table string) int {
 		var count int
-		ExpectWithOffset(1, realDb).ToNot(BeNil())
+		ExpectWithOffset(1, realDb).NotTo(BeNil())
 		err := realDb.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count)
-		ExpectWithOffset(1, err).ToNot(HaveOccurred())
+		ExpectWithOffset(1, err).NotTo(HaveOccurred())
 		return count
 	}
 
@@ -87,13 +87,13 @@ var _ = Describe("SecurityGroupsStore", func() {
 			}}
 
 			err := securityGroupsStore.Replace(securityGroups)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when no space guids are provided", func() {
 			It("returns empty list", func() {
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(0))
 			})
@@ -102,7 +102,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		Context("search by staging space guid", func() {
 			It("fetches asgs attached to provided spaces", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -119,7 +119,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		Context("search by running space guid", func() {
 			It("fetches attached to provided spaces", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-a"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -135,7 +135,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		Context("when one of the spaces of the security group wth multiple spaces is requested", func() {
 			It("returns that security group", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-e"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
 					Guid:              "third-guid",
@@ -151,7 +151,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		Context("when the space that has multiple groups is requested", func() {
 			It("returns all security groups in that space, ordered by id", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-d"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(2))
 				Expect(securityGroups).To(Equal([]store.SecurityGroup{
 					{
@@ -174,7 +174,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		Context("when multiple spaces are requested", func() {
 			It("returns all security groups in all requested spaces", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(2))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
 					Guid:              "third-guid",
@@ -196,7 +196,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		Context("when a page has a limit", func() {
 			It("returns the requested limit", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{Limit: 1, From: 3})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -209,7 +209,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				Expect(pagination).To(Equal(store.Pagination{Next: 4}))
 
 				securityGroups, pagination, err = securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{Limit: 1, From: 4})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
 					Guid:              "fourth-guid",
@@ -239,12 +239,12 @@ var _ = Describe("SecurityGroupsStore", func() {
 				}, {}}
 
 				err := securityGroupsStore.Replace(securityGroups)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns it even if it is not requested by space guid", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(2))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -266,7 +266,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 			It("returns it when no space guids are provided", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -297,12 +297,12 @@ var _ = Describe("SecurityGroupsStore", func() {
 				}, {}}
 
 				err := securityGroupsStore.Replace(securityGroups)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns it even if it is not requested by space guid", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(2))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -323,7 +323,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 			It("returns it when no space guids are requested", func() {
 				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -377,7 +377,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 			emptyRules = []store.SecurityGroup{}
 
 			err := securityGroupsStore.Replace(initialRules)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("updates last updated field", func() {
@@ -396,20 +396,20 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 		It("replaces the spaceSecurityGroupsStore data with the newly provided data", func() {
 			err := securityGroupsStore.Replace(newRules)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(securityGroups).To(ConsistOf(newRules))
 		})
 
 		It("works if data is the same", func() {
 			err := securityGroupsStore.Replace(initialRules)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(securityGroups).To(ConsistOf(initialRules))
 		})
@@ -419,10 +419,10 @@ var _ = Describe("SecurityGroupsStore", func() {
 			})
 			It("deletes the record", func() {
 				err := securityGroupsStore.Replace(newRules)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(securityGroups).To(ConsistOf(newRules))
 			})
@@ -453,10 +453,10 @@ var _ = Describe("SecurityGroupsStore", func() {
 			})
 			It("only updates the two changing", func() {
 				err := securityGroupsStore.Replace(newRules)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(securityGroups).To(ConsistOf(newRules))
 
 				Eventually(testLogger).Should(gbytes.Say(`"num_records":2`))
@@ -489,7 +489,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 				It("removes the association for that space from that ASG", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					results := map[string][]string{}
 					query := helpers.RebindForSQLDialect("SELECT security_group_guid, space_guid FROM running_security_groups_spaces WHERE security_group_guid = ? ORDER BY space_guid", securityGroupsStore.Conn.DriverName())
@@ -513,7 +513,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 				It("removes the association for that space from that ASG", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					results := map[string][]string{}
 					query := helpers.RebindForSQLDialect("SELECT security_group_guid, space_guid FROM staging_security_groups_spaces WHERE security_group_guid = ? ORDER BY space_guid", securityGroupsStore.Conn.DriverName())
@@ -537,7 +537,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 				It("removes all associations for that ASG", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					var associations int
 					query := helpers.RebindForSQLDialect("SELECT COUNT(*) FROM staging_security_groups_spaces WHERE security_group_guid = ?", securityGroupsStore.Conn.DriverName())
@@ -547,7 +547,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 					err = securityGroupsStore.Conn.QueryRow("SELECT COUNT(*) FROM staging_security_groups_spaces").Scan(&associations)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(associations).ToNot(Equal(0))
+					Expect(associations).NotTo(Equal(0))
 				})
 			})
 
@@ -558,7 +558,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 				It("removes all associations from that ASG", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					var associations int
 					query := helpers.RebindForSQLDialect("SELECT COUNT(*) FROM running_security_groups_spaces WHERE security_group_guid = ?", securityGroupsStore.Conn.DriverName())
@@ -568,7 +568,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 					err = securityGroupsStore.Conn.QueryRow("SELECT COUNT(*) FROM running_security_groups_spaces").Scan(&associations)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(associations).ToNot(Equal(0))
+					Expect(associations).NotTo(Equal(0))
 				})
 			})
 			Context("when no more running asgs are directly bound", func() {
@@ -578,7 +578,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 				It("removes all space associations from from all ASGs", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					var associations int
 					err = securityGroupsStore.Conn.QueryRow("SELECT COUNT(*) FROM running_security_groups_spaces").Scan(&associations)
@@ -593,7 +593,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 				It("removes all space associations from from all ASGs", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					var associations int
 					err = securityGroupsStore.Conn.QueryRow("SELECT COUNT(*) FROM staging_security_groups_spaces").Scan(&associations)
@@ -604,9 +604,9 @@ var _ = Describe("SecurityGroupsStore", func() {
 			Context("when the only updated ASGs are ones that don't have space bindings", func() {
 				BeforeEach(func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 					Expect(securityGroups).To(ConsistOf(newRules))
 
 					newRules = append(newRules, store.SecurityGroup{
@@ -621,7 +621,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 
 					Expect(securityGroups).To(ConsistOf(newRules))
 
@@ -630,15 +630,15 @@ var _ = Describe("SecurityGroupsStore", func() {
 		})
 		Context("when no more asgs exist", func() {
 			It("removes all ASGs", func() {
-				Expect(getNumRecords("security_groups")).ToNot(Equal(0))
-				Expect(getNumRecords("staging_security_groups_spaces")).ToNot(Equal(0))
-				Expect(getNumRecords("running_security_groups_spaces")).ToNot(Equal(0))
+				Expect(getNumRecords("security_groups")).NotTo(Equal(0))
+				Expect(getNumRecords("staging_security_groups_spaces")).NotTo(Equal(0))
+				Expect(getNumRecords("running_security_groups_spaces")).NotTo(Equal(0))
 
 				err := securityGroupsStore.Replace(emptyRules)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(securityGroups).To(ConsistOf(emptyRules))
 				time.Sleep(1 * time.Second)
@@ -658,10 +658,10 @@ var _ = Describe("SecurityGroupsStore", func() {
 			})
 			It("creates new data", func() {
 				err := securityGroupsStore.Replace(newRules)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(securityGroups).To(ConsistOf(newRules))
 

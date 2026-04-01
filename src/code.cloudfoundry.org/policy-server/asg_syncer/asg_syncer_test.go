@@ -346,7 +346,7 @@ var _ = Describe("ASGSyncer", func() {
 					})
 					It("doesn't return an error", func() {
 						err := asgSyncer.Poll()
-						Expect(err).ToNot(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred())
 					})
 					It("doesn't update the database", func() {
 						asgSyncer.Poll()

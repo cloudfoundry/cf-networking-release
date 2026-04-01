@@ -192,7 +192,7 @@ func migrateAndPopulateTags(dbConf db.Config) {
 		},
 	}
 	_, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 
 	tagPopulator := &store.TagPopulator{DBConnection: realDb}
 	err = tagPopulator.PopulateTables(1)

@@ -35,7 +35,7 @@ var _ = Describe("space developer policy configuration", func() {
 	BeforeEach(func() {
 		var err error
 		uaaAPI, err = uaa.New(getUAABaseURL(), uaa.WithClientCredentials("admin", testConfig.AdminSecret, uaa.OpaqueToken), uaa.WithSkipSSLValidation(true))
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		policyClient = policy_client.NewExternal(lagertest.NewTestLogger("test"),
 			&http.Client{

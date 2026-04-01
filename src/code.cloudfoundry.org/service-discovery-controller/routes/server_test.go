@@ -130,7 +130,7 @@ var _ = Describe("Server", func() {
 			}).Should(BeNil())
 
 			respBodyBytes, err := io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			respBody = string(respBodyBytes)
 		})
 
@@ -164,7 +164,7 @@ var _ = Describe("Server", func() {
 			Expect(metricsSender.SendDurationCallCount()).To(BeNumerically(">=", 1))
 			name, time := metricsSender.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("addressTableLookupTime"))
-			Expect(time.String()).ToNot(Equal("0s"))
+			Expect(time.String()).NotTo(Equal("0s"))
 		})
 	})
 
@@ -187,7 +187,7 @@ var _ = Describe("Server", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
 
 			respBodyBytes, err := io.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			respBody := string(respBodyBytes)
 			Expect(respBody).To(ContainSubstring("address table is not warm"))
 		})
