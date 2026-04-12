@@ -14,11 +14,11 @@ require (
 	code.cloudfoundry.org/clock v1.65.0
 	code.cloudfoundry.org/debugserver v0.91.0
 	code.cloudfoundry.org/diego-logging-client v0.100.0
-	code.cloudfoundry.org/filelock v0.61.0
-	code.cloudfoundry.org/garden v0.0.0-20260408024713-8ea40dc96c05
+	code.cloudfoundry.org/filelock v0.62.0
+	code.cloudfoundry.org/garden v0.0.0-20260409204432-46ce0a86f9bc
 	code.cloudfoundry.org/lager/v3 v3.65.0
 	code.cloudfoundry.org/locket v0.0.0-20251117222557-be612341b29d
-	code.cloudfoundry.org/policy_client v0.96.0
+	code.cloudfoundry.org/policy_client v0.97.0
 	code.cloudfoundry.org/tlsconfig v0.50.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -46,7 +46,7 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.52.0
+	golang.org/x/net v0.53.0
 	golang.org/x/sys v0.43.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -93,13 +93,13 @@ require (
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.step.sm/crypto v0.77.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
 	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260406210006-6f92a3bedf2d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d // indirect
 	google.golang.org/grpc v1.80.0 // indirect
