@@ -100,7 +100,7 @@ type StreamStore interface {
 	LoadNextMsg(filter string, wc bool, start uint64, smp *StoreMsg) (sm *StoreMsg, skip uint64, err error)
 	LoadNextMsgMulti(sl *gsl.SimpleSublist, start uint64, smp *StoreMsg) (sm *StoreMsg, skip uint64, err error)
 	LoadLastMsg(subject string, sm *StoreMsg) (*StoreMsg, error)
-	LoadPrevMsg(start uint64, smp *StoreMsg) (sm *StoreMsg, err error)
+	LoadPrevMsg(filter string, wc bool, start uint64, smp *StoreMsg) (sm *StoreMsg, skip uint64, err error)
 	LoadPrevMsgMulti(sl *gsl.SimpleSublist, start uint64, smp *StoreMsg) (sm *StoreMsg, skip uint64, err error)
 	RemoveMsg(seq uint64) (bool, error)
 	EraseMsg(seq uint64) (bool, error)
@@ -741,7 +741,7 @@ func isOutOfSpaceErr(err error) bool {
 var errFirstSequenceMismatch = errors.New("first sequence mismatch")
 
 func isClusterResetErr(err error) bool {
-	return err == errLastSeqMismatch || err == ErrStoreEOF || err == errFirstSequenceMismatch || errors.Is(err, errCatchupAbortedNoLeader) || err == errCatchupTooManyRetries
+	return err == errLastSeqMismatch || err == ErrStoreEOF || err == errFirstSequenceMismatch || errors.Is(err, errCatchupAbortedNoLeader) || err == errCatchupTooManyRetries || err == errAlreadyLeader
 }
 
 // Copy all fields.
