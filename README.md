@@ -14,8 +14,8 @@ for [CF Deployment](https://github.com/cloudfoundry/cf-deployment).
 -   [What is CF Networking](./docs/02-what-is-cf-networking.md)
 -   [Troubleshooting](./docs/03-troubleshooting.md)
 -   [Dynamic ASGs](./docs/04-a-dynamic-asgs.md)
--   [Dynamic ASG ICMP Any
-    Bug](./docs/04-b-dynamic-asgs-ki-icmp-any-rules.md)
+-   [VXLAN Policy Agent Enforcement
+    Cycle](./docs/04-c-vxlan-policy-agent-enforcement-cycle.md)
 -   [Service Discovery](./docs/05-service-discovery.md)
 -   [Container-To-Container Networking](./docs/06-c2c.md)
 -   [Network Policy
@@ -25,6 +25,11 @@ for [CF Deployment](https://github.com/cloudfoundry/cf-deployment).
 -   [Example Apps Overview](./docs/10-example-apps.md)
 -   [3rd Party Plugin Development for Container
     Networking](./docs/11-3rd-party.md)
+-   [Know Issue - Policy Server Mysql DB Failures when an ASG is Bound
+    to More than 148
+    Spaces](./docs/12-known-issue-asgs-with-too-many-bound-spaces.md)
+-   [Known Issue - Policy Server ASG Syncer in Crash
+    Loop](./docs/13-known-issue-policy-server-asg-syncer-crash-loop.md)
 
 # Contributing
 
