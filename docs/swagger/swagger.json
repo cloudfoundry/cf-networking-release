@@ -1,0 +1,353 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API for managing network policies and tags in Cloud Foundry",
+        "title": "CF Networking API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "api.bosh-lite.com",
+    "basePath": "/networking/v1/external",
+    "paths": {
+        "/policies": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.write"
+                        ]
+                    }
+                ],
+                "description": "Retrieves network policies. Can optionally filter policies by source ID, destination ID, or specific policy group IDs.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "List policies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated policy group ID values",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated source policy group ID values",
+                        "name": "source_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated destination policy group ID values",
+                        "name": "dest_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved policies",
+                        "schema": {
+                            "$ref": "#/definitions/api.PoliciesPayload"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.write"
+                        ]
+                    }
+                ],
+                "description": "Creates network policies to allow traffic between applications. Policies define which source applications can reach which destination applications on specified protocols and ports.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Create policies",
+                "parameters": [
+                    {
+                        "description": "Policies to create",
+                        "name": "policies",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.PoliciesPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Policies created successfully",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient permissions or policy quota exceeded",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/policies/delete": {
+            "post": {
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.write"
+                        ]
+                    }
+                ],
+                "description": "Deletes existing network policies. This removes the network connectivity rules between the specified source and destination applications.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "policies"
+                ],
+                "summary": "Delete policies",
+                "parameters": [
+                    {
+                        "description": "Policies to delete",
+                        "name": "policies",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.PoliciesPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Policies deleted successfully",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    },
+                    "406": {
+                        "description": "Unsupported API version",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags": {
+            "get": {
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.admin"
+                        ]
+                    }
+                ],
+                "description": "Retrieves all tag and ID mappings. Tags are unique identifiers assigned to policy groups for network policy enforcement.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "List tags",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved tags",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "tags": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/api.Tag"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/httperror.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.Destination": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "ips": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.IPRange"
+                    }
+                },
+                "ports": {
+                    "$ref": "#/definitions/api.Ports"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.IPRange": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.PoliciesPayload": {
+            "type": "object",
+            "properties": {
+                "policies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Policy"
+                    }
+                },
+                "total_policies": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.Policy": {
+            "type": "object",
+            "properties": {
+                "destination": {
+                    "$ref": "#/definitions/api.Destination"
+                },
+                "source": {
+                    "$ref": "#/definitions/api.Source"
+                }
+            }
+        },
+        "api.Ports": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "integer"
+                },
+                "start": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.Source": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.Tag": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "httperror.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "metricsSender": {}
+            }
+        }
+    },
+    "securityDefinitions": {
+        "OAuth2Application": {
+            "type": "oauth2",
+            "flow": "application",
+            "tokenUrl": "https://uaa.bosh-lite.com/oauth/token",
+            "scopes": {
+                "network.admin": "Grants read and write access to network policies",
+                "network.write": "Grants write access to network policies"
+            }
+        }
+    }
+}

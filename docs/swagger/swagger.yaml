@@ -1,0 +1,230 @@
+basePath: /networking/v1/external
+definitions:
+  api.Destination:
+    properties:
+      id:
+        type: string
+      ips:
+        items:
+          $ref: '#/definitions/api.IPRange'
+        type: array
+      ports:
+        $ref: '#/definitions/api.Ports'
+      protocol:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
+    type: object
+  api.IPRange:
+    properties:
+      end:
+        type: string
+      start:
+        type: string
+    type: object
+  api.PoliciesPayload:
+    properties:
+      policies:
+        items:
+          $ref: '#/definitions/api.Policy'
+        type: array
+      total_policies:
+        type: integer
+    type: object
+  api.Policy:
+    properties:
+      destination:
+        $ref: '#/definitions/api.Destination'
+      source:
+        $ref: '#/definitions/api.Source'
+    type: object
+  api.Ports:
+    properties:
+      end:
+        type: integer
+      start:
+        type: integer
+    type: object
+  api.Source:
+    properties:
+      id:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
+    type: object
+  api.Tag:
+    properties:
+      id:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
+    type: object
+  httperror.ErrorResponse:
+    properties:
+      metricsSender: {}
+    type: object
+host: api.bosh-lite.com
+info:
+  contact: {}
+  description: API for managing network policies and tags in Cloud Foundry
+  title: CF Networking API
+  version: "1.0"
+paths:
+  /policies:
+    get:
+      description: Retrieves network policies. Can optionally filter policies by source
+        ID, destination ID, or specific policy group IDs.
+      parameters:
+      - description: Comma-separated policy group ID values
+        in: query
+        name: id
+        type: string
+      - description: Comma-separated source policy group ID values
+        in: query
+        name: source_id
+        type: string
+      - description: Comma-separated destination policy group ID values
+        in: query
+        name: dest_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved policies
+          schema:
+            $ref: '#/definitions/api.PoliciesPayload'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+      security:
+      - OAuth2Application:
+        - network.write
+      summary: List policies
+      tags:
+      - policies
+    post:
+      consumes:
+      - application/json
+      description: Creates network policies to allow traffic between applications.
+        Policies define which source applications can reach which destination applications
+        on specified protocols and ports.
+      parameters:
+      - description: Policies to create
+        in: body
+        name: policies
+        required: true
+        schema:
+          $ref: '#/definitions/api.PoliciesPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Policies created successfully
+          schema:
+            type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions or policy quota exceeded
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+      security:
+      - OAuth2Application:
+        - network.write
+      summary: Create policies
+      tags:
+      - policies
+  /policies/delete:
+    post:
+      consumes:
+      - application/json
+      description: Deletes existing network policies. This removes the network connectivity
+        rules between the specified source and destination applications.
+      parameters:
+      - description: Policies to delete
+        in: body
+        name: policies
+        required: true
+        schema:
+          $ref: '#/definitions/api.PoliciesPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Policies deleted successfully
+          schema:
+            type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+        "406":
+          description: Unsupported API version
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+      security:
+      - OAuth2Application:
+        - network.write
+      summary: Delete policies
+      tags:
+      - policies
+  /tags:
+    get:
+      description: Retrieves all tag and ID mappings. Tags are unique identifiers
+        assigned to policy groups for network policy enforcement.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved tags
+          schema:
+            properties:
+              tags:
+                items:
+                  $ref: '#/definitions/api.Tag'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/httperror.ErrorResponse'
+      security:
+      - OAuth2Application:
+        - network.admin
+      summary: List tags
+      tags:
+      - tags
+schemes:
+- http
+- https
+securityDefinitions:
+  OAuth2Application:
+    flow: application
+    scopes:
+      network.admin: Grants read and write access to network policies
+      network.write: Grants write access to network policies
+    tokenUrl: https://uaa.bosh-lite.com/oauth/token
+    type: oauth2
+swagger: "2.0"

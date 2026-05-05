@@ -49,6 +49,18 @@ func NewPoliciesCreate(store policyStore, mapper api.PolicyMapper,
 	}
 }
 
+// @Summary Create policies
+// @Description Creates network policies to allow traffic between applications. Policies define which source applications can reach which destination applications on specified protocols and ports.
+// @Tags policies
+// @Accept json
+// @Produce json
+// @Param policies body api.PoliciesPayload true "Policies to create"
+// @Success 200 {object} object{} "Policies created successfully"
+// @Failure 400 {object} httperror.ErrorResponse "Invalid request body or validation failed"
+// @Failure 403 {object} httperror.ErrorResponse "Forbidden - insufficient permissions or policy quota exceeded"
+// @Failure 500 {object} httperror.ErrorResponse "Internal server error"
+// @Router /policies [post]
+// @Security OAuth2Application[network.write]
 func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("create-policies")

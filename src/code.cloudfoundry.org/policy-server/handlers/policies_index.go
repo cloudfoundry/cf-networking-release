@@ -34,6 +34,17 @@ func NewPoliciesIndex(store store.Store,
 	}
 }
 
+// @Summary List policies
+// @Description Retrieves network policies. Can optionally filter policies by source ID, destination ID, or specific policy group IDs.
+// @Tags policies
+// @Produce json
+// @Param id query string false "Comma-separated policy group ID values"
+// @Param source_id query string false "Comma-separated source policy group ID values"
+// @Param dest_id query string false "Comma-separated destination policy group ID values"
+// @Success 200 {object} api.PoliciesPayload "Successfully retrieved policies"
+// @Failure 500 {object} httperror.ErrorResponse "Internal server error"
+// @Router /policies [get]
+// @Security OAuth2Application[network.write]
 func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("index-policies")
