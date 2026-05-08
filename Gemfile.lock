@@ -8,7 +8,7 @@ GEM
       semi_semantic (~> 1.2.0)
     diff-lcs (1.6.2)
     jaro_winkler (1.7.0)
-    json (2.19.3)
+    json (2.19.5)
     kramdown (2.5.2)
       rexml (>= 3.4.4)
     kramdown-parser-gfm (1.1.0)
@@ -17,7 +17,7 @@ GEM
     lint_roller (1.1.0)
     logger (1.7.0)
     mini_portile2 (2.8.9)
-    nokogiri (1.19.2)
+    nokogiri (1.19.3)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
     observer (0.1.2)
@@ -50,11 +50,11 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.7)
-    rubocop (1.86.0)
+    rubocop (1.86.1)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
-      parallel (~> 1.10)
+      parallel (>= 1.10)
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.9.3, < 3.0)
@@ -95,7 +95,7 @@ GEM
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.2.0)
-    yard (0.9.38)
+    yard (0.9.43)
     yard-activesupport-concern (0.0.1)
       yard (>= 0.8)
     yard-solargraph (0.1.0)
@@ -111,4 +111,4 @@ DEPENDENCIES
   solargraph
 
 BUNDLED WITH
-   2.6.3
+  4.0.10
