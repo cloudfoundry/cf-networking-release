@@ -18,6 +18,9 @@ CONTAINER_NAME="$REPO_NAME-$DB-docker-container"
 if [[ "${DB}" == "mysql" ]] || [[ "${DB}" == "mysql-8.0" ]]; then
   IMAGE="cloudfoundry/tas-runtime-mysql-8.0"
   DB="mysql"
+elif [[ "${DB}" == "mysql-8.4" ]]; then
+  IMAGE="cloudfoundry/tas-runtime-mysql-8.4"
+  DB="mysql"
 elif [[ "${DB}" == "mysql-5.7" ]]; then
   IMAGE="cloudfoundry/tas-runtime-mysql-5.7"
   DB="mysql"
