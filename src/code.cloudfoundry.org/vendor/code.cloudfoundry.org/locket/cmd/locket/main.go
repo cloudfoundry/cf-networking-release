@@ -97,6 +97,13 @@ func main() {
 		logger.Fatal("failed-to-create-lock-table", err)
 	}
 
+	if cfg.EnableDBHealthCheck {
+		err = sqlDB.CreateHealthCheckTable(context.Background(), logger)
+		if err != nil {
+			logger.Fatal("failed-to-create-health-check-table", err)
+		}
+	}
+
 	tlsConfig, err := tlsconfig.Build(
 		tlsconfig.WithInternalServiceDefaults(),
 		tlsconfig.WithIdentityFromFile(cfg.CertFile, cfg.KeyFile),
@@ -114,12 +121,30 @@ func main() {
 	handler := handlers.NewLocketHandler(logger, sqlDB, lockPick, requestNotifier, exitCh)
 	server := grpcserver.NewGRPCServer(logger, cfg.ListenAddress, tlsConfig, handler)
 
+	var dbHealthCheckRunner ifrit.Runner
+	if cfg.EnableDBHealthCheck {
+		dbHealthCheckRunner = NewDBHealthCheckRunner(
+			logger,
+			sqlDB,
+			clock,
+			cfg.HealthCheckFailureThreshold,
+			time.Duration(cfg.HealthCheckTimeout),
+			time.Duration(cfg.HealthCheckInterval),
+		)
+	}
+
 	members := grouper.Members{
 		{Name: "server", Runner: server},
 		{Name: "burglar", Runner: burglar},
 		{Name: "lock-metrics-notifier", Runner: lockMetricsNotifier},
 		{Name: "db-metrics-notifier", Runner: dbMetricsNotifier},
 		{Name: "request-metrics-notifier", Runner: requestNotifier},
+	}
+
+	if cfg.EnableDBHealthCheck {
+		members = append(grouper.Members{
+			{Name: "db-health-check", Runner: dbHealthCheckRunner},
+		}, members...)
 	}
 
 	if cfg.DebugAddress != "" {

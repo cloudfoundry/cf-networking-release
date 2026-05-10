@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
+	"fmt"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers"
 	"code.cloudfoundry.org/lager/v3"
 )
 
@@ -20,6 +22,31 @@ func (db *SQLDB) CreateLockTable(ctx context.Context, logger lager.Logger) error
 	`)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (db *SQLDB) CreateHealthCheckTable(ctx context.Context, logger lager.Logger) error {
+	logger = logger.Session("create-health-check-table")
+	logger.Info("starting")
+	defer logger.Info("completed")
+
+	var createTableSQL string
+	switch db.flavor {
+	case helpers.MySQL:
+		createTableSQL = "CREATE TABLE IF NOT EXISTS locket_health_check (id int NOT NULL AUTO_INCREMENT, PRIMARY KEY (id), time bigint NOT NULL)"
+	case helpers.Postgres:
+		createTableSQL = "CREATE TABLE IF NOT EXISTS locket_health_check (id SERIAL PRIMARY KEY, time bigint NOT NULL)"
+	default:
+		return fmt.Errorf("unsupported database flavor: %s", db.flavor)
+	}
+
+	logger.Info("creating-table")
+	_, err := db.ExecContext(ctx, helpers.RebindForFlavor(createTableSQL, db.flavor))
+	if err != nil {
+		logger.Error("failed-creating-table", err)
+		return fmt.Errorf("failed to create health check table: %w", err)
 	}
 
 	return nil
