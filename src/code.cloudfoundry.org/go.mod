@@ -1,6 +1,6 @@
 module code.cloudfoundry.org
 
-go 1.25.0
+go 1.25.1
 
 replace (
 	example-apps/spammer => ../example-apps/spammer
@@ -10,16 +10,16 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20260507155651-045cbe358842
-	code.cloudfoundry.org/cf-networking-helpers v0.84.0
-	code.cloudfoundry.org/clock v1.69.0
-	code.cloudfoundry.org/debugserver v0.95.0
-	code.cloudfoundry.org/diego-logging-client v0.104.0
-	code.cloudfoundry.org/filelock v0.65.0
-	code.cloudfoundry.org/garden v0.0.0-20260506025108-a2d6ae9c8f5b
-	code.cloudfoundry.org/lager/v3 v3.68.0
+	code.cloudfoundry.org/cf-networking-helpers v0.86.0
+	code.cloudfoundry.org/clock v1.70.0
+	code.cloudfoundry.org/debugserver v0.96.0
+	code.cloudfoundry.org/diego-logging-client v0.105.0
+	code.cloudfoundry.org/filelock v0.66.0
+	code.cloudfoundry.org/garden v0.0.0-20260513025144-9934e0066727
+	code.cloudfoundry.org/lager/v3 v3.69.0
 	code.cloudfoundry.org/locket v0.0.0-20260507165111-20f6e690be22
-	code.cloudfoundry.org/policy_client v0.101.0
-	code.cloudfoundry.org/tlsconfig v0.53.0
+	code.cloudfoundry.org/policy_client v0.102.0
+	code.cloudfoundry.org/tlsconfig v0.54.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.3.6
@@ -53,7 +53,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/durationjson v0.71.0 // indirect
+	code.cloudfoundry.org/durationjson v0.72.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260504113438-abdf05667e78 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
-	go.step.sm/crypto v0.78.0 // indirect
+	go.step.sm/crypto v0.81.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
@@ -100,9 +100,9 @@ require (
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260504160031-60b97b32f348 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260504160031-60b97b32f348 // indirect
-	google.golang.org/grpc v1.81.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60 // indirect
+	google.golang.org/grpc v1.81.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
