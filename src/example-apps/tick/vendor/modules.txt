@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.86.0
+# code.cloudfoundry.org/cf-networking-helpers v0.87.0
 ## explicit; go 1.25.1
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.72.0
+# code.cloudfoundry.org/localip v0.73.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/localip
 # github.com/Masterminds/semver/v3 v3.5.0
