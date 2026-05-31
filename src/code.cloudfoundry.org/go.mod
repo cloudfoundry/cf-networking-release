@@ -10,19 +10,19 @@ replace (
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20260507155651-045cbe358842
-	code.cloudfoundry.org/cf-networking-helpers v0.86.0
-	code.cloudfoundry.org/clock v1.71.0
-	code.cloudfoundry.org/debugserver v0.97.0
-	code.cloudfoundry.org/diego-logging-client v0.106.0
+	code.cloudfoundry.org/cf-networking-helpers v0.87.0
+	code.cloudfoundry.org/clock v1.72.0
+	code.cloudfoundry.org/debugserver v0.98.0
+	code.cloudfoundry.org/diego-logging-client v0.108.0
 	code.cloudfoundry.org/filelock v0.66.0
-	code.cloudfoundry.org/garden v0.0.0-20260520025236-3c8c94cab4c6
-	code.cloudfoundry.org/lager/v3 v3.70.0
+	code.cloudfoundry.org/garden v0.0.0-20260527025323-7fe1cefbd6e8
+	code.cloudfoundry.org/lager/v3 v3.71.0
 	code.cloudfoundry.org/locket v0.0.0-20260507165111-20f6e690be22
-	code.cloudfoundry.org/policy_client v0.102.0
-	code.cloudfoundry.org/tlsconfig v0.55.0
+	code.cloudfoundry.org/policy_client v0.103.0
+	code.cloudfoundry.org/tlsconfig v0.56.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
-	github.com/cloudfoundry-community/go-uaa v0.3.6
+	github.com/cloudfoundry-community/go-uaa v0.4.0
 	github.com/cloudfoundry/cf-acceptance-tests v1.9.1-0.20250312160631-048ab2ea8caa
 	github.com/cloudfoundry/cf-test-helpers/v2 v2.13.0
 	github.com/cloudfoundry/dropsonde v1.1.0
@@ -53,8 +53,8 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/durationjson v0.73.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20260518082450-53acbbed6d0f // indirect
+	code.cloudfoundry.org/durationjson v0.74.0 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260526122959-0284fcb5ac88 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/antithesishq/antithesis-sdk-go v0.7.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
-	github.com/cloudfoundry/sonde-go v0.0.0-20251217143644-d1670a435f2a // indirect
+	github.com/cloudfoundry/sonde-go v0.0.0-20260526083715-66f310f13c26 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
-	go.step.sm/crypto v0.81.0 // indirect
+	go.step.sm/crypto v0.81.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
@@ -100,8 +100,8 @@ require (
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260523011958-0a33c5d7ca68 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260523011958-0a33c5d7ca68 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/grpc v1.81.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
