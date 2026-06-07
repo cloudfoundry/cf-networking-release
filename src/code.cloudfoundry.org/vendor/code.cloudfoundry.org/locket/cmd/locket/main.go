@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"time"
 
@@ -118,7 +117,13 @@ func main() {
 	lockPick := expiration.NewLockPick(sqlDB, clock, metronClient)
 	burglar := expiration.NewBurglar(logger, sqlDB, lockPick, clock, locket.RetryInterval, metronClient)
 	exitCh := make(chan struct{})
-	handler := handlers.NewLocketHandler(logger, sqlDB, lockPick, requestNotifier, exitCh)
+
+	dbOperationTimeout := handlers.DefaultDBOperationTimeout
+	if cfg.DBOperationTimeout > 0 {
+		dbOperationTimeout = time.Duration(cfg.DBOperationTimeout)
+	}
+
+	handler := handlers.NewLocketHandler(logger, sqlDB, lockPick, requestNotifier, exitCh, dbOperationTimeout)
 	server := grpcserver.NewGRPCServer(logger, cfg.ListenAddress, tlsConfig, handler)
 
 	var dbHealthCheckRunner ifrit.Runner
@@ -172,7 +177,6 @@ func main() {
 }
 
 func initializeMetron(logger lager.Logger, locketConfig config.LocketConfig) (loggingclient.IngressClient, error) {
-	fmt.Println("** Get metron client")
 	client, err := loggingclient.NewIngressClient(locketConfig.LoggregatorConfig)
 	if err != nil {
 		return nil, err

@@ -1,6 +1,6 @@
 module code.cloudfoundry.org
 
-go 1.25.1
+go 1.25.8
 
 replace (
 	example-apps/spammer => ../example-apps/spammer
@@ -9,17 +9,17 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20260507155651-045cbe358842
-	code.cloudfoundry.org/cf-networking-helpers v0.87.0
-	code.cloudfoundry.org/clock v1.72.0
-	code.cloudfoundry.org/debugserver v0.98.0
-	code.cloudfoundry.org/diego-logging-client v0.108.0
-	code.cloudfoundry.org/filelock v0.66.0
-	code.cloudfoundry.org/garden v0.0.0-20260527025323-7fe1cefbd6e8
-	code.cloudfoundry.org/lager/v3 v3.71.0
-	code.cloudfoundry.org/locket v0.0.0-20260507165111-20f6e690be22
-	code.cloudfoundry.org/policy_client v0.103.0
-	code.cloudfoundry.org/tlsconfig v0.56.0
+	code.cloudfoundry.org/bbs v0.0.0-20260601194358-002fe939f0da
+	code.cloudfoundry.org/cf-networking-helpers v0.88.0
+	code.cloudfoundry.org/clock v1.73.0
+	code.cloudfoundry.org/debugserver v0.100.0
+	code.cloudfoundry.org/diego-logging-client v0.110.0
+	code.cloudfoundry.org/filelock v0.67.0
+	code.cloudfoundry.org/garden v0.0.0-20260605151806-250ac484dd9a
+	code.cloudfoundry.org/lager/v3 v3.72.0
+	code.cloudfoundry.org/locket v0.0.0-20260602143356-23bea5865010
+	code.cloudfoundry.org/policy_client v0.106.0
+	code.cloudfoundry.org/tlsconfig v0.58.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.4.0
@@ -33,7 +33,7 @@ require (
 	github.com/montanaflynn/stats v0.9.0
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.14.1
+	github.com/nats-io/nats-server/v2 v2.14.2
 	github.com/nats-io/nats-top v0.6.4
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.29.0
@@ -53,7 +53,7 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/durationjson v0.74.0 // indirect
+	code.cloudfoundry.org/durationjson v0.75.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260526122959-0284fcb5ac88 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
@@ -73,25 +73,25 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
-	github.com/google/pprof v0.0.0-20260507013755-92041b743c96 // indirect
+	github.com/google/pprof v0.0.0-20260604005048-7023385849c0 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.9.2 // indirect
+	github.com/jackc/pgx/v5 v5.10.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/minio/highwayhash v1.0.4 // indirect
-	github.com/nats-io/jwt/v2 v2.8.1 // indirect
-	github.com/nats-io/nkeys v0.4.15 // indirect
+	github.com/nats-io/jwt/v2 v2.8.2 // indirect
+	github.com/nats-io/nkeys v0.4.16 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
-	go.step.sm/crypto v0.81.1 // indirect
+	go.step.sm/crypto v0.82.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
