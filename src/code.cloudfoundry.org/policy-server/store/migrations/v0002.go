@@ -13,6 +13,20 @@ BEGIN
  FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
  WHERE TABLE_NAME='destinations' AND COLUMN_NAME= 'port' AND TABLE_SCHEMA=@databaseName;
 
+ SELECT CONSTRAINT_NAME INTO @fkName
+ FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+ WHERE TABLE_NAME='destinations' AND COLUMN_NAME='group_id'
+   AND TABLE_SCHEMA=@databaseName
+   AND REFERENCED_TABLE_NAME IS NOT NULL
+ LIMIT 1;
+
+ IF @fkName IS NOT NULL THEN
+   SET @dropFkQuery = CONCAT('ALTER TABLE destinations DROP FOREIGN KEY ', @fkName);
+   PREPARE stmtFk FROM @dropFkQuery;
+   EXECUTE stmtFk;
+   DEALLOCATE PREPARE stmtFk;
+ END IF;
+
  SET @query = CONCAT('ALTER TABLE destinations DROP INDEX ', @name);
 
  PREPARE stmt FROM @query;
@@ -23,6 +37,8 @@ BEGIN
  SET @databaseName = NULL;
  SET @query = NULL;
  SET @name = NULL;
+ SET @fkName = NULL;
+ SET @dropFkQuery = NULL;
 
 END;`,
 		`CALL drop_destination_index();`,
@@ -90,6 +106,20 @@ BEGIN
  FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
  WHERE TABLE_NAME='destinations' AND COLUMN_NAME= 'port' AND TABLE_SCHEMA=@databaseName;
 
+ SELECT CONSTRAINT_NAME INTO @fkName
+ FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+ WHERE TABLE_NAME='destinations' AND COLUMN_NAME='group_id'
+   AND TABLE_SCHEMA=@databaseName
+   AND REFERENCED_TABLE_NAME IS NOT NULL
+ LIMIT 1;
+
+ IF @fkName IS NOT NULL THEN
+   SET @dropFkQuery = CONCAT('ALTER TABLE destinations DROP FOREIGN KEY ', @fkName);
+   PREPARE stmtFk FROM @dropFkQuery;
+   EXECUTE stmtFk;
+   DEALLOCATE PREPARE stmtFk;
+ END IF;
+
  SET @query = CONCAT('ALTER TABLE destinations DROP INDEX ', @name);
 
  PREPARE stmt FROM @query;
@@ -100,6 +130,8 @@ BEGIN
  SET @databaseName = NULL;
  SET @query = NULL;
  SET @name = NULL;
+ SET @fkName = NULL;
+ SET @dropFkQuery = NULL;
 
 END;`,
 	},
