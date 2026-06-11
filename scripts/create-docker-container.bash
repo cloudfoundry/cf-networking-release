@@ -21,6 +21,9 @@ if [[ "${DB}" == "mysql" ]] || [[ "${DB}" == "mysql-8.0" ]]; then
 elif [[ "${DB}" == "mysql-8.4" ]]; then
   IMAGE="cloudfoundry/tas-runtime-mysql-8.4"
   DB="mysql"
+elif [[ "${DB}" == "mysql-9.7" ]]; then
+  IMAGE="cloudfoundry/tas-runtime-mysql-9.7"
+  DB="mysql"
 elif [[ "${DB}" == "mysql-5.7" ]]; then
   IMAGE="cloudfoundry/tas-runtime-mysql-5.7"
   DB="mysql"

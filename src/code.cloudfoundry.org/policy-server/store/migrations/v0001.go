@@ -1,3 +1,8 @@
+// @AI-Generated
+// Generated in whole or in part by Cursor with a mix of different LLM models (Auto select mode)
+// Description:
+// 2026-06-15: Remove inline REFERENCES from MySQL CREATE TABLE statements in v0001 migrations
+
 package migrations
 
 var migration_v0001 = map[string][]string{
@@ -8,21 +13,21 @@ var migration_v0001 = map[string][]string{
 		UNIQUE (guid),
 		PRIMARY KEY (id)
 	);`,
-		`CREATE TABLE IF NOT EXISTS destinations (
-		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES "groups"(id),
-		port int,
-		protocol varchar(255),
-		UNIQUE (group_id, port, protocol),
-		PRIMARY KEY (id)
-	);`,
+	`CREATE TABLE IF NOT EXISTS destinations (
+	id int NOT NULL AUTO_INCREMENT,
+	group_id int,
+	port int,
+	protocol varchar(255),
+	UNIQUE (group_id, port, protocol),
+	PRIMARY KEY (id)
+);`,
 		`CREATE TABLE IF NOT EXISTS policies (
-		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES "groups"(id),
-		destination_id int REFERENCES destinations(id),
-		UNIQUE (group_id, destination_id),
-		PRIMARY KEY (id)
-	);`,
+	id int NOT NULL AUTO_INCREMENT,
+	group_id int,
+	destination_id int,
+	UNIQUE (group_id, destination_id),
+	PRIMARY KEY (id)
+);`,
 	},
 	"postgres": {
 		`CREATE TABLE IF NOT EXISTS groups (
@@ -66,14 +71,14 @@ var migration_modified_v0001 = map[string][]string{
 
 var migration_modified_v0001a = map[string][]string{
 	"mysql": {
-		`CREATE TABLE IF NOT EXISTS destinations (
-		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES "groups"(id),
-		port int,
-		protocol varchar(255),
-		UNIQUE (group_id, port, protocol),
-		PRIMARY KEY (id)
-	);`,
+	`CREATE TABLE IF NOT EXISTS destinations (
+	id int NOT NULL AUTO_INCREMENT,
+	group_id int,
+	port int,
+	protocol varchar(255),
+	UNIQUE (group_id, port, protocol),
+	PRIMARY KEY (id)
+);`,
 	},
 	"postgres": {
 		`CREATE TABLE IF NOT EXISTS destinations (
@@ -88,13 +93,13 @@ var migration_modified_v0001a = map[string][]string{
 
 var migration_modified_v0001b = map[string][]string{
 	"mysql": {
-		`CREATE TABLE IF NOT EXISTS policies (
-		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES "groups"(id),
-		destination_id int REFERENCES destinations(id),
-		UNIQUE (group_id, destination_id),
-		PRIMARY KEY (id)
-	);`,
+	`CREATE TABLE IF NOT EXISTS policies (
+	id int NOT NULL AUTO_INCREMENT,
+	group_id int,
+	destination_id int,
+	UNIQUE (group_id, destination_id),
+	PRIMARY KEY (id)
+);`,
 	},
 	"postgres": {
 		`CREATE TABLE IF NOT EXISTS policies (
