@@ -3,6 +3,7 @@ module code.cloudfoundry.org
 go 1.25.8
 
 replace (
+	code.cloudfoundry.org/locket => code.cloudfoundry.org/locket v0.0.0-20260602143356-23bea5865010
 	example-apps/spammer => ../example-apps/spammer
 
 	github.com/nats-io/go-nats => github.com/nats-io/go-nats v1.5.1-0.20180331191609-247b2a84d8d0
