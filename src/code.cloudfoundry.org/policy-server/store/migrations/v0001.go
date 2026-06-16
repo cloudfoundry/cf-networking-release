@@ -13,7 +13,7 @@ var migration_v0001 = map[string][]string{
 		UNIQUE (guid),
 		PRIMARY KEY (id)
 	);`,
-	`CREATE TABLE IF NOT EXISTS destinations (
+		`CREATE TABLE IF NOT EXISTS destinations (
 	id int NOT NULL AUTO_INCREMENT,
 	group_id int,
 	port int,
@@ -71,7 +71,7 @@ var migration_modified_v0001 = map[string][]string{
 
 var migration_modified_v0001a = map[string][]string{
 	"mysql": {
-	`CREATE TABLE IF NOT EXISTS destinations (
+		`CREATE TABLE IF NOT EXISTS destinations (
 	id int NOT NULL AUTO_INCREMENT,
 	group_id int,
 	port int,
@@ -93,7 +93,7 @@ var migration_modified_v0001a = map[string][]string{
 
 var migration_modified_v0001b = map[string][]string{
 	"mysql": {
-	`CREATE TABLE IF NOT EXISTS policies (
+		`CREATE TABLE IF NOT EXISTS policies (
 	id int NOT NULL AUTO_INCREMENT,
 	group_id int,
 	destination_id int,
