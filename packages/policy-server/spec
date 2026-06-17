@@ -8,7 +8,6 @@ files:
   - code.cloudfoundry.org/go.mod
   - code.cloudfoundry.org/go.sum
   - code.cloudfoundry.org/vendor/modules.txt
-  - code.cloudfoundry.org/vendor/code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/db/monitor/*.go # gosub
   - code.cloudfoundry.org/vendor/code.cloudfoundry.org/cf-networking-helpers/httperror/*.go # gosub
