@@ -36,7 +36,7 @@ type sqlHelper struct {
 	flavor string
 }
 
-func NewSQLHelper(flavor string) *sqlHelper {
+func NewSQLHelper(flavor string) SQLHelper {
 	return &sqlHelper{flavor: flavor}
 }
 
