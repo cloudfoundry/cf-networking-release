@@ -47,7 +47,7 @@ func (tc *TimeoutConn) Write(b []byte) (int, error) {
 	return tc.Conn.Write(b)
 }
 
-type BBSDBParam struct {
+type ConnectParams struct {
 	DriverName                    string
 	DatabaseConnectionString      string
 	SqlCACertFile                 string
@@ -58,9 +58,9 @@ type BBSDBParam struct {
 }
 
 func Connect(
-	logger lager.Logger, bbsDBParam *BBSDBParam) (*sql.DB, error) {
-	connString := addDatabaseParams(logger, bbsDBParam)
-	driverName := bbsDBParam.DriverName
+	logger lager.Logger, params *ConnectParams) (*sql.DB, error) {
+	connString := addDatabaseParams(logger, params)
+	driverName := params.DriverName
 
 	if driverName == "postgres" {
 		driverName = "pgx"
@@ -76,28 +76,28 @@ func Connect(
 // one of the CAs in SqlCACertFile. It also sets timeouts for connections.
 func addDatabaseParams(
 	logger lager.Logger,
-	bbsDBParam *BBSDBParam,
+	params *ConnectParams,
 ) string {
-	dbConnectionString := bbsDBParam.DatabaseConnectionString
-	switch bbsDBParam.DriverName {
+	dbConnectionString := params.DatabaseConnectionString
+	switch params.DriverName {
 	case "mysql":
-		dbConnectionString = generateMysqlConfig(dbConnectionString, logger, bbsDBParam)
+		dbConnectionString = generateMysqlConfig(dbConnectionString, logger, params)
 	case "postgres":
-		dbConnectionString = generatePostgreSQLConfig(dbConnectionString, logger, bbsDBParam)
+		dbConnectionString = generatePostgreSQLConfig(dbConnectionString, logger, params)
 	default:
-		logger.Fatal("invalid-driver-name", nil, lager.Data{"driver-name": bbsDBParam.DriverName})
+		logger.Fatal("invalid-driver-name", nil, lager.Data{"driver-name": params.DriverName})
 	}
 
 	return dbConnectionString
 }
 
-func generateMysqlConfig(dbConnectionString string, logger lager.Logger, bbsDBParam *BBSDBParam) string {
+func generateMysqlConfig(dbConnectionString string, logger lager.Logger, params *ConnectParams) string {
 	cfg, err := mysql.ParseDSN(dbConnectionString)
 	if err != nil {
 		logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": dbConnectionString})
 	}
 
-	tlsConfig := generateTLSConfig(logger, bbsDBParam.SqlCACertFile, bbsDBParam.SqlEnableIdentityVerification)
+	tlsConfig := generateTLSConfig(logger, params.SqlCACertFile, params.SqlEnableIdentityVerification)
 	if tlsConfig != nil {
 		err = mysql.RegisterTLSConfig("bbs-tls", tlsConfig)
 		if err != nil {
@@ -106,9 +106,9 @@ func generateMysqlConfig(dbConnectionString string, logger lager.Logger, bbsDBPa
 		cfg.TLSConfig = "bbs-tls"
 	}
 
-	cfg.ReadTimeout = cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout)
-	cfg.WriteTimeout = cmp.Or(bbsDBParam.WriteTimeout, defaultTimeout)
-	cfg.Timeout = cmp.Or(bbsDBParam.ConnectionTimeout, defaultTimeout)
+	cfg.ReadTimeout = cmp.Or(params.ReadTimeout, defaultTimeout)
+	cfg.WriteTimeout = cmp.Or(params.WriteTimeout, defaultTimeout)
+	cfg.Timeout = cmp.Or(params.ConnectionTimeout, defaultTimeout)
 
 	cfg.Params = map[string]string{
 		"group_concat_max_len": strconv.Itoa(MYSQL_GROUP_CONCAT_MAX_LEN),
@@ -116,13 +116,13 @@ func generateMysqlConfig(dbConnectionString string, logger lager.Logger, bbsDBPa
 	return cfg.FormatDSN()
 }
 
-func generatePostgreSQLConfig(dbConnectionString string, logger lager.Logger, bbsDBParam *BBSDBParam) string {
+func generatePostgreSQLConfig(dbConnectionString string, logger lager.Logger, params *ConnectParams) string {
 	config, err := pgx.ParseConfig(dbConnectionString)
 	if err != nil {
 		logger.Fatal("invalid-db-connection-string", err, lager.Data{"connection-string": dbConnectionString})
 	}
 
-	tlsConfig := generateTLSConfig(logger, bbsDBParam.SqlCACertFile, bbsDBParam.SqlEnableIdentityVerification)
+	tlsConfig := generateTLSConfig(logger, params.SqlCACertFile, params.SqlEnableIdentityVerification)
 	config.TLSConfig = tlsConfig
 	dialFuncWithTimeouts := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		// Dial with optional connect timeout from config
@@ -140,13 +140,13 @@ func generatePostgreSQLConfig(dbConnectionString string, logger lager.Logger, bb
 		// Enable TCP keepalive when possible
 		if tcpConn, ok := conn.(*net.TCPConn); ok {
 			_ = tcpConn.SetKeepAlive(true)
-			_ = tcpConn.SetKeepAlivePeriod(cmp.Or(bbsDBParam.ConnectionTimeout, defaultTimeout))
+			_ = tcpConn.SetKeepAlivePeriod(cmp.Or(params.ConnectionTimeout, defaultTimeout))
 		}
 
 		tc := &TimeoutConn{
 			Conn: conn,
-			Rd:   cmp.Or(bbsDBParam.ReadTimeout, defaultTimeout),
-			Wd:   cmp.Or(bbsDBParam.WriteTimeout, defaultTimeout),
+			Rd:   cmp.Or(params.ReadTimeout, defaultTimeout),
+			Wd:   cmp.Or(params.WriteTimeout, defaultTimeout),
 		}
 
 		return tc, nil
