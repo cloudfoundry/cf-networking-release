@@ -36,14 +36,12 @@ func (h *sqlHelper) ConvertSQLError(err error) error {
 			return h.convertPostgresError(e)
 		case *pgconn.PrepareError:
 			subError := e.Unwrap()
-			// Guard against infinite recursion: if pgconn ever wraps a PrepareError
-			// inside another PrepareError, stop recursing rather than looping forever.
-			// errors.Is on a bare &pgconn.PrepareError{} will always be false today,
-			// but the intent is to detect that structural case defensively.
-			if _, ok := subError.(*pgconn.PrepareError); ok {
+			if errors.Is(subError, &pgconn.PrepareError{}) {
+				// don't recurse if someone has mistakenly wrapped a PrepareError in a PrepareError
+				// to ensure we avoid invinite looping
 				return err
 			}
-			return h.ConvertSQLError(subError)
+			return h.ConvertSQLError(e.Unwrap())
 		}
 
 		if err == sql.ErrNoRows {

@@ -10,15 +10,15 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/cf-networking-helpers v0.89.0
+	code.cloudfoundry.org/cf-networking-helpers v0.90.0
 	code.cloudfoundry.org/clock v1.75.0
 	code.cloudfoundry.org/debugserver v0.102.0
-	code.cloudfoundry.org/diego-logging-client v0.111.0
-	code.cloudfoundry.org/filelock v0.68.0
-	code.cloudfoundry.org/garden v0.0.0-20260615182558-dd88c014d8c3
+	code.cloudfoundry.org/diego-logging-client v0.112.0
+	code.cloudfoundry.org/filelock v0.69.0
+	code.cloudfoundry.org/garden v0.0.0-20260617020226-a9e754564bb5
 	code.cloudfoundry.org/lager/v3 v3.74.0
-	code.cloudfoundry.org/locket v0.0.0-20260617153455-212090c124cc
-	code.cloudfoundry.org/policy_client v0.106.0
+	code.cloudfoundry.org/locket v1.2.0
+	code.cloudfoundry.org/policy_client v0.108.0
 	code.cloudfoundry.org/tlsconfig v0.60.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -53,13 +53,13 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/diego-db-helpers v0.3.0 // indirect
-	code.cloudfoundry.org/durationjson v0.76.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20260526122959-0284fcb5ac88 // indirect
+	code.cloudfoundry.org/bbs v1.3.0 // indirect
+	code.cloudfoundry.org/diego-db-helpers v0.4.0 // indirect
+	code.cloudfoundry.org/durationjson v0.77.0 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260615142411-472d6bcdb3c6 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
-	code.cloudfoundry.org/inigo v0.0.0-20250908175034-b7230e46c815 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/antithesishq/antithesis-sdk-go v0.7.0 // indirect
@@ -100,8 +100,8 @@ require (
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.46.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260618152121-87f3d3e198d3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
 	google.golang.org/grpc v1.81.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
