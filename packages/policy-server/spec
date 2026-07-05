@@ -125,13 +125,13 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/internal/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/proto/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/experimental/balancer/weight/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/experimental/stats/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/grpclog/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/grpclog/internal/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/backoff/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/balancer/gracefulswitch/*.go # gosub
-  - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/balancer/weight/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/balancerload/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/binarylog/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/buffer/*.go # gosub
@@ -157,6 +157,7 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/status/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/syscall/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/transport/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/transport/internal/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/transport/networktype/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/transport/readyreader/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/keepalive/*.go # gosub
