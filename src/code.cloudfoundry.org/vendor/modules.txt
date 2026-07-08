@@ -22,30 +22,30 @@ code.cloudfoundry.org/cf-networking-helpers/poller
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/clock v1.77.0
+# code.cloudfoundry.org/clock v1.78.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
-# code.cloudfoundry.org/debugserver v0.104.0
+# code.cloudfoundry.org/debugserver v0.105.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/debugserver
 # code.cloudfoundry.org/diego-db-helpers v0.6.0
 ## explicit; go 1.26.0
 code.cloudfoundry.org/diego-db-helpers/sqldb/helpers/monitor
-# code.cloudfoundry.org/diego-logging-client v0.114.0
+# code.cloudfoundry.org/diego-logging-client v0.115.0
 ## explicit; go 1.25.8
 code.cloudfoundry.org/diego-logging-client
 code.cloudfoundry.org/diego-logging-client/testhelpers
-# code.cloudfoundry.org/durationjson v0.79.0
+# code.cloudfoundry.org/durationjson v0.80.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/durationjson
 # code.cloudfoundry.org/filelock v0.71.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/filelock
-# code.cloudfoundry.org/garden v0.0.0-20260701020453-6a4fe469372c
+# code.cloudfoundry.org/garden v0.0.0-20260708020641-3ee0e5230510
 ## explicit; go 1.25.0
 code.cloudfoundry.org/garden
-# code.cloudfoundry.org/go-diodes v0.0.0-20260629064500-85da08bf73ac
+# code.cloudfoundry.org/go-diodes v0.0.0-20260706112827-32a910f327a2
 ## explicit; go 1.25.0
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-log-cache/v3 v3.1.2
@@ -59,7 +59,7 @@ code.cloudfoundry.org/go-loggregator/v10/rpc/loggregator_v2
 code.cloudfoundry.org/go-loggregator/v9
 code.cloudfoundry.org/go-loggregator/v9/rpc/loggregator_v2
 code.cloudfoundry.org/go-loggregator/v9/runtimeemitter
-# code.cloudfoundry.org/lager/v3 v3.76.0
+# code.cloudfoundry.org/lager/v3 v3.77.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/lager/v3
 code.cloudfoundry.org/lager/v3/internal/truncate
@@ -107,7 +107,7 @@ github.com/benjamintf1/unmarshalledmatchers
 # github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f
 ## explicit
 github.com/bmizerany/pat
-# github.com/cloudfoundry-community/go-uaa v0.4.0
+# github.com/cloudfoundry-community/go-uaa v0.4.1
 ## explicit; go 1.25.0
 github.com/cloudfoundry-community/go-uaa
 github.com/cloudfoundry-community/go-uaa/passwordcredentials
@@ -149,7 +149,7 @@ github.com/cloudfoundry/dropsonde/metric_sender
 github.com/cloudfoundry/dropsonde/metricbatcher
 github.com/cloudfoundry/dropsonde/metrics
 github.com/cloudfoundry/dropsonde/runtime_stats
-# github.com/cloudfoundry/sonde-go v0.0.0-20260622134720-d7b012c5b9c4
+# github.com/cloudfoundry/sonde-go v0.0.0-20260706112804-cd2c61a47573
 ## explicit; go 1.23
 github.com/cloudfoundry/sonde-go/events
 # github.com/containernetworking/cni v1.3.0
@@ -459,11 +459,11 @@ golang.org/x/net/trace
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.21.0
+# golang.org/x/sync v0.22.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.46.0
+# golang.org/x/sys v0.47.0
 ## explicit; go 1.25.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
@@ -473,7 +473,7 @@ golang.org/x/sys/windows/svc
 golang.org/x/sys/windows/svc/debug
 golang.org/x/sys/windows/svc/eventlog
 golang.org/x/sys/windows/svc/mgr
-# golang.org/x/text v0.38.0
+# golang.org/x/text v0.39.0
 ## explicit; go 1.25.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -524,12 +524,12 @@ golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
-# google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7
+# google.golang.org/genproto/googleapis/api v0.0.0-20260706201446-f0a921348800
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.82.0

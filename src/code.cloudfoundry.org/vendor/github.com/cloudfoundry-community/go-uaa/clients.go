@@ -22,24 +22,26 @@ type paginatedClientList struct {
 // Client is a UAA client
 // http://docs.cloudfoundry.org/api/uaa/version/4.19.0/index.html#clients.
 type Client struct {
-	ClientID             string      `json:"client_id,omitempty" generator:"id"`
-	AuthorizedGrantTypes []string    `json:"authorized_grant_types,omitempty"`
-	RedirectURI          []string    `json:"redirect_uri,omitempty"`
-	Scope                []string    `json:"scope,omitempty"`
-	ResourceIDs          []string    `json:"resource_ids,omitempty"`
-	Authorities          []string    `json:"authorities,omitempty"`
-	AutoApproveRaw       interface{} `json:"autoapprove,omitempty"`
-	AccessTokenValidity  int64       `json:"access_token_validity,omitempty"`
-	RefreshTokenValidity int64       `json:"refresh_token_validity,omitempty"`
-	AllowedProviders     []string    `json:"allowedproviders,omitempty"`
-	DisplayName          string      `json:"name,omitempty"`
-	TokenSalt            string      `json:"token_salt,omitempty"`
-	CreatedWith          string      `json:"createdwith,omitempty"`
-	ApprovalsDeleted     bool        `json:"approvals_deleted,omitempty"`
-	RequiredUserGroups   []string    `json:"required_user_groups,omitempty"`
-	ClientSecret         string      `json:"client_secret,omitempty"`
-	LastModified         int64       `json:"lastModified,omitempty"`
-	AllowPublic          bool        `json:"allowpublic,omitempty"`
+	ClientID             string          `json:"client_id,omitempty" generator:"id"`
+	AuthorizedGrantTypes []string        `json:"authorized_grant_types,omitempty"`
+	RedirectURI          []string        `json:"redirect_uri,omitempty"`
+	Scope                []string        `json:"scope,omitempty"`
+	ResourceIDs          []string        `json:"resource_ids,omitempty"`
+	Authorities          []string        `json:"authorities,omitempty"`
+	AutoApproveRaw       interface{}     `json:"autoapprove,omitempty"`
+	AccessTokenValidity  int64           `json:"access_token_validity,omitempty"`
+	RefreshTokenValidity int64           `json:"refresh_token_validity,omitempty"`
+	AllowedProviders     []string        `json:"allowedproviders,omitempty"`
+	DisplayName          string          `json:"name,omitempty"`
+	TokenSalt            string          `json:"token_salt,omitempty"`
+	CreatedWith          string          `json:"createdwith,omitempty"`
+	ApprovalsDeleted     bool            `json:"approvals_deleted,omitempty"`
+	RequiredUserGroups   []string        `json:"required_user_groups,omitempty"`
+	ClientSecret         string          `json:"client_secret,omitempty"`
+	LastModified         int64           `json:"lastModified,omitempty"`
+	AllowPublic          bool            `json:"allowpublic,omitempty"`
+	JwksURI              string          `json:"jwks_uri,omitempty"`
+	Jwks                 json.RawMessage `json:"jwks,omitempty"`
 }
 
 // Identifier returns the field used to uniquely identify a Client.
@@ -155,4 +157,43 @@ func (a *API) ChangeClientSecret(id string, newSecret string) error {
 		return err
 	}
 	return nil
+}
+
+// ChangeClientJWTMode is the operation mode for ChangeClientJWT.
+type ChangeClientJWTMode string
+
+const (
+	ChangeClientJWTModeAdd    = ChangeClientJWTMode("ADD")
+	ChangeClientJWTModeUpdate = ChangeClientJWTMode("UPDATE")
+	ChangeClientJWTModeDelete = ChangeClientJWTMode("DELETE")
+)
+
+// ClientJWTChangeRequest is the request body for the PUT /oauth/clients/{id}/clientjwt endpoint.
+type ClientJWTChangeRequest struct {
+	ClientID   string              `json:"client_id,omitempty"`
+	ChangeMode ChangeClientJWTMode `json:"changeMode,omitempty"`
+	JwksURI    string              `json:"jwks_uri,omitempty"`
+	Jwks       json.RawMessage     `json:"jwks,omitempty"`
+	Kid        string              `json:"kid,omitempty"`
+	Issuer     string              `json:"iss,omitempty"`
+	Subject    string              `json:"sub,omitempty"`
+	Audience   string              `json:"aud,omitempty"`
+}
+
+// ChangeClientJWT configures the JWT trust for the client with the given id.
+// Use jwks_uri or jwks to specify public keys; use iss/sub/aud for federation JWT trust.
+// changeMode controls whether the key is ADDed, UPDATEd, or DELETEd (kid required for DELETE).
+func (a *API) ChangeClientJWT(req ClientJWTChangeRequest) error {
+	if req.ClientID == "" {
+		return errorMissingValue("client_id")
+	}
+	if req.ChangeMode == ChangeClientJWTModeDelete && req.Kid == "" {
+		return fmt.Errorf("kid must be specified when changeMode is %v", ChangeClientJWTModeDelete)
+	}
+	u := urlWithPath(*a.TargetURL, fmt.Sprintf("%s/%s/clientjwt", ClientsEndpoint, req.ClientID))
+	j, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	return a.doJSON(http.MethodPut, &u, bytes.NewBuffer(j), nil, true)
 }
