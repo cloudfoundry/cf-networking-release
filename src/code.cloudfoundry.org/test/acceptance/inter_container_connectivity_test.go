@@ -243,10 +243,10 @@ func assertResponseContains(destIP string, port int, sourceAppName string, desir
 var httpClient = &http.Client{
 	Transport: &http.Transport{
 		DisableKeepAlives: true,
-		Dial: (&net.Dialer{
+		DialContext: (&net.Dialer{
 			Timeout:   4 * time.Second,
 			KeepAlive: 0,
-		}).Dial,
+		}).DialContext,
 	},
 	Timeout: 20 * time.Second,
 }
