@@ -10,16 +10,16 @@ replace (
 )
 
 require (
-	code.cloudfoundry.org/cf-networking-helpers v0.93.0
-	code.cloudfoundry.org/clock v1.78.0
-	code.cloudfoundry.org/debugserver v0.105.0
-	code.cloudfoundry.org/diego-logging-client v0.115.0
-	code.cloudfoundry.org/filelock v0.72.0
-	code.cloudfoundry.org/garden v0.0.0-20260708020641-3ee0e5230510
-	code.cloudfoundry.org/lager/v3 v3.77.0
-	code.cloudfoundry.org/locket v1.4.0
-	code.cloudfoundry.org/policy_client v0.111.0
-	code.cloudfoundry.org/tlsconfig v0.61.0
+	code.cloudfoundry.org/cf-networking-helpers v0.94.0
+	code.cloudfoundry.org/clock v1.79.0
+	code.cloudfoundry.org/debugserver v0.106.0
+	code.cloudfoundry.org/diego-logging-client v0.116.0
+	code.cloudfoundry.org/filelock v0.73.0
+	code.cloudfoundry.org/garden v0.0.0-20260715020742-79c9837591af
+	code.cloudfoundry.org/lager/v3 v3.78.0
+	code.cloudfoundry.org/locket v1.5.0
+	code.cloudfoundry.org/policy_client v0.112.0
+	code.cloudfoundry.org/tlsconfig v0.62.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.4.1
@@ -30,7 +30,7 @@ require (
 	github.com/containernetworking/plugins v1.9.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/montanaflynn/stats v0.10.0
+	github.com/montanaflynn/stats v0.12.2
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-server/v2 v2.14.3
@@ -54,8 +54,8 @@ require (
 
 require (
 	code.cloudfoundry.org/bbs v1.11.0 // indirect
-	code.cloudfoundry.org/diego-db-helpers v0.6.0 // indirect
-	code.cloudfoundry.org/durationjson v0.80.0 // indirect
+	code.cloudfoundry.org/diego-db-helpers v0.7.0 // indirect
+	code.cloudfoundry.org/durationjson v0.81.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260706112827-32a910f327a2 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/square/certstrap v1.3.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
-	go.step.sm/crypto v0.84.1 // indirect
+	go.step.sm/crypto v0.85.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/mod v0.38.0 // indirect
@@ -100,9 +100,9 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260706201446-f0a921348800 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
-	google.golang.org/grpc v1.82.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
