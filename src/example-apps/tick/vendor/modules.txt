@@ -1,7 +1,7 @@
-# code.cloudfoundry.org/cf-networking-helpers v0.95.0
+# code.cloudfoundry.org/cf-networking-helpers v0.96.0
 ## explicit; go 1.25.8
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
-# code.cloudfoundry.org/localip v0.82.0
+# code.cloudfoundry.org/localip v0.83.0
 ## explicit; go 1.25.0
 code.cloudfoundry.org/localip
 # github.com/Masterminds/semver/v3 v3.5.0
@@ -21,7 +21,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20260802004507-5106ece31595
+# github.com/google/pprof v0.0.0-20260802141513-ef3492d7dac3
 ## explicit; go 1.25.0
 github.com/google/pprof/profile
 # github.com/onsi/ginkgo/v2 v2.32.0
