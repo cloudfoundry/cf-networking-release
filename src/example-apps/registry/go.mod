@@ -11,7 +11,7 @@ replace github.com/dgrijalva/jwt-go => github.com/dgrijalva/jwt-go v2.3.0+incomp
 go 1.20
 
 require (
-	github.com/Sirupsen/logrus v1.10.0
+	github.com/Sirupsen/logrus v1.10.1
 	github.com/amalgam8/amalgam8 v1.1.0
 	github.com/codegangsta/cli v1.22.17
 )
