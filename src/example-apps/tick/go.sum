@@ -1,7 +1,7 @@
 code.cloudfoundry.org/cf-networking-helpers v0.96.0 h1:8EncONCymH/GAHnpvcJFsZGihWKQtolG0ipq3bkmZvA=
 code.cloudfoundry.org/cf-networking-helpers v0.96.0/go.mod h1:K+5vI6zgMAjEvUukxNn4HRlvCiFkwkvWBN+7FQ8UEZw=
-code.cloudfoundry.org/localip v0.84.0 h1:eVEqnkhQ/5rf3zmcyDeoSmOJYc/EGddQMnpup+l42e0=
-code.cloudfoundry.org/localip v0.84.0/go.mod h1:ujHdkJs63PwzNjd0xjI0N40TN98PfxNeARRAh96T+Sg=
+code.cloudfoundry.org/localip v0.85.0 h1:3jn9Sg9RJ/lgBV9e+MbVqxhCGLBsk/0nMggO3CehvPc=
+code.cloudfoundry.org/localip v0.85.0/go.mod h1:jZNiQjiT2JBYvvUVk60dpAL9YjHV0dxi25fUr2KoHII=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=
 github.com/Masterminds/semver/v3 v3.5.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

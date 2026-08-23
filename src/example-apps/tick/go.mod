@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	code.cloudfoundry.org/cf-networking-helpers v0.96.0
-	code.cloudfoundry.org/localip v0.84.0
+	code.cloudfoundry.org/localip v0.85.0
 	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.42.1
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
