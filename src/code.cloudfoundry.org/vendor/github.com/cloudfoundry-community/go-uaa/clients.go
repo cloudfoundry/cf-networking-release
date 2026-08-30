@@ -44,11 +44,97 @@ type Client struct {
 	Jwks                 json.RawMessage `json:"jwks,omitempty"`
 }
 
+// UnmarshalJSON decodes a Client, tolerating UAA responses that encode
+// allowpublic, approvals_deleted, lastModified, allowedproviders, and
+// required_user_groups with a different JSON type than usual (e.g. a JSON
+// string instead of a boolean, or a single string instead of an array). UAA
+// stores these fields in a loosely-typed map and serializes back whatever
+// type was originally stored there, so the same field can come back as a
+// bool on one client and a string on another. AllowPublic, ApprovalsDeleted,
+// LastModified, AllowedProviders, and RequiredUserGroups keep their normal
+// public field types; only decoding is more lenient.
+func (c *Client) UnmarshalJSON(data []byte) error {
+	type alias Client
+	aux := struct {
+		AllowPublic        interface{} `json:"allowpublic,omitempty"`
+		ApprovalsDeleted   interface{} `json:"approvals_deleted,omitempty"`
+		LastModified       interface{} `json:"lastModified,omitempty"`
+		AllowedProviders   interface{} `json:"allowedproviders,omitempty"`
+		RequiredUserGroups interface{} `json:"required_user_groups,omitempty"`
+		*alias
+	}{
+		alias: (*alias)(c),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	c.AllowPublic = clientRawToBool(aux.AllowPublic)
+	c.ApprovalsDeleted = clientRawToBool(aux.ApprovalsDeleted)
+	c.LastModified = clientRawToInt64(aux.LastModified)
+	c.AllowedProviders = clientRawToStringSlice(aux.AllowedProviders)
+	c.RequiredUserGroups = clientRawToStringSlice(aux.RequiredUserGroups)
+
+	return nil
+}
+
+func clientRawToBool(v interface{}) bool {
+	switch t := v.(type) {
+	case bool:
+		return t
+	case string:
+		b, err := strconv.ParseBool(t)
+		if err != nil {
+			return false
+		}
+		return b
+	}
+	return false
+}
+
+func clientRawToInt64(v interface{}) int64 {
+	switch t := v.(type) {
+	case float64:
+		return int64(t)
+	case string:
+		i, err := strconv.ParseInt(t, 10, 64)
+		if err != nil {
+			return 0
+		}
+		return i
+	}
+	return 0
+}
+
+// clientRawToStringSlice handles the fact that a JSON array decoded into an
+// interface{} becomes []interface{}, not []string.
+func clientRawToStringSlice(v interface{}) []string {
+	switch t := v.(type) {
+	case nil:
+		return nil
+	case string:
+		return []string{t}
+	case []interface{}:
+		result := make([]string, 0, len(t))
+		for _, item := range t {
+			if s, ok := item.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
+	}
+	return []string{}
+}
+
 // Identifier returns the field used to uniquely identify a Client.
 func (c Client) Identifier() string {
 	return c.ClientID
 }
 
+// AutoApprove tolerates UAA responses that encode autoapprove as a JSON
+// boolean, string, or array (a JSON array decoded into AutoApproveRaw
+// becomes []interface{}, not []string).
 func (c Client) AutoApprove() []string {
 	switch t := c.AutoApproveRaw.(type) {
 	case bool:
@@ -57,6 +143,14 @@ func (c Client) AutoApprove() []string {
 		return []string{t}
 	case []string:
 		return t
+	case []interface{}:
+		result := make([]string, 0, len(t))
+		for _, item := range t {
+			if s, ok := item.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
 	}
 	return []string{}
 }

@@ -11,18 +11,18 @@ replace (
 
 require (
 	code.cloudfoundry.org/cf-networking-helpers v0.96.0
-	code.cloudfoundry.org/clock v1.84.0
-	code.cloudfoundry.org/debugserver v0.111.0
-	code.cloudfoundry.org/diego-logging-client v0.121.0
+	code.cloudfoundry.org/clock v1.85.0
+	code.cloudfoundry.org/debugserver v0.112.0
+	code.cloudfoundry.org/diego-logging-client v0.122.0
 	code.cloudfoundry.org/filelock v0.76.0
-	code.cloudfoundry.org/garden v0.0.0-20260814181737-66902029982f
-	code.cloudfoundry.org/lager/v3 v3.82.0
-	code.cloudfoundry.org/locket v1.7.0
+	code.cloudfoundry.org/garden v0.0.0-20260826021137-674e52f7c65b
+	code.cloudfoundry.org/lager/v3 v3.84.0
+	code.cloudfoundry.org/locket v1.10.0
 	code.cloudfoundry.org/policy_client v0.116.0
 	code.cloudfoundry.org/tlsconfig v0.65.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
-	github.com/cloudfoundry-community/go-uaa v0.4.2
+	github.com/cloudfoundry-community/go-uaa v0.5.0
 	github.com/cloudfoundry/cf-acceptance-tests v1.9.1-0.20250312160631-048ab2ea8caa
 	github.com/cloudfoundry/cf-test-helpers/v2 v2.13.0
 	github.com/cloudfoundry/dropsonde v1.1.0
@@ -30,14 +30,14 @@ require (
 	github.com/containernetworking/plugins v1.9.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/montanaflynn/stats v0.12.4
+	github.com/montanaflynn/stats v0.12.5
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.14.5
+	github.com/nats-io/nats-server/v2 v2.14.6
 	github.com/nats-io/nats-top v0.6.4
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.32.1
-	github.com/onsi/gomega v1.42.1
+	github.com/onsi/gomega v1.43.0
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
@@ -55,14 +55,14 @@ require (
 require (
 	code.cloudfoundry.org/bbs v1.12.0 // indirect
 	code.cloudfoundry.org/diego-db-helpers v0.12.0 // indirect
-	code.cloudfoundry.org/durationjson v0.86.0 // indirect
+	code.cloudfoundry.org/durationjson v0.87.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260818081020-5f89c9327272 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/antithesishq/antithesis-sdk-go v0.7.2 // indirect
+	github.com/antithesishq/antithesis-sdk-go v0.8.0 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20260818080958-d46298cd8513 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
-	github.com/google/pprof v0.0.0-20260802141513-ef3492d7dac3 // indirect
+	github.com/google/pprof v0.0.0-20260825171938-4d453200e7d9 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect
@@ -100,9 +100,9 @@ require (
 	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260819154853-08b0e4226688 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
-	google.golang.org/grpc v1.83.1 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260825221802-da73d73af1c5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260825221802-da73d73af1c5 // indirect
+	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
