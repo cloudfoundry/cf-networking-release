@@ -84,7 +84,7 @@ GEM
       prism (~> 1.7)
     ruby-progressbar (1.13.0)
     semi_semantic (1.2.0)
-    solargraph (0.60.3)
+    solargraph (0.60.4)
       ast (~> 2.4.3)
       backport (~> 1.2)
       benchmark (~> 0.4)
@@ -109,7 +109,7 @@ GEM
       yard (~> 0.9, >= 0.9.24)
       yard-activesupport-concern (~> 0.0)
       yard-solargraph (~> 0.1)
-    sorbet-runtime (0.6.13454)
+    sorbet-runtime (0.6.13485)
     sord (7.1.0)
       commander (~> 5.0)
       parlour (~> 9.1)
@@ -140,4 +140,4 @@ DEPENDENCIES
   solargraph
 
 BUNDLED WITH
-  4.0.18
+  4.0.20
