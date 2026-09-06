@@ -1,7 +1,7 @@
 code.cloudfoundry.org/cf-networking-helpers v0.96.0 h1:8EncONCymH/GAHnpvcJFsZGihWKQtolG0ipq3bkmZvA=
 code.cloudfoundry.org/cf-networking-helpers v0.96.0/go.mod h1:K+5vI6zgMAjEvUukxNn4HRlvCiFkwkvWBN+7FQ8UEZw=
-code.cloudfoundry.org/localip v0.86.0 h1:25b9njv404T5SuChRnZXRnE5xr2yaAneTYcOuNZUBxk=
-code.cloudfoundry.org/localip v0.86.0/go.mod h1:oNoVlrT3DDEyrcVHP9aEf9Xms+ekTeR3EAHKA50jrh8=
+code.cloudfoundry.org/localip v0.87.0 h1:9dJPoIZT5O+HozeGH6QY3clfl0aVzy9zPz6i0UfuFW4=
+code.cloudfoundry.org/localip v0.87.0/go.mod h1:5LYKIsvfHkbjbWQDQwdi10vIql5OCFBQpPyNbw5fAOg=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=
 github.com/Masterminds/semver/v3 v3.5.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -35,8 +35,8 @@ github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/google/pprof v0.0.0-20260825171938-4d453200e7d9 h1:dl4UZiszMU+NKHirOiCKTC+hRuNAQ0moHPxSg6WcU1o=
-github.com/google/pprof v0.0.0-20260825171938-4d453200e7d9/go.mod h1:jl5iWTm0/hd5PjEYEOuwAJ57L/CibdZfrqZ5XA5GrCk=
+github.com/google/pprof v0.0.0-20260903180319-d6c3cb2f37ec h1:ZhR4jlKRUmzPEPd2RLiJRUi25rUrdKBrhQNVIbqpTNE=
+github.com/google/pprof v0.0.0-20260903180319-d6c3cb2f37ec/go.mod h1:jl5iWTm0/hd5PjEYEOuwAJ57L/CibdZfrqZ5XA5GrCk=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/joshdk/go-junit v1.0.0 h1:S86cUKIdwBHWwA6xCmFlf3RTLfVXYQfvanM5Uh+K6GE=
 github.com/joshdk/go-junit v1.0.0/go.mod h1:TiiV0PqkaNfFXjEiyjWM3XXrhVyCa1K4Zfga6W52ung=
