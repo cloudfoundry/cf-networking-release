@@ -21,6 +21,8 @@ files:
   - code.cloudfoundry.org/garden-external-networker/proxy/*.go # gosub
   - code.cloudfoundry.org/lib/rules/*.go # gosub
   - code.cloudfoundry.org/lib/serial/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/cespare/xxhash/v2/*.go # gosub
+  - code.cloudfoundry.org/vendor/github.com/cespare/xxhash/v2/*.s # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/libcni/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/types/*.go # gosub
@@ -33,6 +35,18 @@ files:
   - code.cloudfoundry.org/vendor/github.com/containernetworking/cni/pkg/version/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/containernetworking/plugins/pkg/ns/*.go # gosub
   - code.cloudfoundry.org/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/attribute/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/attribute/internal/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/attribute/internal/xxhash/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/baggage/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/codes/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/internal/baggage/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/internal/errorhandler/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/propagation/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/semconv/v1.43.0/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/trace/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/trace/embedded/*.go # gosub
+  - code.cloudfoundry.org/vendor/go.opentelemetry.io/otel/trace/internal/telemetry/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/unix/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/unix/*.s # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/*.go # gosub
