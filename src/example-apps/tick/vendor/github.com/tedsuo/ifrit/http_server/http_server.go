@@ -3,8 +3,6 @@ package http_server
 import (
 	"context"
 	"crypto/tls"
-	"errors"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -76,21 +74,9 @@ func (s *httpServer) Run(signals <-chan os.Signal, ready chan<- struct{}) error 
 			return err
 
 		case <-signals:
-			listener.Close()
-
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
-			if shutdownErr := server.Shutdown(ctx); shutdownErr != nil {
-				// 2. Filter out http.ErrServerClosed (this is a normal, successful shutdown)
-				if errors.Is(shutdownErr, http.ErrServerClosed) {
-					log.Println("HTTP server closed gracefully.")
-				} else {
-					// 3. Handle actual errors (e.g., context deadline timeout)
-					log.Fatalf("HTTP server shutdown failed: %v", err)
-				}
-			}
-
-			return nil
+			return server.Shutdown(ctx)
 		}
 	}
 }
