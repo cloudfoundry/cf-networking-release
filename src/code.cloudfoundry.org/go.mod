@@ -11,15 +11,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/cf-networking-helpers v0.96.0
-	code.cloudfoundry.org/clock v1.87.0
-	code.cloudfoundry.org/debugserver v0.114.0
-	code.cloudfoundry.org/diego-logging-client v0.124.0
-	code.cloudfoundry.org/filelock v0.80.0
-	code.cloudfoundry.org/garden v0.3.0
-	code.cloudfoundry.org/lager/v3 v3.86.0
-	code.cloudfoundry.org/locket v1.12.0
-	code.cloudfoundry.org/policy_client v0.119.0
-	code.cloudfoundry.org/tlsconfig v0.66.0
+	code.cloudfoundry.org/clock v1.88.0
+	code.cloudfoundry.org/debugserver v0.115.0
+	code.cloudfoundry.org/diego-logging-client v0.125.0
+	code.cloudfoundry.org/filelock v0.81.0
+	code.cloudfoundry.org/garden v0.4.0
+	code.cloudfoundry.org/lager/v3 v3.87.0
+	code.cloudfoundry.org/locket v1.13.0
+	code.cloudfoundry.org/policy_client v0.120.0
+	code.cloudfoundry.org/tlsconfig v0.67.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.5.0
@@ -30,14 +30,14 @@ require (
 	github.com/containernetworking/plugins v1.9.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/montanaflynn/stats v0.12.6
+	github.com/montanaflynn/stats v0.12.7
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.14.6
+	github.com/nats-io/nats-server/v2 v2.15.0
 	github.com/nats-io/nats-top v0.6.4
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo/v2 v2.32.2
-	github.com/onsi/gomega v1.43.0
+	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/onsi/gomega v1.43.1
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
@@ -53,10 +53,10 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/bbs v1.16.0 // indirect
-	code.cloudfoundry.org/diego-db-helpers v0.17.0 // indirect
-	code.cloudfoundry.org/durationjson v0.89.0 // indirect
-	code.cloudfoundry.org/go-diodes v0.0.0-20260831145205-e8366a756183 // indirect
+	code.cloudfoundry.org/bbs v1.17.0 // indirect
+	code.cloudfoundry.org/diego-db-helpers v0.18.0 // indirect
+	code.cloudfoundry.org/durationjson v0.90.0 // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20260914115851-7fd03ae06e34 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
 	code.cloudfoundry.org/go-loggregator/v9 v9.2.1 // indirect
@@ -66,7 +66,6 @@ require (
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20260818080958-d46298cd8513 // indirect
-	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-sql-driver/mysql v1.10.1 // indirect
@@ -94,7 +93,7 @@ require (
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/trace v1.46.0 // indirect
-	go.step.sm/crypto v0.90.0 // indirect
+	go.step.sm/crypto v0.91.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
@@ -103,9 +102,9 @@ require (
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.50.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260911204522-f61a6ca850bd // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
-	google.golang.org/grpc v1.83.2 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260918162117-cecb64721679 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260918162117-cecb64721679 // indirect
+	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
