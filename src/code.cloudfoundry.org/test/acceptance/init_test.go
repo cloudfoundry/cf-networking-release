@@ -22,7 +22,9 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-const Timeout_Push = 2 * time.Minute
+const defaultPushTimeout = 2 * time.Minute
+
+var Timeout_Push = defaultPushTimeout
 
 var (
 	appsDir         string
@@ -38,6 +40,9 @@ func TestAcceptance(t *testing.T) {
 	BeforeSuite(func() {
 		cfCLI = cf_cli_adapter.NewAdapterWithLogWriter(GinkgoWriter)
 		config = helpers.LoadConfig()
+		if config.CfPushTimeout > 0 {
+			Timeout_Push = config.GetScaledTimeout(config.CfPushTimeoutDuration())
+		}
 
 		configPath := helpers.ConfigPath()
 		configBytes, err := os.ReadFile(configPath)
