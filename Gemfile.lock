@@ -51,7 +51,7 @@ GEM
       erb
       psych (>= 4.0.0)
       tsort
-    regexp_parser (2.12.0)
+    regexp_parser (2.13.0)
     reverse_markdown (3.0.2)
       nokogiri
     rexml (3.4.4)
@@ -109,7 +109,7 @@ GEM
       yard (~> 0.9, >= 0.9.24)
       yard-activesupport-concern (~> 0.0)
       yard-solargraph (~> 0.1)
-    sorbet-runtime (0.6.13506)
+    sorbet-runtime (0.6.13508)
     sord (7.1.0)
       commander (~> 5.0)
       parlour (~> 9.1)
@@ -121,9 +121,9 @@ GEM
     thor (1.5.0)
     tilt (2.9.0)
     tsort (0.2.0)
-    unicode-display_width (3.2.0)
-      unicode-emoji (~> 4.1)
-    unicode-emoji (4.2.0)
+    unicode-display_width (3.3.0)
+      unicode-emoji (~> 4.3)
+    unicode-emoji (4.3.0)
     yard (0.9.45)
     yard-activesupport-concern (0.0.1)
       yard (>= 0.8)
