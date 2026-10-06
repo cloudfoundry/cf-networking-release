@@ -22,6 +22,14 @@ func NewTagsIndex(store store.TagStore, marshaler marshal.Marshaler, errorRespon
 	}
 }
 
+// @Summary List tags
+// @Description Retrieves all tag and ID mappings. Tags are unique identifiers assigned to policy groups for network policy enforcement.
+// @Tags tags
+// @Produce json
+// @Success 200 {object} object{tags=[]Tag} "Successfully retrieved tags"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /tags [get]
+// @Security OAuth2Application[network.admin]
 func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("index-tags")
