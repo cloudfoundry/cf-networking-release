@@ -11,26 +11,26 @@ replace (
 
 require (
 	code.cloudfoundry.org/cf-networking-helpers v0.99.0
-	code.cloudfoundry.org/clock v1.90.0
-	code.cloudfoundry.org/debugserver v0.117.0
-	code.cloudfoundry.org/diego-logging-client v0.127.0
-	code.cloudfoundry.org/filelock v0.83.0
-	code.cloudfoundry.org/garden v0.6.0
-	code.cloudfoundry.org/lager/v3 v3.89.0
-	code.cloudfoundry.org/locket v1.15.0
+	code.cloudfoundry.org/clock v1.91.0
+	code.cloudfoundry.org/debugserver v0.118.0
+	code.cloudfoundry.org/diego-logging-client v0.128.0
+	code.cloudfoundry.org/filelock v0.84.0
+	code.cloudfoundry.org/garden v0.7.0
+	code.cloudfoundry.org/lager/v3 v3.90.0
+	code.cloudfoundry.org/locket v1.16.0
 	code.cloudfoundry.org/policy_client v0.122.0
 	code.cloudfoundry.org/tlsconfig v0.68.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
-	github.com/cloudfoundry-community/go-uaa v0.5.0
+	github.com/cloudfoundry-community/go-uaa v0.5.1
 	github.com/cloudfoundry/cf-acceptance-tests v1.9.1-0.20250312160631-048ab2ea8caa
-	github.com/cloudfoundry/cf-test-helpers/v2 v2.14.0
+	github.com/cloudfoundry/cf-test-helpers/v2 v2.15.0
 	github.com/cloudfoundry/dropsonde v1.1.0
 	github.com/containernetworking/cni v1.3.1
 	github.com/containernetworking/plugins v1.9.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/montanaflynn/stats v0.12.7
+	github.com/montanaflynn/stats v0.13.0
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
 	github.com/nats-io/nats-server/v2 v2.15.0
@@ -53,9 +53,9 @@ require (
 )
 
 require (
-	code.cloudfoundry.org/bbs v1.22.0 // indirect
-	code.cloudfoundry.org/diego-db-helpers v0.20.0 // indirect
-	code.cloudfoundry.org/durationjson v0.92.0 // indirect
+	code.cloudfoundry.org/bbs v1.23.0 // indirect
+	code.cloudfoundry.org/diego-db-helpers v0.21.0 // indirect
+	code.cloudfoundry.org/durationjson v0.93.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20260928063035-f81ac938b818 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
@@ -73,14 +73,14 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
-	github.com/google/pprof v0.0.0-20261003200830-ebaad5f31b4d // indirect
+	github.com/google/pprof v0.0.0-20261008003335-7bae8d8c4c9e // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.11.0 // indirect
-	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/jackc/puddle/v2 v2.2.3 // indirect
 	github.com/klauspost/compress v1.20.1 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/minio/highwayhash v1.0.4 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
-	github.com/square/certstrap v1.3.0 // indirect
+	github.com/square/certstrap v1.4.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
@@ -102,8 +102,8 @@ require (
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.51.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260928230214-8a89bd6388cc // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260928230214-8a89bd6388cc // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20261005182115-fad411399dd8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
