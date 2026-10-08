@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	code.cloudfoundry.org/cf-networking-helpers v0.99.0
-	code.cloudfoundry.org/localip v0.91.0
+	code.cloudfoundry.org/localip v0.92.0
 	github.com/onsi/ginkgo/v2 v2.33.0
 	github.com/onsi/gomega v1.44.0
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
@@ -16,7 +16,7 @@ require (
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20261003200830-ebaad5f31b4d // indirect
+	github.com/google/pprof v0.0.0-20261008003335-7bae8d8c4c9e // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.41.0 // indirect
