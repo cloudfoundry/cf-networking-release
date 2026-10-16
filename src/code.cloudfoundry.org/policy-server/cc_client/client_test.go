@@ -495,6 +495,21 @@ var _ = Describe("Client", func() {
 			}))
 		})
 
+		Context("when a role has a null space (org-scoped role)", func() {
+			BeforeEach(func() {
+				fakeExternalJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					return json.Unmarshal([]byte(fixtures.SubjectSpacesWithNullSpace), respData)
+				}
+			})
+
+			It("does not include an empty-string space key", func() {
+				subjectSpaces, err := client.GetSubjectSpaces("some-token", "some-subject-id")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(subjectSpaces).To(Equal(map[string]struct{}{"space-1-guid": {}, "space-2-guid": {}}))
+				Expect(subjectSpaces).NotTo(HaveKey(""))
+			})
+		})
+
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
 				fakeExternalJSONClient.DoReturns(errors.New("banana"))
