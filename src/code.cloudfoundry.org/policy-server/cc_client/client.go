@@ -420,6 +420,10 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	subjectSpaces := map[string]struct{}{}
 	for _, space := range resources {
 		spaceID := space.Relationships.Space.Data.GUID
+		if spaceID == "" {
+			c.Logger.Debug("get-subject-spaces-skip-empty-space", lager.Data{"subject-id": subjectId})
+			continue
+		}
 		subjectSpaces[spaceID] = struct{}{}
 	}
 

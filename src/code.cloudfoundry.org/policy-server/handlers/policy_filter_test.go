@@ -154,6 +154,86 @@ var _ = Describe("PolicyFilter", func() {
 			})
 		})
 
+		Context("with a single policy and an org-scoped subject (empty-string space key)", func() {
+			var onePolicy []store.Policy
+			BeforeEach(func() {
+				onePolicy = []store.Policy{{
+					Source:      store.Source{ID: "app-guid-1"},
+					Destination: store.Destination{ID: "app-guid-2"},
+				}}
+			})
+
+			Context("when both apps are deleted", func() {
+				BeforeEach(func() {
+					policies = onePolicy
+					fakeCCClient.GetAppSpacesReturns(map[string]string{}, nil)
+					fakeCCClient.GetSubjectSpacesReturns(map[string]struct{}{"": {}, "space-1": {}}, nil)
+				})
+
+				It("filters out the policy", func() {
+					filtered, err := policyFilter.FilterPolicies(policies, tokenData)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(filtered).To(BeEmpty())
+				})
+			})
+
+			Context("when only one app is deleted", func() {
+				BeforeEach(func() {
+					policies = onePolicy
+					fakeCCClient.GetAppSpacesReturns(map[string]string{"app-guid-1": "space-1"}, nil)
+					fakeCCClient.GetSubjectSpacesReturns(map[string]struct{}{"": {}, "space-1": {}}, nil)
+				})
+
+				It("filters out the policy", func() {
+					filtered, err := policyFilter.FilterPolicies(policies, tokenData)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(filtered).To(BeEmpty())
+				})
+			})
+
+			Context("when apps are deleted and subject spaces only contain the empty key", func() {
+				BeforeEach(func() {
+					policies = onePolicy
+					fakeCCClient.GetAppSpacesReturns(map[string]string{}, nil)
+					fakeCCClient.GetSubjectSpacesReturns(map[string]struct{}{"": {}}, nil)
+				})
+
+				It("filters out the policy", func() {
+					filtered, err := policyFilter.FilterPolicies(policies, tokenData)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(filtered).To(BeEmpty())
+				})
+			})
+
+			Context("positive control: both apps exist in accessible spaces", func() {
+				BeforeEach(func() {
+					policies = onePolicy
+					fakeCCClient.GetAppSpacesReturns(map[string]string{"app-guid-1": "space-1", "app-guid-2": "space-2"}, nil)
+					fakeCCClient.GetSubjectSpacesReturns(map[string]struct{}{"": {}, "space-1": {}, "space-2": {}}, nil)
+				})
+
+				It("includes the policy", func() {
+					filtered, err := policyFilter.FilterPolicies(policies, tokenData)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(filtered).To(Equal(onePolicy))
+				})
+			})
+
+			Context("when an app has an empty space value", func() {
+				BeforeEach(func() {
+					policies = onePolicy
+					fakeCCClient.GetAppSpacesReturns(map[string]string{"app-guid-1": "", "app-guid-2": "space-1"}, nil)
+					fakeCCClient.GetSubjectSpacesReturns(map[string]struct{}{"": {}, "space-1": {}}, nil)
+				})
+
+				It("filters out the policy", func() {
+					filtered, err := policyFilter.FilterPolicies(policies, tokenData)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(filtered).To(BeEmpty())
+				})
+			})
+		})
+
 		Context("when the token has network.admin scope", func() {
 			BeforeEach(func() {
 				tokenData = uaa_client.CheckTokenResponse{

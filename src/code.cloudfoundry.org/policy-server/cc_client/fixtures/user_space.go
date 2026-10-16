@@ -104,6 +104,50 @@ const SubjectSpace1 = `{
 
 const SubjectSpace2 = `{}`
 
+const SubjectSpacesWithNullSpace = `{
+   "pagination": {
+      "total_results": 3,
+      "total_pages": 1,
+      "first": {
+         "href": "https://api.example.org/v3/roles?page=1&per_page=100"
+      },
+      "last": {
+         "href": "https://api.example.org/v3/roles?page=1&per_page=100"
+      },
+      "next": null,
+      "previous": null
+   },
+   "resources": [
+      {
+         "guid": "guid-1",
+         "type": "space_developer",
+         "relationships": {
+            "user": {"data": {"guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"}},
+            "organization": {"data": {"guid": "org-1-guid"}},
+            "space": {"data": {"guid": "space-1-guid"}}
+         }
+      },
+      {
+         "guid": "guid-2",
+         "type": "space_developer",
+         "relationships": {
+            "user": {"data": {"guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"}},
+            "organization": {"data": {"guid": "org-1-guid"}},
+            "space": {"data": {"guid": "space-2-guid"}}
+         }
+      },
+      {
+         "guid": "guid-3",
+         "type": "organization_auditor",
+         "relationships": {
+            "user": {"data": {"guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"}},
+            "organization": {"data": {"guid": "org-1-guid"}},
+            "space": {"data": null}
+         }
+      }
+   ]
+}`
+
 const SubjectSpacesPage1 = `{
    "pagination": {
       "total_results": 3,
