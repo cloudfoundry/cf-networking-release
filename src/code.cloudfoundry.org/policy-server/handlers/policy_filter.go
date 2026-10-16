@@ -88,8 +88,13 @@ func filter(policies []store.Policy, appSpaces map[string]string, subjectSpaces 
 	filtered := []store.Policy{}
 
 	for _, policy := range policies {
-		_, sourceFound := subjectSpaces[appSpaces[policy.Source.ID]]
-		_, destFound := subjectSpaces[appSpaces[policy.Destination.ID]]
+		sourceSpace, sourceOK := appSpaces[policy.Source.ID]
+		destSpace, destOK := appSpaces[policy.Destination.ID]
+		if !sourceOK || !destOK || sourceSpace == "" || destSpace == "" {
+			continue
+		}
+		_, sourceFound := subjectSpaces[sourceSpace]
+		_, destFound := subjectSpaces[destSpace]
 		if sourceFound && destFound {
 			filtered = append(filtered, policy)
 		}
