@@ -13,7 +13,7 @@ GEM
     erb (6.0.7)
     highline (3.0.1)
     jaro_winkler (1.7.0)
-    json (3.0.2)
+    json (3.1.0)
     kramdown (2.5.2)
       rexml (>= 3.4.4)
     kramdown-parser-gfm (1.1.0)
@@ -109,7 +109,7 @@ GEM
       yard (~> 0.9, >= 0.9.24)
       yard-activesupport-concern (~> 0.0)
       yard-solargraph (~> 0.1)
-    sorbet-runtime (0.6.13550)
+    sorbet-runtime (0.6.13572)
     sord (7.1.0)
       commander (~> 5.0)
       parlour (~> 9.1)
@@ -140,4 +140,4 @@ DEPENDENCIES
   solargraph
 
 BUNDLED WITH
-  4.0.22
+  4.0.23
