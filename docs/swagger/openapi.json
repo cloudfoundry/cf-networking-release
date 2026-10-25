@@ -1,0 +1,414 @@
+{
+    "components": {
+        "schemas": {
+            "Destination": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "ips": {
+                        "items": {
+                            "$ref": "#/components/schemas/IPRange"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "ports": {
+                        "$ref": "#/components/schemas/Ports"
+                    },
+                    "protocol": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "additionalProperties": {},
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "IPRange": {
+                "properties": {
+                    "end": {
+                        "type": "string"
+                    },
+                    "start": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PoliciesPayload": {
+                "properties": {
+                    "policies": {
+                        "items": {
+                            "$ref": "#/components/schemas/Policy"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "total_policies": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "Policy": {
+                "properties": {
+                    "destination": {
+                        "$ref": "#/components/schemas/Destination"
+                    },
+                    "source": {
+                        "$ref": "#/components/schemas/Source"
+                    }
+                },
+                "type": "object"
+            },
+            "Ports": {
+                "properties": {
+                    "end": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "Source": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Tag": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "tag": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "info": {
+        "contact": {
+            "name": "Cloud Foundry Networking Team"
+        },
+        "description": "API for managing network policies and tags in Cloud Foundry",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "title": "CF Networking API",
+        "version": "1.0"
+    },
+    "externalDocs": {
+        "description": "",
+        "url": ""
+    },
+    "paths": {
+        "/policies": {
+            "get": {
+                "description": "Retrieves network policies. Can optionally filter policies by source ID, destination ID, or specific policy group IDs.",
+                "parameters": [
+                    {
+                        "description": "Comma-separated policy group ID values",
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Comma-separated source policy group ID values",
+                        "in": "query",
+                        "name": "source_id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Comma-separated destination policy group ID values",
+                        "in": "query",
+                        "name": "dest_id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PoliciesPayload"
+                                }
+                            }
+                        },
+                        "description": "Successfully retrieved policies"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.write"
+                        ]
+                    }
+                ],
+                "summary": "List policies",
+                "tags": [
+                    "policies"
+                ]
+            },
+            "post": {
+                "description": "Creates network policies to allow traffic between applications. Policies define which source applications can reach which destination applications on specified protocols and ports.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/PoliciesPayload",
+                                        "summary": "policies",
+                                        "description": "Policies to create"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Policies to create",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Policies created successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid request body or validation failed"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Forbidden - insufficient permissions or policy quota exceeded"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.write"
+                        ]
+                    }
+                ],
+                "summary": "Create policies",
+                "tags": [
+                    "policies"
+                ]
+            }
+        },
+        "/policies/delete": {
+            "post": {
+                "description": "Deletes existing network policies. This removes the network connectivity rules between the specified source and destination applications.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/PoliciesPayload",
+                                        "summary": "policies",
+                                        "description": "Policies to delete"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Policies to delete",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Policies deleted successfully"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Invalid request body or validation failed"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Forbidden - insufficient permissions"
+                    },
+                    "406": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Unsupported API version"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.write"
+                        ]
+                    }
+                ],
+                "summary": "Delete policies",
+                "tags": [
+                    "policies"
+                ]
+            }
+        },
+        "/tags": {
+            "get": {
+                "description": "Retrieves all tag and ID mappings. Tags are unique identifiers assigned to policy groups for network policy enforcement.",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "tags": {
+                                            "items": {
+                                                "$ref": "#/components/schemas/Tag"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successfully retrieved tags"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": "Internal server error"
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2Application": [
+                            "network.admin"
+                        ]
+                    }
+                ],
+                "summary": "List tags",
+                "tags": [
+                    "tags"
+                ]
+            }
+        }
+    },
+    "openapi": "3.1.0"
+}
