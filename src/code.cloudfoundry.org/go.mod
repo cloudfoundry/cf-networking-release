@@ -11,15 +11,15 @@ replace (
 
 require (
 	code.cloudfoundry.org/cf-networking-helpers v0.101.0
-	code.cloudfoundry.org/clock v1.93.0
-	code.cloudfoundry.org/debugserver v0.120.0
-	code.cloudfoundry.org/diego-logging-client v0.130.0
-	code.cloudfoundry.org/filelock v0.86.0
-	code.cloudfoundry.org/garden v0.9.0
-	code.cloudfoundry.org/lager/v3 v3.92.0
-	code.cloudfoundry.org/locket v1.18.0
-	code.cloudfoundry.org/policy_client v0.125.0
-	code.cloudfoundry.org/tlsconfig v0.69.0
+	code.cloudfoundry.org/clock v1.94.0
+	code.cloudfoundry.org/debugserver v0.121.0
+	code.cloudfoundry.org/diego-logging-client v0.131.0
+	code.cloudfoundry.org/filelock v0.87.0
+	code.cloudfoundry.org/garden v0.10.0
+	code.cloudfoundry.org/lager/v3 v3.93.0
+	code.cloudfoundry.org/locket v1.19.0
+	code.cloudfoundry.org/policy_client v0.126.0
+	code.cloudfoundry.org/tlsconfig v0.70.0
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cloudfoundry-community/go-uaa v0.5.1
@@ -30,10 +30,10 @@ require (
 	github.com/containernetworking/plugins v1.9.1
 	github.com/coreos/go-iptables v0.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/montanaflynn/stats v0.13.0
+	github.com/montanaflynn/stats v0.14.0
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v1.8.1
-	github.com/nats-io/nats-server/v2 v2.15.1
+	github.com/nats-io/nats-server/v2 v2.15.2
 	github.com/nats-io/nats-top v0.6.5
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo/v2 v2.33.1
@@ -46,16 +46,16 @@ require (
 	github.com/st3v/glager v0.4.0
 	github.com/tedsuo/ifrit v0.0.0-20260908181113-dd353a7daa27
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.61.0
+	golang.org/x/net v0.62.0
 	golang.org/x/sys v0.49.0
 	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	code.cloudfoundry.org/bbs v1.26.0 // indirect
-	code.cloudfoundry.org/diego-db-helpers v0.23.0 // indirect
-	code.cloudfoundry.org/durationjson v0.95.0 // indirect
+	code.cloudfoundry.org/bbs v1.30.0 // indirect
+	code.cloudfoundry.org/diego-db-helpers v0.24.0 // indirect
+	code.cloudfoundry.org/durationjson v0.96.0 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20261019063924-5f5277928191 // indirect
 	code.cloudfoundry.org/go-log-cache/v3 v3.1.2 // indirect
 	code.cloudfoundry.org/go-loggregator/v10 v10.3.1 // indirect
@@ -73,13 +73,13 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
-	github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50 // indirect
+	github.com/google/pprof v0.0.0-20261026192309-dbd0ed30aa88 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.32.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.33.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.11.0 // indirect
+	github.com/jackc/pgx/v5 v5.12.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.3 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/lib/pq v1.12.3 // indirect
@@ -93,8 +93,8 @@ require (
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
-	go.step.sm/crypto v0.91.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.step.sm/crypto v0.91.1 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
@@ -102,9 +102,9 @@ require (
 	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.52.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20261019180522-ce908d29299b // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b // indirect
-	google.golang.org/grpc v1.84.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20261026165753-2ffab32bce7e // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261026165753-2ffab32bce7e // indirect
+	google.golang.org/grpc v1.85.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
