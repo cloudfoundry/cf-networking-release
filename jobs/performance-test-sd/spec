@@ -4,14 +4,20 @@ name: performance-test-sd
 templates:
   run-tests.erb: bin/run
   config.json.erb: config.json
+  nats_ca_certs.crt.erb: config/certs/nats_ca_certs.crt
+  nats_cert_chain.crt.erb: config/certs/nats_cert_chain.crt
+  nats_private_key.key.erb: config/certs/nats_private_key.key
 
 packages:
   - golang-1.27-linux
   - performance-test-sd
 
 consumes:
-- name: nats
-  type: nats
-  optional: true
+- name: nats-tls
+  type: nats-tls
 
-properties: {}
+properties:
+  nats.cert_chain:
+    description: "PEM client certificate for connecting to NATS"
+  nats.private_key:
+    description: "PEM client private key"

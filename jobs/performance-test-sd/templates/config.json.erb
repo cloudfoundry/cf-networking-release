@@ -2,15 +2,17 @@
     require 'json'
 
     toRender = {
-      "nats_url" => link('nats').instances[0].address,
-      "nats_username" => link('nats').p("nats.user"),
-      "nats_password" => link('nats').p("nats.password"),
-      "nats_port" => link('nats').p("nats.port"),
-      "nats_monitoring_port" => 8222,
+      "nats_url" => link('nats-tls').p('nats.hostname', link('nats-tls').instances[0].address),
+      "nats_username" => link('nats-tls').p("nats.user"),
+      "nats_password" => link('nats-tls').p("nats.password"),
+      "nats_port" => link('nats-tls').p("nats.port"),
+      "nats_monitoring_port" => link('nats-tls').p("nats.monitor_port"),
+      "nats_ca_certs" => "/var/vcap/jobs/performance-test-sd/config/certs/nats_ca_certs.crt",
+      "nats_cert_chain" => "/var/vcap/jobs/performance-test-sd/config/certs/nats_cert_chain.crt",
+      "nats_private_key" => "/var/vcap/jobs/performance-test-sd/config/certs/nats_private_key.key",
       "num_messages" => 10,
       "num_publishers" => 10,
     }
 
     JSON.pretty_generate(toRender)
 %>
-

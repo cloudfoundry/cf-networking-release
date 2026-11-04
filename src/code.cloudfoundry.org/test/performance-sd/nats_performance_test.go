@@ -181,8 +181,10 @@ func runNatsBenchmarker(natsRuns ...NatsRun) *bench.Benchmark {
 	opts.User = config.NatsUsername
 	opts.Password = config.NatsPassword
 	for i, s := range opts.Servers {
-		opts.Servers[i] = "nats://" + strings.Trim(s, " ") + ":" + strconv.Itoa(config.NatsPort)
+		opts.Servers[i] = "tls://" + strings.Trim(s, " ") + ":" + strconv.Itoa(config.NatsPort)
 	}
+	Expect(nats.RootCAs(config.NatsCaCerts)(&opts)).To(Succeed())
+	Expect(nats.ClientCert(config.NatsCertChain, config.NatsPrivateKey)(&opts)).To(Succeed())
 
 	var startwg sync.WaitGroup
 
