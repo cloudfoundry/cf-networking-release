@@ -88,15 +88,19 @@ func Auth(username, password string) {
 }
 
 func getUAABaseURL() string {
-	sess := cf.Cf("curl", "/info")
+	sess := cf.Cf("curl", "/")
 	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
 	var response struct {
-		TokenEndpoint string `json:"token_endpoint"`
+		Links struct {
+			UAA struct {
+				Href string `json:"href"`
+			} `json:"uaa"`
+		} `json:"links"`
 	}
 	err := json.Unmarshal(sess.Out.Contents(), &response)
 	Expect(err).NotTo(HaveOccurred())
 
-	uaaBaseURL := response.TokenEndpoint
+	uaaBaseURL := response.Links.UAA.Href
 	Expect(uaaBaseURL).To(HavePrefix("https://uaa."))
 	return uaaBaseURL
 }
