@@ -54,7 +54,7 @@ var _ = Describe("Application Security Groups", func() {
 
 	It("applies security group changes", func() {
 		internalCCPort := 9024
-		proxyRequestURL := fmt.Sprintf("http://%s.%s/proxy/cloud-controller-ng.service.cf.internal:%d/info?protocol=https", appName, testConfig.AppsDomain, internalCCPort)
+		proxyRequestURL := fmt.Sprintf("http://%s.%s/proxy/cloud-controller-ng.service.cf.internal:%d/v3/info?protocol=https", appName, testConfig.AppsDomain, internalCCPort)
 
 		By("checking that our app can't initially reach cloud controller over internal address")
 		resp, err := http.Get(proxyRequestURL)
