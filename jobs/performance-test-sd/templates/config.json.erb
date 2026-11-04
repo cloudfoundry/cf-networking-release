@@ -2,7 +2,7 @@
     require 'json'
 
     toRender = {
-      "nats_url" => link('nats-tls').instances[0].address,
+      "nats_url" => link('nats-tls').p('nats.hostname', link('nats-tls').instances[0].address),
       "nats_username" => link('nats-tls').p("nats.user"),
       "nats_password" => link('nats-tls').p("nats.password"),
       "nats_port" => link('nats-tls').p("nats.port"),

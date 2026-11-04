@@ -56,6 +56,18 @@ module Bosh::Template::Test
           'num_publishers' => 10
         })
       end
+
+      context 'when the nats-tls link provides nats.hostname' do
+        before do
+          links[0].properties['nats']['hostname'] = '10.0.255.190'
+        end
+
+        it 'dials the hostname so it matches the server certificate SAN' do
+          config = JSON.parse(template.render(properties, consumes: links))
+
+          expect(config['nats_url']).to eq('10.0.255.190')
+        end
+      end
     end
 
     describe 'certificate templates' do
