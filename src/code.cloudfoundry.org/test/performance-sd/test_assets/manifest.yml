@@ -8,7 +8,10 @@ instance_groups:
   instances: 1
   jobs:
   - name: performance-test-sd
-    properties: {}
+    properties:
+      nats:
+        cert_chain: "((nats_client_cert.certificate))"
+        private_key: "((nats_client_cert.private_key))"
     release: cf-networking
   - name: bpm
     release: bpm
@@ -25,28 +28,29 @@ instance_groups:
   instances: 1
 
   jobs:
-  - name: nats
+  - name: nats-tls
     properties:
       nats:
         debug: true
+        port: 4222
         monitor_port: 8222
         password: ((nats_password))
         trace: true
         user: nats
         hostname: ((nats_ip))
-        migrate_server:
+        external:
           tls:
             ca: "((nats_server_cert.ca))"
             private_key: "((nats_server_cert.private_key))"
             certificate: "((nats_server_cert.certificate))"
-        migrate_client:
+        client:
           tls:
             ca: "((nats_client_cert.ca))"
             private_key: "((nats_client_cert.private_key))"
             certificate: "((nats_client_cert.certificate))"
     provides:
-      nats:
-        as: nats
+      nats-tls:
+        as: nats-tls
         shared: true
     release: nats
   - name: bpm
@@ -84,6 +88,10 @@ instance_groups:
             ca: ((service_discovery_ca.ca))
             certificate: ((service_discovery_server_tls.certificate))
             private_key: ((service_discovery_server_tls.private_key))
+      nats:
+        tls_enabled: true
+        cert_chain: "((nats_client_cert.certificate))"
+        private_key: "((nats_client_cert.private_key))"
     release: cf-networking
   - name: bpm
     release: bpm
@@ -148,6 +156,7 @@ variables:
     ca: nats_ca
     common_name: nats.service.cf.internal
     alternative_names:
+    - ((nats_ip))
     - "*.nats.service.cf.internal"
     - nats.service.cf.internal
     extended_key_usage:

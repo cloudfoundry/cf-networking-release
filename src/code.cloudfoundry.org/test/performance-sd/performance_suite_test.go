@@ -24,6 +24,9 @@ type Config struct {
 	NatsPort           int    `json:"nats_port"`
 	NumMessages        int    `json:"num_messages"`
 	NumPublisher       int    `json:"num_publishers"`
+	NatsCaCerts        string `json:"nats_ca_certs"`
+	NatsCertChain      string `json:"nats_cert_chain"`
+	NatsPrivateKey     string `json:"nats_private_key"`
 }
 
 func TestPerformance(t *testing.T) {
