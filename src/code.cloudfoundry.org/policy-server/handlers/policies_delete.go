@@ -27,6 +27,19 @@ func NewPoliciesDelete(store policyStore, mapper api.PolicyMapper,
 	}
 }
 
+// @Summary Delete policies
+// @Description Deletes existing network policies. This removes the network connectivity rules between the specified source and destination applications.
+// @Tags policies
+// @Accept json
+// @Produce json
+// @Param policies body PoliciesPayload true "Policies to delete"
+// @Success 200 {object} object{} "Policies deleted successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request body or validation failed"
+// @Failure 403 {object} ErrorResponse "Forbidden - insufficient permissions"
+// @Failure 406 {object} ErrorResponse "Unsupported API version"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /policies/delete [post]
+// @Security OAuth2Application[network.write]
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("delete-policies")
