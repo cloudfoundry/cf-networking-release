@@ -16,6 +16,7 @@ type InternalConfig struct {
 	InternalListenPort            int       `json:"internal_listen_port" validate:"nonzero"`
 	DebugServerHost               string    `json:"debug_server_host" validate:"nonzero"`
 	DebugServerPort               int       `json:"debug_server_port" validate:"nonzero"`
+	ExposeHealthCheck             bool      `json:"expose_health_check"`
 	HealthCheckPort               int       `json:"health_check_port" validate:"nonzero"`
 	CACertFile                    string    `json:"ca_cert_file" validate:"nonzero"`
 	ServerCertFile                string    `json:"server_cert_file" validate:"nonzero"`
