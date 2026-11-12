@@ -16,7 +16,7 @@ type InternalConfig struct {
 	InternalListenPort            int       `json:"internal_listen_port" validate:"nonzero"`
 	DebugServerHost               string    `json:"debug_server_host" validate:"nonzero"`
 	DebugServerPort               int       `json:"debug_server_port" validate:"nonzero"`
-	ExposeHealthCheck             bool      `json:"expose_health_check"`
+	HealthCheckHost               string    `json:"health_check_host" validate:"nonzero"`
 	HealthCheckPort               int       `json:"health_check_port" validate:"nonzero"`
 	CACertFile                    string    `json:"ca_cert_file" validate:"nonzero"`
 	ServerCertFile                string    `json:"server_cert_file" validate:"nonzero"`
@@ -40,7 +40,7 @@ func NewInternal(path string) (*InternalConfig, error) {
 		return nil, fmt.Errorf("reading config: %s", err)
 	}
 
-	cfg := InternalConfig{}
+	cfg := InternalConfig{HealthCheckHost: "127.0.0.1"}
 	err = json.Unmarshal(jsonBytes, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("parsing config: %s", err)

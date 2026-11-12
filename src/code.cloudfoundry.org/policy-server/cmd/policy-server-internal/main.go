@@ -189,11 +189,7 @@ func main() {
 		"health": metricsWrap("Health", logWrap(healthHandler)),
 	}
 
-	healthCheckListenIP := "127.0.0.1"
-	if conf.ExposeHealthCheck {
-		healthCheckListenIP = "0.0.0.0"
-	}
-	healthCheckServer := common.InitServer(logger, nil, healthCheckListenIP,
+	healthCheckServer := common.InitServer(logger, nil, conf.HealthCheckHost,
 		conf.HealthCheckPort, healthHandlers, healthRoutes)
 
 	members := grouper.Members{

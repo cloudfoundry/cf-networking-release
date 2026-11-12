@@ -14,7 +14,7 @@ module Bosh::Template::Test
         'disable' => false,
         'listen_ip' => '111.11.11.1',
         'debug_port' => 1234,
-        'expose_health_check' => true,
+        'health_check_host' => '0.0.0.0',
         'health_check_port' => 2345,
         'internal_listen_port' => 3456,
         'ca_cert' => 'meow-a-real-cert',
@@ -81,7 +81,7 @@ module Bosh::Template::Test
         expect(config).to eq({
           'listen_host' => '111.11.11.1',
           'debug_server_port' => 1234,
-          'expose_health_check' => true,
+          'health_check_host' => '0.0.0.0',
           'health_check_port' => 2345,
           'internal_listen_port' => 3456,
           'database' => {
