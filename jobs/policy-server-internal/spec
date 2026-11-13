@@ -36,6 +36,10 @@ properties:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31945
 
+  health_check_host:
+    description: "Bind address for the health listener. Use 0.0.0.0 to listen on all IPv4 interfaces."
+    default: 127.0.0.1
+
   health_check_port:
     description: "The port for the health endpoint"
     default: 31946
