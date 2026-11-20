@@ -1,3 +1,28 @@
+// Package main CF Networking API
+//
+// The CF Networking API is used for creating, deleting and listing network policies and tags.
+//
+// In order to communicate with the CF Networking API, a UAA oauth token with valid
+// `network.admin` or `network.write` scope is required. The CF admin by default
+// has `network.admin` scope, other users will need to have the proper scope
+// granted by an admin.
+//
+// Space developers with the `network.write` scope can configure policies for
+// applications in spaces for which they have the SpaceDeveloper role.
+//
+//	@title			CF Networking API
+//	@description	API for managing network policies and tags in Cloud Foundry
+//	@version		1.0
+//	@servers		url:https://api.bosh-lite.com/networking/v1/external description:CF Networking API
+//
+//	@contact.name	Cloud Foundry Networking Team
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+//
+//	@securityDefinitions.oauth2.clientCredentials OAuth2Application
+//	@tokenUrl		https://uaa.bosh-lite.com/oauth/token
+//	@scope.network.admin	Grants read and write access to network policies
+//	@scope.network.write	Grants write access to network policies
 package main
 
 import (
