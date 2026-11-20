@@ -31,6 +31,7 @@ var _ = Describe("InternalConfig", func() {
 					"internal_listen_port": 2222,
 					"debug_server_host": "http://6.5.4.3",
 					"debug_server_port": 9999,
+					"health_check_host": "0.0.0.0",
 					"health_check_port": 9443,
 					"ca_cert_file": "some/ca/cert/file",
 					"server_cert_file": "some/server/cert/file",
@@ -58,6 +59,7 @@ var _ = Describe("InternalConfig", func() {
 				Expect(c.InternalListenPort).To(Equal(2222))
 				Expect(c.DebugServerHost).To(Equal("http://6.5.4.3"))
 				Expect(c.DebugServerPort).To(Equal(9999))
+				Expect(c.HealthCheckHost).To(Equal("0.0.0.0"))
 				Expect(c.HealthCheckPort).To(Equal(9443))
 				Expect(c.CACertFile).To(Equal("some/ca/cert/file"))
 				Expect(c.ServerCertFile).To(Equal("some/server/cert/file"))

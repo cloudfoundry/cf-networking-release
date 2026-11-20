@@ -219,6 +219,7 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 
 	internalConfig := config.InternalConfig{
 		ListenHost:         "127.0.0.1",
+		HealthCheckHost:    "127.0.0.1",
 		InternalListenPort: ports.PickAPort(),
 		LogPrefix:          "testprefix",
 		DebugServerHost:    "127.0.0.1",
